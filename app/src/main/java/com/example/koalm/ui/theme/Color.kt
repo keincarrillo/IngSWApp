@@ -2,11 +2,11 @@ package com.example.koalm.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // Colores principales
-val VerdePrincipal = Color(0xFF478D4F)      // Botón "Iniciar sesión"
-val VerdeSecundario = Color(0xFF478D4F)     // Enlaces tipo Google
-val VerdeClaro = Color(0xFF81C784)          // Efecto hover o acentos suaves
-val VerdeContenedor = Color(0xFFF6FBF2)     // Color de fondo para contenedores
-val VerdeBorde = Color(0xFFC1C8BD)          // Color para bordes de contenedores
+val VerdePrincipal = Color(0xFF2196F3)      // Botón "Iniciar sesión"
+val VerdeSecundario = Color(0xFF1976D2)     // Enlaces tipo Google
+val VerdeClaro = Color(0xFF64B5F6)          // Efecto hover o acentos suaves
+val VerdeContenedor = Color(0xFFE3F2FD)     // Color de fondo para contenedores
+val VerdeBorde = Color(0xFFBBDEFB)          // Color para bordes de contenedores
 
 // Grises y neutros
 val GrisClaro = Color(0xFFE0E0E0)           // Fondos secundarios
@@ -16,17 +16,17 @@ val GrisOscuro = Color(0xFF868686)
 
 // Complementarios
 val Blanco = Color(0xFFFFFFFF)              // Fondo principal
-val Negro = Color(0xFF000000)              // Texto principal
+val Negro = Color(0xFF000000)               // Texto principal
 
 // Colores grafica ritmo cardiaco
 val AzulLigero = Color(0xFF00CFF9)
-val VerdeAerobico = Color(0xFF8D9D3D)
+val VerdeAerobico = Color(0xFF42A5F5)
 val AmarilloIntensivo = Color(0xFFFFA20D)
 val NaranjaAnaerobico = Color(0xFFFF5E3A)
 val RojoVOMAx = Color(0xFFFF1A1A)
 
 // Color temático del koala
-val MarronKoala = Color(0xFF5D4037)         // Íconos y detalles visuales
+val MarronKoala = Color(0xFF1565C0)         // Íconos y detalles visuales
 
 
 // MODO OSCURO
