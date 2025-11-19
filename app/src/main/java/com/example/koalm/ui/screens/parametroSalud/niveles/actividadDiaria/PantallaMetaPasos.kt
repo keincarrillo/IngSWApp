@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.koalm.ui.components.BarraNavegacionInferior
-import com.example.koalm.ui.theme.VerdePrincipal
+import com.example.koalm.ui.theme.PrimaryColor
 import kotlin.math.roundToInt
 import androidx.compose.ui.tooling.preview.Preview
 import com.google.firebase.auth.FirebaseAuth
@@ -135,7 +135,7 @@ fun PantallaMetaPasos(
                 ) {
                     items(pasosList.size) { i ->
                         val valor = pasosList[i]
-                        val color = if (valor == centeredItemIndex) VerdePrincipal else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                        val color = if (valor == centeredItemIndex) PrimaryColor else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                         val scale = if (valor == centeredItemIndex) 1.4f else 1f
 
                         Text(

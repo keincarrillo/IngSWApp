@@ -106,7 +106,7 @@ fun PantallaSueno(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = MaterialTheme.shapes.medium,
-                    colors = CardDefaults.cardColors(containerColor = GrisCard)
+                    colors = CardDefaults.cardColors(containerColor = TertiaryCardColor)
                 ) {
                     Column(
                         modifier = Modifier

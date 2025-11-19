@@ -88,7 +88,7 @@ fun HabitoCategoriaCard(
         modifier = Modifier
             .fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = VerdeContenedor
+            containerColor = ContainerColor
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 2.dp
@@ -102,7 +102,7 @@ fun HabitoCategoriaCard(
         ) {
             Surface(
                 shape = MaterialTheme.shapes.medium,
-                color = VerdePrincipal,
+                color = PrimaryColor,
                 modifier = Modifier.size(48.dp)
             ) {
                 Box(
@@ -112,7 +112,7 @@ fun HabitoCategoriaCard(
                     Icon(
                         imageVector = icono,
                         contentDescription = null,
-                        tint = Blanco,
+                        tint = White,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -130,7 +130,7 @@ fun HabitoCategoriaCard(
                 Text(
                     text = descripcion,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = GrisMedio
+                    color = TertiaryMediumColor
                 )
             }
             

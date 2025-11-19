@@ -115,7 +115,7 @@ fun PantallaControlPeso(
                 Text(
                     text = "Toca al koala para ver tu progreso",
                     fontSize = 13.sp,
-                    color = GrisMedio,
+                    color = TertiaryMediumColor,
                     modifier = Modifier
                         .align(Alignment.Center)
                         .padding(top = 180.dp)
@@ -201,7 +201,7 @@ private fun ComponenteObjetivos(
     Button(
         onClick = { navController.navigate(ruta) },
         shape = RoundedCornerShape(12.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = VerdePrincipal),
+        colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor),
         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 4.dp)
     ) {
         Text(textoBoton)

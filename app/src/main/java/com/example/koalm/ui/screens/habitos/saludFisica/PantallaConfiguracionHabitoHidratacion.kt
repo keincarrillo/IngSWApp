@@ -31,8 +31,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.koalm.R
 import com.example.koalm.ui.components.BarraNavegacionInferior
-import com.example.koalm.ui.theme.VerdeBorde
-import com.example.koalm.ui.theme.VerdeContenedor
+import com.example.koalm.ui.theme.BorderColor
+import com.example.koalm.ui.theme.ContainerColor
 import java.time.LocalTime
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
@@ -521,8 +521,8 @@ fun PantallaConfiguracionHabitoHidratacion (
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape   = RoundedCornerShape(16.dp),
-                border  = BorderStroke(1.dp, VerdeBorde),
-                colors  = CardDefaults.cardColors(containerColor = VerdeContenedor)
+                border  = BorderStroke(1.dp, BorderColor),
+                colors  = CardDefaults.cardColors(containerColor = ContainerColor)
             ){
                 Column(
                 Modifier.padding(24.dp),

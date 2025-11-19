@@ -81,7 +81,7 @@ fun PantallaEstres(
                 Icon(
                     imageVector = Icons.Default.SentimentNeutral,
                     contentDescription = null,
-                    tint = VerdePrincipal,
+                    tint = PrimaryColor,
                     modifier = Modifier.size(40.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -97,7 +97,7 @@ fun PantallaEstres(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.medium,
-                colors = CardDefaults.cardColors(containerColor = GrisCard)
+                colors = CardDefaults.cardColors(containerColor = TertiaryCardColor)
             ) {
                 Column(Modifier.padding(16.dp)) {
                     Row(
@@ -109,9 +109,9 @@ fun PantallaEstres(
                             valores = listOf(0.6f, 0.7f, 1f, 0.8f, 0.4f, 0.6f, 0.5f, 0.3f, 0.2f, 0.4f, 0.3f, 0.5f, 0.6f, 0.4f, 0.8f, 0.7f, 0.6f, 0.5f, 0.7f, 0.9f, 1f, 0.9f, 0.6f, 0.3f),
                             colores = listOf(0.6f, 0.7f, 1f, 0.8f, 0.4f, 0.6f, 0.5f, 0.3f, 0.2f, 0.4f, 0.3f, 0.5f, 0.6f, 0.4f, 0.8f, 0.7f, 0.6f, 0.5f, 0.7f, 0.9f, 1f, 0.9f, 0.6f, 0.3f).map {
                                 when {
-                                    it > 0.8f -> MarronKoala
-                                    it > 0.5f -> GrisMedio
-                                    else -> VerdePrincipal
+                                    it > 0.8f -> BrandPrimaryColor
+                                    it > 0.5f -> TertiaryMediumColor
+                                    else -> PrimaryColor
                                 }
                             }
                         )
@@ -143,7 +143,7 @@ fun PantallaEstres(
                                 Box(
                                     modifier = Modifier
                                         .size(10.dp)
-                                        .background(VerdePrincipal, CircleShape)
+                                        .background(PrimaryColor, CircleShape)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text("$Nivel")
@@ -162,7 +162,7 @@ fun PantallaEstres(
 
             Button(
                 onClick = { navController.navigate("test_de_ansiedad") },
-                colors = ButtonDefaults.buttonColors(containerColor = VerdePrincipal),
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor),
                 shape = RoundedCornerShape(20.dp),
                 modifier = Modifier
                     .height(40.dp)

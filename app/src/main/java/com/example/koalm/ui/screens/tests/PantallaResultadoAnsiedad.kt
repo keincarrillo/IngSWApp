@@ -235,7 +235,7 @@ fun PantallaResultadoAnsiedad(
                 modifier = Modifier
                     .width(200.dp)
                     .height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = VerdePrincipal),
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor),
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Text("Volver al inicio", fontSize = 16.sp)

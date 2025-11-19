@@ -137,7 +137,7 @@ fun HabitoCard(
                 Icon(
                     imageVector = Icons.Default.Star,
                     contentDescription = null,
-                    tint = VerdePrincipal,
+                    tint = PrimaryColor,
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(16.dp))
@@ -149,7 +149,7 @@ fun HabitoCard(
                     Text(
                         text = descripcion,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = GrisMedio
+                        color = TertiaryMediumColor
                     )
                 }
             }
@@ -158,7 +158,7 @@ fun HabitoCard(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
                 colors = CheckboxDefaults.colors(
-                    checkedColor = VerdePrincipal,
+                    checkedColor = PrimaryColor,
                     checkmarkColor = MaterialTheme.colorScheme.onPrimary
                 )
             )

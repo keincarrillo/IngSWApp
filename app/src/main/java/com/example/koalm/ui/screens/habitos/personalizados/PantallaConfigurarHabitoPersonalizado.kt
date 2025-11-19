@@ -35,8 +35,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.koalm.R
 import com.example.koalm.ui.components.BarraNavegacionInferior
-import com.example.koalm.ui.theme.VerdeBorde
-import com.example.koalm.ui.theme.VerdeContenedor
+import com.example.koalm.ui.theme.BorderColor
+import com.example.koalm.ui.theme.ContainerColor
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -53,7 +53,7 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.sp
-import com.example.koalm.ui.theme.VerdePrincipal
+import com.example.koalm.ui.theme.PrimaryColor
 import com.example.koalm.model.HabitoPersonalizado
 import com.example.koalm.model.ProgresoDiario
 import com.example.koalm.model.Recordatorios
@@ -254,8 +254,8 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Card(
-                colors = CardDefaults.cardColors(containerColor = VerdeContenedor),
-                border = BorderStroke(1.dp, VerdeBorde),
+                colors = CardDefaults.cardColors(containerColor = ContainerColor),
+                border = BorderStroke(1.dp, BorderColor),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -298,7 +298,7 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                         OutlinedButton(
                             onClick = { mostrarSelectorColor = true },
                             shape = RoundedCornerShape(50),
-                            border = BorderStroke(1.dp, VerdeBorde),
+                            border = BorderStroke(1.dp, BorderColor),
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.outlinedButtonColors(
                                 containerColor = Color.Transparent,
@@ -322,7 +322,7 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                         OutlinedButton(
                             onClick = { mostrarSelectorIconos = true },
                             shape = RoundedCornerShape(50),
-                            border = BorderStroke(1.dp, VerdeBorde),
+                            border = BorderStroke(1.dp, BorderColor),
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.outlinedButtonColors(
                                 containerColor = Color.Transparent,
@@ -493,7 +493,7 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                             modifier = Modifier.padding(start = 10.dp),
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = Color.White,
-                                checkedTrackColor = VerdePrincipal,
+                                checkedTrackColor = PrimaryColor,
                                 uncheckedThumbColor = Color.LightGray,
                                 uncheckedTrackColor = Color.Gray
                             )
@@ -513,7 +513,7 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                         ) {
                             OutlinedButton(
                                 onClick = { modoPersonalizado = true },
-                                border = BorderStroke(1.dp, VerdeBorde ),
+                                border = BorderStroke(1.dp, BorderColor ),
                                 colors = ButtonDefaults.outlinedButtonColors(
                                     containerColor = if (modoPersonalizado) {
                                        MaterialTheme.colorScheme.primary
@@ -530,7 +530,7 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
 
                             OutlinedButton(
                                 onClick = { modoPersonalizado = false },
-                                border = BorderStroke(1.dp, VerdeBorde),
+                                border = BorderStroke(1.dp, BorderColor),
                                 colors = ButtonDefaults.outlinedButtonColors(
                                     containerColor = if (!modoPersonalizado) {
                                         MaterialTheme.colorScheme.primary
@@ -669,7 +669,7 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                             modifier = Modifier.padding(start = 10.dp),
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = Color.White,
-                                checkedTrackColor = VerdePrincipal,
+                                checkedTrackColor = PrimaryColor,
                                 uncheckedThumbColor = Color.LightGray,
                                 uncheckedTrackColor = Color.Gray
                             )
@@ -683,7 +683,7 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                         ) {
                             OutlinedButton(
                                 onClick = { modoFecha = true },
-                                border = BorderStroke(1.dp, VerdeBorde),
+                                border = BorderStroke(1.dp, BorderColor),
                                 colors = ButtonDefaults.outlinedButtonColors(
                                     containerColor = if (modoFecha) MaterialTheme.colorScheme.primary else Color.Transparent,
                                     contentColor = if (modoFecha) Color.White else Color.Black
@@ -696,7 +696,7 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
 
                             OutlinedButton(
                                 onClick = { modoFecha = false },
-                                border = BorderStroke(1.dp, VerdeBorde),
+                                border = BorderStroke(1.dp, BorderColor),
                                 colors = ButtonDefaults.outlinedButtonColors(
                                     containerColor = if (!modoFecha) MaterialTheme.colorScheme.primary else Color.Transparent,
                                     contentColor = if (!modoFecha) Color.White else Color.Black
@@ -760,7 +760,7 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
 
                                 OutlinedButton(
                                     onClick = { mostrarDatePicker = true },
-                                    border = BorderStroke(1.dp, VerdeBorde),
+                                    border = BorderStroke(1.dp, BorderColor),
                                     shape = RoundedCornerShape(50),
                                     colors = ButtonDefaults.outlinedButtonColors(
                                         containerColor = Color.Transparent,
@@ -1171,9 +1171,9 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                 state = datePickerState,
                 showModeToggle = false,
                 colors = DatePickerDefaults.colors(
-                    selectedDayContainerColor = VerdeContenedor,
+                    selectedDayContainerColor = ContainerColor,
                     selectedDayContentColor = Color.Black,
-                    todayDateBorderColor = VerdeBorde
+                    todayDateBorderColor = BorderColor
                 )
             )
         }

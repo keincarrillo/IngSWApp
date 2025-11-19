@@ -14,9 +14,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
-import com.example.koalm.ui.theme.GrisMedio
-import com.example.koalm.ui.theme.MarronKoala
-import com.example.koalm.ui.theme.VerdePrincipal
+import com.example.koalm.ui.theme.TertiaryMediumColor
+import com.example.koalm.ui.theme.BrandPrimaryColor
+import com.example.koalm.ui.theme.PrimaryColor
 
 @Composable
 fun GraficaEstres(
@@ -104,9 +104,9 @@ val datosMockEstres = DatosEstres( // Estos datos van a ser recuperados del back
     valores = listOf(0.6f, 0.7f, 1f, 0.8f, 0.4f, 0.6f, 0.5f, 0.3f, 0.2f, 0.4f, 0.3f, 0.5f, 0.6f, 0.4f, 0.8f, 0.7f, 0.6f, 0.5f, 0.7f, 0.9f, 1f, 0.9f, 0.6f, 0.3f),
     colores = listOf(0.6f, 0.7f, 1f, 0.8f, 0.4f, 0.6f, 0.5f, 0.3f, 0.2f, 0.4f, 0.3f, 0.5f, 0.6f, 0.4f, 0.8f, 0.7f, 0.6f, 0.5f, 0.7f, 0.9f, 1f, 0.9f, 0.6f, 0.3f).map {
         when {
-            it > 0.8f -> MarronKoala
-            it > 0.5f -> GrisMedio
-            else -> VerdePrincipal
+            it > 0.8f -> BrandPrimaryColor
+            it > 0.5f -> TertiaryMediumColor
+            else -> PrimaryColor
         }
     }
 )

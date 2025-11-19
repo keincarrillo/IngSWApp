@@ -37,9 +37,9 @@ import com.example.koalm.model.Nota
 // import com.example.koalm.services.timers.WritingTimerService
 // import com.example.koalm.services.notifications.NotificationConstants
 import com.example.koalm.ui.components.BarraNavegacionInferior
-import com.example.koalm.ui.theme.VerdeBorde
-import com.example.koalm.ui.theme.VerdeContenedor
-import com.example.koalm.ui.theme.VerdePrincipal
+import com.example.koalm.ui.theme.BorderColor
+import com.example.koalm.ui.theme.ContainerColor
+import com.example.koalm.ui.theme.PrimaryColor
 // import com.example.koalm.ui.viewmodels.TimerViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -168,7 +168,7 @@ fun PantallaNotas(navController: NavHostController) {
                 onClick = { mostrarDialogoNuevaNota = true },
                 icon = { Icon(Icons.Filled.Add, contentDescription = null) },
                 text = { Text(stringResource(R.string.nueva_nota)) },
-                containerColor = VerdePrincipal,
+                containerColor = PrimaryColor,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             )
         },
@@ -207,7 +207,7 @@ fun PantallaNotas(navController: NavHostController) {
                         timerViewModel.start(timerDuration.value)
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = VerdePrincipal,
+                        containerColor = PrimaryColor,
                         contentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
@@ -223,7 +223,7 @@ fun PantallaNotas(navController: NavHostController) {
                 Text(
                     text = if (timerActivo) formatTime(tiempoRestante) else "00:00",
                     style = MaterialTheme.typography.headlineMedium,
-                    color = if (timerActivo) VerdePrincipal else MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (timerActivo) PrimaryColor else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             */
@@ -237,8 +237,8 @@ fun PantallaNotas(navController: NavHostController) {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
-                        border = BorderStroke(1.dp, VerdeBorde),
-                        colors = CardDefaults.cardColors(containerColor = VerdeContenedor)
+                        border = BorderStroke(1.dp, BorderColor),
+                        colors = CardDefaults.cardColors(containerColor = ContainerColor)
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp)

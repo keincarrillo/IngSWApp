@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.koalm.ui.components.BarraNavegacionInferior
-import com.example.koalm.ui.theme.VerdePrincipal
+import com.example.koalm.ui.theme.PrimaryColor
 import kotlin.math.roundToInt
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.material3.TopAppBarDefaults
@@ -144,7 +144,7 @@ fun PantallaMetaMovimiento(
                 ) {
                     items(minutosList.size) { i ->
                         val valor = minutosList[i]
-                        val color = if (valor == centeredItemIndex) VerdePrincipal else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                        val color = if (valor == centeredItemIndex) PrimaryColor else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                         val scale = if (valor == centeredItemIndex) 1.4f else 1f
 
                         Text(

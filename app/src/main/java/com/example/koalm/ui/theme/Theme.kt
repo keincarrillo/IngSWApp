@@ -9,36 +9,36 @@ import androidx.compose.ui.graphics.Color
 
 // Paleta clara
 private val LightColorScheme = lightColorScheme(
-    primary = VerdePrincipal,
+    primary = PrimaryColor,
     onPrimary = Color.White,
-    secondary = VerdeSecundario,
+    secondary = SecondaryColor,
     onSecondary = Color.White,
-    tertiary = VerdeClaro,
+    tertiary = PrimaryLightColor,
     onTertiary = Color.Black,
-    background = Blanco,
+    background = White,
     onBackground = Color.Black,
-    surface = Blanco,
+    surface = White,
     onSurface = Color.Black,
-    surfaceVariant = GrisClaro,
+    surfaceVariant = TertiaryColor,
     onSurfaceVariant = Color.Black,
-    surfaceTint = VerdePrincipal
+    surfaceTint = PrimaryColor
 )
 
 // Paleta oscura
 private val DarkColorScheme = darkColorScheme(
-    primary = VerdePrincipal,
+    primary = PrimaryColor,
     onPrimary = Color.White,
-    secondary = VerdeSecundario,
+    secondary = SecondaryColor,
     onSecondary = Color.White,
-    tertiary = VerdeClaro,
+    tertiary = PrimaryLightColor,
     onTertiary = Color.Black,
-    background = FondoOscuro,
+    background = DarkBackgroundColor,
     onBackground = Color.White,
     surface = Color.Black,
     onSurface = Color.White,
-    surfaceVariant = GrisClaro,
+    surfaceVariant = TertiaryColor,
     onSurfaceVariant = Color.White,
-    surfaceTint = VerdePrincipal
+    surfaceTint = PrimaryColor
 )
 
 @Composable

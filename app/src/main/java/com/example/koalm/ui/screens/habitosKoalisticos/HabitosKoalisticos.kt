@@ -26,7 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
-import com.example.koalm.ui.theme.VerdePrincipal
+import com.example.koalm.ui.theme.PrimaryColor
 import androidx.compose.foundation.border
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
@@ -58,7 +58,7 @@ fun PantallaHabitosKoalisticos(navController: NavHostController, tituloHabito: S
                 title = {
                     Text(
                         text = "Hábitos Koalisticos",
-                        color = VerdePrincipal,
+                        color = PrimaryColor,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold
                     )

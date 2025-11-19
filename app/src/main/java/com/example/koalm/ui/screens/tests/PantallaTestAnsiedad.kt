@@ -98,7 +98,7 @@ fun PantallaTestAnsiedad(navController: NavHostController? = null) {
                         .width(200.dp)
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = VerdePrincipal),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor),
                     enabled = respuestas.none { it == -1 }
                 ) {
                     Text(
@@ -125,9 +125,9 @@ fun PreguntaCard(
     OutlinedCard(
         modifier = Modifier
             .fillMaxWidth(),
-        border = BorderStroke(1.dp, VerdeBorde),
+        border = BorderStroke(1.dp, BorderColor),
         colors = CardDefaults.outlinedCardColors(
-            containerColor = VerdeContenedor
+            containerColor = ContainerColor
         ),
         shape = RoundedCornerShape(16.dp)
     ) {
@@ -155,8 +155,8 @@ fun PreguntaCard(
                         selected = seleccionada == index,
                         onClick = { onSeleccionar(index) },
                         colors = RadioButtonDefaults.colors(
-                            selectedColor = VerdePrincipal,
-                            unselectedColor = VerdePrincipal.copy(alpha = 0.6f)
+                            selectedColor = PrimaryColor,
+                            unselectedColor = PrimaryColor.copy(alpha = 0.6f)
                         )
                     )
                     Text(

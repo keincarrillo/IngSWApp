@@ -110,7 +110,7 @@ fun EntradaPesoItem(entrada: PesoEntrada) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(entrada.fecha, fontSize = 16.sp, color = VerdePrincipal)
+            Text(entrada.fecha, fontSize = 16.sp, color = PrimaryColor)
             Text(entrada.peso, fontSize = 15.sp)
         }
         Icon(

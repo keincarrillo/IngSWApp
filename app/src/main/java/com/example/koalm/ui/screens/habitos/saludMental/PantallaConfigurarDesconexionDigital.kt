@@ -50,8 +50,8 @@ import com.example.koalm.ui.components.ExitoDialogoGuardadoAnimado
 import com.example.koalm.ui.components.ValidacionesDialogoAnimado
 import com.example.koalm.ui.screens.habitos.personalizados.DiasSeleccionadosResumen
 import com.example.koalm.ui.screens.habitos.personalizados.TooltipDialogAyuda
-import com.example.koalm.ui.theme.VerdeBorde
-import com.example.koalm.ui.theme.VerdeContenedor
+import com.example.koalm.ui.theme.BorderColor
+import com.example.koalm.ui.theme.ContainerColor
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
@@ -382,8 +382,8 @@ fun PantallaConfigurarDesconexionDigital(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, VerdeBorde),
-                colors = CardDefaults.cardColors(containerColor = VerdeContenedor)
+                border = BorderStroke(1.dp, BorderColor),
+                colors = CardDefaults.cardColors(containerColor = ContainerColor)
             ) {
                 Column(
                     Modifier.padding(24.dp),

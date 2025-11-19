@@ -90,8 +90,8 @@ fun CampoValidarContrasena (value: String, onValueChange: (String) -> Unit){
         //keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
         singleLine = true,
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = VerdePrincipal,
-            unfocusedBorderColor = GrisMedio,
+            focusedBorderColor = PrimaryColor,
+            unfocusedBorderColor = TertiaryMediumColor,
             unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
         )
     )
@@ -102,7 +102,7 @@ fun MensajeExplicacionCambio(){
     Text(
         text = "Te enviaremos un enlace de restablecimiento al correo asociado a tu cuenta",
         fontSize = 12.sp,
-        color = GrisMedio,
+        color = TertiaryMediumColor,
         modifier = Modifier
             .fillMaxWidth(0.85f)
             .padding(top = 4.dp)
@@ -203,17 +203,17 @@ fun ValidarContrasenaActual(
                         }
                     }
             },
-            colors = ButtonDefaults.buttonColors(containerColor = VerdePrincipal),
+            colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor),
             enabled = !isLoading
         ) {
             if (isLoading) {
                 CircularProgressIndicator(
-                    color = Blanco,
+                    color = White,
                     modifier = Modifier.size(20.dp),
                     strokeWidth = 2.dp
                 )
             } else {
-                Text("Validar contraseña", color = Blanco)
+                Text("Validar contraseña", color = White)
             }
         }
 

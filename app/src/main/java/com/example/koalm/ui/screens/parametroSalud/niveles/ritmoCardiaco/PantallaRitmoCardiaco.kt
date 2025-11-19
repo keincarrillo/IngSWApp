@@ -308,7 +308,7 @@ fun PantallaRitmoCardiaco(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.medium,
-                colors = CardDefaults.cardColors(containerColor = GrisCard)
+                colors = CardDefaults.cardColors(containerColor = TertiaryCardColor)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Box(
@@ -367,7 +367,7 @@ fun PantallaRitmoCardiaco(
                                     -82f,
                                     posY + 4.dp.toPx(),
                                     android.graphics.Paint().apply {
-                                        color = GrisMedio.toArgb()
+                                        color = TertiaryMediumColor.toArgb()
                                         textSize = 28f
                                     }
                                 )
@@ -392,7 +392,7 @@ fun PantallaRitmoCardiaco(
                                     etiqueta
                                 },
                                 fontSize = 10.sp,
-                                color = GrisMedio
+                                color = TertiaryMediumColor
                             )
                         }
                     }
@@ -402,11 +402,11 @@ fun PantallaRitmoCardiaco(
             Spacer(modifier = Modifier.height(28.dp))
 
             val zonasFormateadas = listOf(
-                Pair("Ligero", AzulLigero),
-                Pair("Aeróbico", VerdeAerobico),
-                Pair("Intensivo", AmarilloIntensivo),
-                Pair("Anaeróbico", NaranjaAnaerobico),
-                Pair("VO Máx", RojoVOMAx)
+                Pair("Ligero", InfoColor),
+                Pair("Aeróbico", SuccessColor),
+                Pair("Intensivo", WarningColor),
+                Pair("Anaeróbico", AlertColor),
+                Pair("VO Máx", CriticalColor)
             )
 
             Column(
@@ -430,7 +430,7 @@ fun PantallaRitmoCardiaco(
                                     .background(color)
                             )
                             Spacer(modifier = Modifier.height(4.dp))
-                            Text(zona, fontSize = 12.sp, color = GrisMedio)
+                            Text(zona, fontSize = 12.sp, color = TertiaryMediumColor)
                         }
                     }
                 }
@@ -454,11 +454,11 @@ fun PantallaRitmoCardiaco(
 
 fun colorZona(valor: Float): Color {
     return when {
-        valor <= 60f -> AzulLigero // Ligero
-        valor <= 100f -> VerdeAerobico // Aeróbico
-        valor <= 140f -> AmarilloIntensivo // Intensivo
-        valor <= 170f -> NaranjaAnaerobico // Anaeróbico
-        else -> RojoVOMAx // VO Máx
+        valor <= 60f -> InfoColor // Ligero
+        valor <= 100f -> SuccessColor // Aeróbico
+        valor <= 140f -> WarningColor // Intensivo
+        valor <= 170f -> AlertColor // Anaeróbico
+        else -> CriticalColor // VO Máx
     }
 }
 

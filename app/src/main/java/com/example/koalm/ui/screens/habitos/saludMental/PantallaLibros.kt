@@ -26,9 +26,9 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavHostController
 import com.example.koalm.model.Libro
 import com.example.koalm.ui.components.BarraNavegacionInferior
-import com.example.koalm.ui.theme.VerdeBorde
-import com.example.koalm.ui.theme.VerdeContenedor
-import com.example.koalm.ui.theme.VerdePrincipal
+import com.example.koalm.ui.theme.BorderColor
+import com.example.koalm.ui.theme.ContainerColor
+import com.example.koalm.ui.theme.PrimaryColor
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
@@ -100,7 +100,7 @@ fun PantallaLibros(navController: NavHostController) {
                 onClick = { mostrarDialogoNuevoLibro = true },
                 icon = { Icon(Icons.Filled.Add, contentDescription = null) },
                 text = { Text("Nuevo Libro") },
-                containerColor = VerdePrincipal,
+                containerColor = PrimaryColor,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             )
         },
@@ -124,8 +124,8 @@ fun PantallaLibros(navController: NavHostController) {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
-                        border = BorderStroke(1.dp, VerdeBorde),
-                        colors = CardDefaults.cardColors(containerColor = VerdeContenedor)
+                        border = BorderStroke(1.dp, BorderColor),
+                        colors = CardDefaults.cardColors(containerColor = ContainerColor)
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp)

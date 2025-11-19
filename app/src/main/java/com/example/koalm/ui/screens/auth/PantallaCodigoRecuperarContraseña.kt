@@ -91,8 +91,8 @@ fun PantallaCodigoRecuperarContrasena(navController: NavController) {
                         textStyle = TextStyle(fontSize = 24.sp),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = VerdePrincipal,
-                            unfocusedBorderColor = GrisMedio,
+                            focusedBorderColor = PrimaryColor,
+                            unfocusedBorderColor = TertiaryMediumColor,
                             unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                         )
                     )
@@ -104,7 +104,7 @@ fun PantallaCodigoRecuperarContrasena(navController: NavController) {
             Text(
                 text = "Ingresa los 4 dígitos que se enviaron al correo asociado a tu cuenta.",
                 fontSize = 12.sp,
-                color = GrisMedio,
+                color = TertiaryMediumColor,
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
 
@@ -120,9 +120,9 @@ fun PantallaCodigoRecuperarContrasena(navController: NavController) {
                         navController.navigate("restablecer")
                     }
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = VerdePrincipal)
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor)
             ) {
-                Text("Verificar", color = Blanco)
+                Text("Verificar", color = White)
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -132,7 +132,7 @@ fun PantallaCodigoRecuperarContrasena(navController: NavController) {
                     withStyle(SpanStyle(color = MaterialTheme.colorScheme.onSurface)) {
                         append("¿No tienes una cuenta? ")
                     }
-                    withStyle(SpanStyle(color = VerdeSecundario)) {
+                    withStyle(SpanStyle(color = SecondaryColor)) {
                         append("Regístrate")
                     }
                 },

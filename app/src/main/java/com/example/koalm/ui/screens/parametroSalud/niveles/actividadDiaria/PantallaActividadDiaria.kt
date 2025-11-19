@@ -149,7 +149,7 @@ fun PantallaActividadDiaria(
                         Text(
                             text = letra,
                             fontWeight = if (esSeleccionado) FontWeight.Bold else FontWeight.Normal,
-                            color = if (esSeleccionado) VerdePrincipal else Color.Gray
+                            color = if (esSeleccionado) PrimaryColor else Color.Gray
                         )
                         Spacer(modifier = Modifier.height(6.dp))
 
@@ -233,7 +233,7 @@ fun PantallaActividadDiaria(
                         }
                     }
 
-                    // Gradiente blanco arriba y abajo (opcional)
+                    // Gradiente White arriba y abajo (opcional)
                     Box(
                         modifier = Modifier
                             .matchParentSize()
@@ -270,7 +270,7 @@ fun PantallaActividadDiaria(
             Button(
                 onClick = { navController.navigate(rutas[selectedIndex]) },
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = VerdePrincipal)
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor)
             ) {
                 Text("Editar objetivo")
             }
@@ -299,9 +299,9 @@ fun GraficadorActividadDia(
     val proporcion = (valorDia / meta).coerceIn(0f, 1f)
 
     val colorBarra = when {
-        proporcion > 0.8f -> MarronKoala
-        proporcion > 0.5f -> GrisMedio
-        else              -> VerdePrincipal
+        proporcion > 0.8f -> BrandPrimaryColor
+        proporcion > 0.5f -> TertiaryMediumColor
+        else              -> PrimaryColor
     }
 
     val graficoHeight = 180.dp

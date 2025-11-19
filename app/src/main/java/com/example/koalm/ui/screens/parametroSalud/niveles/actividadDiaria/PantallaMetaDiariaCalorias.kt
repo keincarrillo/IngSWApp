@@ -145,7 +145,7 @@ fun PantallaMetaCalorias(
                 ) {
                     items(caloriasList.size) { i ->
                         val valor = caloriasList[i]
-                        val color = if (valor == centeredItemIndex) VerdePrincipal else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                        val color = if (valor == centeredItemIndex) PrimaryColor else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                         val scale = if (valor == centeredItemIndex) 1.4f else 1f
 
                         Text(

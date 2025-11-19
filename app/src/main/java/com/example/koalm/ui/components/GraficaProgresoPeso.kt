@@ -102,7 +102,7 @@ fun GraficaPeso(
                             .width(10.dp)
                             .height((ratio * 160).dp.coerceAtLeast(4.dp))
                             .clip(RoundedCornerShape(topStart = 50.dp, topEnd = 50.dp))
-                            .background(VerdePrincipal)
+                            .background(PrimaryColor)
                     )
                 }
             }

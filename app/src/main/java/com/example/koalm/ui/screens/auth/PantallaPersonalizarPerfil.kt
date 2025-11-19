@@ -386,7 +386,7 @@
                         onClick = onDeleteClick,
                         modifier = Modifier
                             .size(32.dp)
-                            .background(RojoClaro, CircleShape)
+                            .background(LightErrorColor, CircleShape)
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_delete),
@@ -421,9 +421,9 @@
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor   = if (valido) VerdePrincipal else Color.Red,
-                    unfocusedBorderColor = if (valido || value.isEmpty()) GrisMedio else Color.Red,
-                    focusedLabelColor    = if (valido) VerdePrincipal else Color.Red,
+                    focusedBorderColor   = if (valido) PrimaryColor else Color.Red,
+                    unfocusedBorderColor = if (valido || value.isEmpty()) TertiaryMediumColor else Color.Red,
+                    focusedLabelColor    = if (valido) PrimaryColor else Color.Red,
                     unfocusedLabelColor  = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                     errorLabelColor      = Color.Red
                 ),
@@ -451,7 +451,7 @@
                             )
                         }
                         else -> {
-                            Text("Nombre de usuario válido.", color = GrisMedio, fontSize = 12.sp)
+                            Text("Nombre de usuario válido.", color = TertiaryMediumColor, fontSize = 12.sp)
                         }
                     }
                 }
@@ -473,8 +473,8 @@
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor   = VerdePrincipal,
-                    unfocusedBorderColor = GrisMedio,
+                    focusedBorderColor   = PrimaryColor,
+                    unfocusedBorderColor = TertiaryMediumColor,
                     unfocusedLabelColor  = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
             )
@@ -494,8 +494,8 @@
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor   = VerdePrincipal,
-                    unfocusedBorderColor = GrisMedio,
+                    focusedBorderColor   = PrimaryColor,
+                    unfocusedBorderColor = TertiaryMediumColor,
                     unfocusedLabelColor  = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
             )
@@ -577,8 +577,8 @@
                         state = datePickerState,
                         showModeToggle = false,
                         colors = DatePickerDefaults.colors(
-                            selectedDayContainerColor = VerdePrincipal,
-                            todayDateBorderColor = VerdePrincipal
+                            selectedDayContainerColor = PrimaryColor,
+                            todayDateBorderColor = PrimaryColor
                         )
                     )
                 }
@@ -607,8 +607,8 @@
                     )
                 },
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor   = VerdePrincipal,
-                    unfocusedBorderColor = GrisMedio,
+                    focusedBorderColor   = PrimaryColor,
+                    unfocusedBorderColor = TertiaryMediumColor,
                     unfocusedLabelColor  = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
             )
@@ -632,10 +632,10 @@
                     .padding(horizontal = 8.dp),
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true,
-                trailingIcon = { Text("kg", color = GrisMedio) },
+                trailingIcon = { Text("kg", color = TertiaryMediumColor) },
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor   = VerdePrincipal,
-                    unfocusedBorderColor = GrisMedio,
+                    focusedBorderColor   = PrimaryColor,
+                    unfocusedBorderColor = TertiaryMediumColor,
                     unfocusedLabelColor  = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
             )
@@ -657,10 +657,10 @@
                     .padding(horizontal = 8.dp),
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true,
-                trailingIcon = { Text("cm", color = GrisMedio) },
+                trailingIcon = { Text("cm", color = TertiaryMediumColor) },
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor   = VerdePrincipal,
-                    unfocusedBorderColor = GrisMedio,
+                    focusedBorderColor   = PrimaryColor,
+                    unfocusedBorderColor = TertiaryMediumColor,
                     unfocusedLabelColor  = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
             )
@@ -689,7 +689,7 @@
                                 selected = opcion == seleccion,
                                 onClick  = { onSelect(opcion) },
                                 colors    = RadioButtonDefaults.colors(
-                                    selectedColor   = VerdePrincipal,
+                                    selectedColor   = PrimaryColor,
                                     unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             )

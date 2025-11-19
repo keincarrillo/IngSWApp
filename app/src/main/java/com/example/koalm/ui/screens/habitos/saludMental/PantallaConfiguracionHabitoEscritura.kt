@@ -433,8 +433,8 @@ fun PantallaConfiguracionHabitoEscritura(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape   = RoundedCornerShape(16.dp),
-                border  = BorderStroke(1.dp, VerdeBorde),
-                colors  = CardDefaults.cardColors(containerColor = VerdeContenedor)
+                border  = BorderStroke(1.dp, BorderColor),
+                colors  = CardDefaults.cardColors(containerColor = ContainerColor)
             ) {
                 Column(
                     Modifier.padding(24.dp),
@@ -591,8 +591,8 @@ fun PantallaConfiguracionHabitoEscritura(
                         }
                     },
                 shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, VerdeBorde),
-                colors = CardDefaults.cardColors(containerColor = VerdeContenedor)
+                border = BorderStroke(1.dp, BorderColor),
+                colors = CardDefaults.cardColors(containerColor = ContainerColor)
             ) {
                 Row(
                     modifier = Modifier

@@ -19,8 +19,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.koalm.R
-import com.example.koalm.ui.theme.VerdePrincipal
-import com.example.koalm.ui.theme.GrisMedio
+import com.example.koalm.ui.theme.PrimaryColor
+import com.example.koalm.ui.theme.TertiaryMediumColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,14 +55,14 @@ fun PantallaRestablecerContrasena(navController: NavController) {
             Text(
                 text = "¡Revisa tu correo!",
                 style = MaterialTheme.typography.headlineMedium,
-                color = VerdePrincipal,
+                color = PrimaryColor,
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = "Te hemos enviado un enlace para que puedas crear una nueva contraseña.\nÁbrelo desde tu correo para continuar.",
                 style = MaterialTheme.typography.bodyLarge,
-                color = GrisMedio,
+                color = TertiaryMediumColor,
                 textAlign = TextAlign.Center
             )
             Handler(Looper.getMainLooper()).postDelayed({

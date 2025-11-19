@@ -97,8 +97,8 @@ fun CampoCorreoRecuperar(value: String, onValueChange: (String) -> Unit) {
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
         singleLine = true,
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = VerdePrincipal,
-            unfocusedBorderColor = GrisMedio,
+            focusedBorderColor = PrimaryColor,
+            unfocusedBorderColor = TertiaryMediumColor,
             unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
         )
     )
@@ -110,7 +110,7 @@ fun MensajeExplicacion() {
     Text(
         text = "Te enviaremos un enlace de restablecimiento al correo asociado a tu cuenta.",
         fontSize = 12.sp,
-        color = GrisMedio,
+        color = TertiaryMediumColor,
         modifier = Modifier
             .fillMaxWidth(0.85f)
             .padding(top = 4.dp)
@@ -182,9 +182,9 @@ fun BotonEnviarCorreo(
             // Al presionar el botón, validamos si el correo existe
             validarCorreoExistente(correo)
         },
-        colors = ButtonDefaults.buttonColors(containerColor = VerdePrincipal)
+        colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor)
     ) {
-        Text("Enviar", color = Blanco)
+        Text("Enviar", color = White)
     }
 }
 
@@ -193,7 +193,7 @@ fun TextoIrARegistro(navController: NavController) {
     Text(
         buildAnnotatedString {
             append("¿No tienes una cuenta? ")
-            withStyle(SpanStyle(color = VerdeSecundario)) {
+            withStyle(SpanStyle(color = SecondaryColor)) {
                 append("Regístrate")
             }
         },

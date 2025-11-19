@@ -286,9 +286,9 @@ private fun HabitoPlantillaCard(habito: Habito, navController: NavHostController
         },
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, VerdeBorde, RoundedCornerShape(16.dp)),
+            .border(1.dp, BorderColor, RoundedCornerShape(16.dp)),
         colors = CardDefaults.cardColors(
-            containerColor = VerdeContenedor
+            containerColor = ContainerColor
         )
     ) {
         Row(
@@ -300,7 +300,7 @@ private fun HabitoPlantillaCard(habito: Habito, navController: NavHostController
             Icon(
                 imageVector = Icons.Default.AddCircle,
                 contentDescription = "Agregar hábito",
-                tint = VerdePrincipal,
+                tint = PrimaryColor,
                 modifier = Modifier.size(24.dp)
             )
 
@@ -315,7 +315,7 @@ private fun HabitoPlantillaCard(habito: Habito, navController: NavHostController
                 Text(
                     text = habito.descripcion,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = GrisMedio
+                    color = TertiaryMediumColor
                 )
             }
         }
@@ -351,9 +351,9 @@ private fun HabitoActivoCardMental(
         onClick = {},
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, VerdeBorde, RoundedCornerShape(16.dp)),
+            .border(1.dp, BorderColor, RoundedCornerShape(16.dp)),
         colors = CardDefaults.cardColors(
-            containerColor = VerdeContenedor.copy(alpha = 0.3f)
+            containerColor = ContainerColor.copy(alpha = 0.3f)
         )
     ) {
         Row(
@@ -387,7 +387,7 @@ private fun HabitoActivoCardMental(
                 Text(
                     text = habito.descripcion,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = GrisMedio,
+                    color = TertiaryMediumColor,
                     maxLines = 1
                 )
                 Row(

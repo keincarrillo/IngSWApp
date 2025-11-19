@@ -289,16 +289,16 @@ fun EmailField(
         shape = RoundedCornerShape(6.dp),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = if (isValid || value.isEmpty()) VerdePrincipal else Color.Red,
-            unfocusedBorderColor = if (isValid || value.isEmpty()) GrisMedio else Color.Red,
-            focusedLabelColor = if (isValid || value.isEmpty()) VerdePrincipal else Color.Red,
+            focusedBorderColor = if (isValid || value.isEmpty()) PrimaryColor else Color.Red,
+            unfocusedBorderColor = if (isValid || value.isEmpty()) TertiaryMediumColor else Color.Red,
+            focusedLabelColor = if (isValid || value.isEmpty()) PrimaryColor else Color.Red,
             unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             errorLabelColor = Color.Red
         ),
         supportingText = {
             Text(
                 text = "Solo servicios de correo electrónico permitidos.",
-                color = GrisMedio,
+                color = TertiaryMediumColor,
                 fontSize = 12.sp
             )
         }
@@ -333,16 +333,16 @@ fun PasswordField(
             }
         },
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = if (isValidPassword || value.isEmpty()) VerdePrincipal else Color.Red,
-            unfocusedBorderColor = if (isValidPassword || value.isEmpty()) GrisMedio else Color.Red,
-            focusedLabelColor = if (isValidPassword || value.isEmpty()) VerdePrincipal else Color.Red,
+            focusedBorderColor = if (isValidPassword || value.isEmpty()) PrimaryColor else Color.Red,
+            unfocusedBorderColor = if (isValidPassword || value.isEmpty()) TertiaryMediumColor else Color.Red,
+            focusedLabelColor = if (isValidPassword || value.isEmpty()) PrimaryColor else Color.Red,
             unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             errorLabelColor = Color.Red
         ),
         supportingText = {
             Text(
                 text = "La contraseña debe tener al menos 8 caracteres, una letra minúscula, una mayúscula, un número y un carácter especial.",
-                color = GrisMedio,
+                color = TertiaryMediumColor,
                 fontSize = 12.sp
             )
         }

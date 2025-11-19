@@ -32,8 +32,8 @@ import android.Manifest
 import androidx.compose.material.icons.filled.Schedule
 import com.example.koalm.R
 import com.example.koalm.ui.components.BarraNavegacionInferior
-import com.example.koalm.ui.theme.VerdeBorde
-import com.example.koalm.ui.theme.VerdeContenedor
+import com.example.koalm.ui.theme.BorderColor
+import com.example.koalm.ui.theme.ContainerColor
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
@@ -456,8 +456,8 @@ fun PantallaConfiguracionHabitoAlimentacion(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, VerdeBorde),
-                colors = CardDefaults.cardColors(containerColor = VerdeContenedor)
+                border = BorderStroke(1.dp, BorderColor),
+                colors = CardDefaults.cardColors(containerColor = ContainerColor)
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),

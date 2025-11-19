@@ -34,7 +34,7 @@ fun GraficaSueno(datos: DatosSueno, modifier: Modifier = Modifier) {
             text = "Registro semanal de sueño",
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
-            color = VerdePrincipal,
+            color = PrimaryColor,
             modifier = Modifier.padding(bottom = 4.dp)
         )
         Text(
@@ -52,12 +52,12 @@ fun GraficaSueno(datos: DatosSueno, modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             LeyendaItem(
-                color = VerdePrincipal.copy(alpha = 0.3f),
+                color = PrimaryColor.copy(alpha = 0.3f),
                 texto = "Horas objetivo",
                 forma = "barra"
             )
             LeyendaItem(
-                color = VerdePrincipal,
+                color = PrimaryColor,
                 texto = "≥ 8h Real",
                 forma = "barra"
             )
@@ -214,7 +214,7 @@ fun InfoCard(titulo: String, valor: String) {
         modifier = Modifier
             .padding(4.dp),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = GrisCard)
+        colors = CardDefaults.cardColors(containerColor = TertiaryCardColor)
     ) {
         Column(
             modifier = Modifier.padding(8.dp),
@@ -229,7 +229,7 @@ fun InfoCard(titulo: String, valor: String) {
                 text = valor,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = VerdePrincipal
+                color = PrimaryColor
             )
         }
     }
@@ -242,7 +242,7 @@ fun BarrasDobleSueno(
     maxHoras: Float
 ) {
     val colorReal = when {
-        horasDormidas >= 8f -> VerdePrincipal
+        horasDormidas >= 8f -> PrimaryColor
         horasDormidas >= 6f -> Color(0xFFFFC107)
         else -> Color(0xFFE57373)
     }
@@ -260,7 +260,7 @@ fun BarrasDobleSueno(
                 .width(12.dp)
                 .height((horasObjetivo / maxHoras * 220).dp)
                 .clip(RoundedCornerShape(4.dp))
-                .background(VerdePrincipal.copy(alpha = 0.3f))
+                .background(PrimaryColor.copy(alpha = 0.3f))
         )
 
         // Barra de horas reales

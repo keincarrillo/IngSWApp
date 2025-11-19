@@ -66,7 +66,7 @@ fun GraficaRitmoCardiaco(
                     -82f,
                     posY + 4.dp.toPx(),
                     android.graphics.Paint().apply {
-                        color = GrisMedio.toArgb()
+                        color = TertiaryMediumColor.toArgb()
                         textSize = 28f
                     }
                 )
@@ -84,18 +84,18 @@ fun GraficaRitmoCardiaco(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         etiquetasX.forEach {
-            Text(text = it, fontSize = 10.sp, color = GrisMedio)
+            Text(text = it, fontSize = 10.sp, color = TertiaryMediumColor)
         }
     }
 }
 
 fun colorZona(valor: Float): Color {
     return when {
-        valor <= 60f -> AzulLigero // Ligero
-        valor <= 100f -> VerdeAerobico // Aeróbico
-        valor <= 140f -> AmarilloIntensivo // Intensivo
-        valor <= 170f -> NaranjaAnaerobico // Anaeróbico
-        else -> RojoVOMAx // VO Máx
+        valor <= 60f -> InfoColor // Ligero
+        valor <= 100f -> SuccessColor // Aeróbico
+        valor <= 140f -> WarningColor // Intensivo
+        valor <= 170f -> AlertColor // Anaeróbico
+        else -> CriticalColor // VO Máx
     }
 }
 

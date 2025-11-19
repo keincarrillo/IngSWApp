@@ -213,9 +213,9 @@ fun CampoCorreo(
         shape = RoundedCornerShape(6.dp),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = if (!mostrarError) VerdePrincipal else Color.Red,
-            unfocusedBorderColor = if (!mostrarError) GrisMedio else Color.Red,
-            focusedLabelColor = if (!mostrarError) VerdePrincipal else Color.Red,
+            focusedBorderColor = if (!mostrarError) PrimaryColor else Color.Red,
+            unfocusedBorderColor = if (!mostrarError) TertiaryMediumColor else Color.Red,
+            focusedLabelColor = if (!mostrarError) PrimaryColor else Color.Red,
             unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             errorLabelColor = Color.Red
         ),
@@ -234,7 +234,7 @@ fun CampoCorreo(
                     ) {
                         Text(
                             "Solo servicios de correo electrónico permitidos.",
-                            color = GrisMedio,
+                            color = TertiaryMediumColor,
                             fontSize = 12.sp
                         )
                         AyudaDominios()
@@ -316,9 +316,9 @@ fun CampoNombreUsuario(
             .clip(RoundedCornerShape(16.dp)),
         singleLine = true,
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = if (valido || value.isEmpty()) VerdePrincipal else Color.Red,
-            unfocusedBorderColor = if (valido || value.isEmpty()) GrisMedio else Color.Red,
-            focusedLabelColor = if (valido || value.isEmpty()) VerdePrincipal else Color.Red,
+            focusedBorderColor = if (valido || value.isEmpty()) PrimaryColor else Color.Red,
+            unfocusedBorderColor = if (valido || value.isEmpty()) TertiaryMediumColor else Color.Red,
+            focusedLabelColor = if (valido || value.isEmpty()) PrimaryColor else Color.Red,
             unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             errorLabelColor = Color.Red
         ),
@@ -335,7 +335,7 @@ fun CampoNombreUsuario(
                 value.isBlank() -> {
                     Text(
                         text = "El nombre no puede estar vacío o solo contener espacios.",
-                        color = GrisMedio,
+                        color = TertiaryMediumColor,
                         fontSize = 12.sp
                     )
                 }
@@ -357,7 +357,7 @@ fun CampoNombreUsuario(
                 else -> {
                     Text(
                         text = "Nombre de usuario válido.",
-                        color = GrisMedio,
+                        color = TertiaryMediumColor,
                         fontSize = 12.sp
                     )
                 }
@@ -409,14 +409,14 @@ fun CampoContrasena(
             }
         },
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = if (isValidPassword || value.isEmpty()) VerdePrincipal else Color.Red,
-            unfocusedBorderColor = if (isValidPassword || value.isEmpty()) GrisMedio else Color.Red,
-            focusedLabelColor = if (isValidPassword || value.isEmpty()) VerdePrincipal else Color.Red,
+            focusedBorderColor = if (isValidPassword || value.isEmpty()) PrimaryColor else Color.Red,
+            unfocusedBorderColor = if (isValidPassword || value.isEmpty()) TertiaryMediumColor else Color.Red,
+            focusedLabelColor = if (isValidPassword || value.isEmpty()) PrimaryColor else Color.Red,
             unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             errorLabelColor = Color.Red
         ),
         supportingText = {
-            val color = if (!isValidPassword && value.isNotEmpty()) Color.Red else GrisMedio
+            val color = if (!isValidPassword && value.isNotEmpty()) Color.Red else TertiaryMediumColor
 
             Text(
                 text = passwordValidationMessage,
@@ -451,16 +451,16 @@ fun CampoConfirmarContrasena(
             }
         },
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = if (coincideCon || value.isEmpty()) VerdePrincipal else Color.Red,
-            unfocusedBorderColor = if (coincideCon || value.isEmpty()) GrisMedio else Color.Red,
-            focusedLabelColor = if (coincideCon || value.isEmpty()) VerdePrincipal else Color.Red,
+            focusedBorderColor = if (coincideCon || value.isEmpty()) PrimaryColor else Color.Red,
+            unfocusedBorderColor = if (coincideCon || value.isEmpty()) TertiaryMediumColor else Color.Red,
+            focusedLabelColor = if (coincideCon || value.isEmpty()) PrimaryColor else Color.Red,
             unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             errorLabelColor = Color.Red
         ),
         supportingText = {
             // Mensaje de validación inicial (cuando el campo está vacío)
             if (value.isEmpty()) {
-                Text("Las contraseñas deben coincidir.", color = GrisMedio, fontSize = 12.sp)
+                Text("Las contraseñas deben coincidir.", color = TertiaryMediumColor, fontSize = 12.sp)
             }
 
             // Mensaje de error si las contraseñas no coinciden
@@ -476,7 +476,7 @@ fun CampoConfirmarContrasena(
             if (coincideCon && value.isNotEmpty()) {
                 Text(
                     text = "Las contraseñas coinciden.",
-                    color = GrisMedio,
+                    color = TertiaryMediumColor,
                     fontSize = 12.sp
                 )
             }
@@ -497,15 +497,15 @@ fun CheckboxTerminos(checked: Boolean, navController: NavController, onCheckedCh
             checked = checked,
             onCheckedChange = onCheckedChange,
             colors = CheckboxDefaults.colors(
-                checkedColor = VerdePrincipal,
-                uncheckedColor = GrisMedio
+                checkedColor = PrimaryColor,
+                uncheckedColor = TertiaryMediumColor
             )
         )
         Text(
             buildAnnotatedString {
                 withStyle(
                     SpanStyle(
-                        color = VerdeSecundario,
+                        color = SecondaryColor,
                         textDecoration = TextDecoration.Underline
                     )
                 ) {

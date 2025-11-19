@@ -17,8 +17,8 @@ fun BarraNavegacionInferior(
     rutaActual: String
 ) {
     NavigationBar(
-        containerColor = GrisClaro,
-        contentColor = GrisMedio,
+        containerColor = TertiaryColor,
+        contentColor = TertiaryMediumColor,
         tonalElevation = 8.dp
     ) {
         listOf(
@@ -41,21 +41,21 @@ fun BarraNavegacionInferior(
                     Icon(
                         imageVector = icon,
                         contentDescription = label,
-                        tint = if (rutaActual == route) VerdePrincipal else GrisMedio
+                        tint = if (rutaActual == route) PrimaryColor else TertiaryMediumColor
                     )
                 },
                 label = { 
                     Text(
                         text = label,
-                        color = if (rutaActual == route) VerdePrincipal else GrisMedio
+                        color = if (rutaActual == route) PrimaryColor else TertiaryMediumColor
                     ) 
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = VerdePrincipal,
-                    unselectedIconColor = GrisMedio,
-                    selectedTextColor = VerdePrincipal,
-                    unselectedTextColor = GrisMedio,
-                    indicatorColor = VerdePrincipal.copy(alpha = 0.1f)
+                    selectedIconColor = PrimaryColor,
+                    unselectedIconColor = TertiaryMediumColor,
+                    selectedTextColor = PrimaryColor,
+                    unselectedTextColor = TertiaryMediumColor,
+                    indicatorColor = PrimaryColor.copy(alpha = 0.1f)
                 )
             )
         }

@@ -240,7 +240,7 @@ fun SeccionTitulo(texto: String) {
         text = texto,
         fontSize = 18.sp,
         fontWeight = FontWeight.Bold,
-        color = VerdePrincipal
+        color = PrimaryColor
     )
 }
 
@@ -252,15 +252,15 @@ fun EstadisticasCard() {
         modifier = Modifier
             .fillMaxWidth()
             .height(150.dp)
-            .border(1.dp, VerdeBorde, RoundedCornerShape(16.dp))
+            .border(1.dp, BorderColor, RoundedCornerShape(16.dp))
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(VerdeContenedor),
+                .background(ContainerColor),
             contentAlignment = Alignment.Center
         ) {
-            Text("Gráficos de estadísticas", color = GrisMedio)
+            Text("Gráficos de estadísticas", color = TertiaryMediumColor)
         }
     }
 }
@@ -366,7 +366,7 @@ fun FormatoRacha(dias: List<Pair<String, Boolean>>,  onClick: () -> Unit = {}
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, VerdeBorde, RoundedCornerShape(16.dp))
+            .border(1.dp, BorderColor, RoundedCornerShape(16.dp))
             .padding(vertical = 24.dp, horizontal = 12.dp)
             .clickable { onClick() }
     ) {
@@ -388,14 +388,14 @@ fun FormatoRacha(dias: List<Pair<String, Boolean>>,  onClick: () -> Unit = {}
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Surface(
                             shape = RoundedCornerShape(50),
-                            color = if (completado) VerdePrincipal else GrisClaro,
+                            color = if (completado) PrimaryColor else TertiaryColor,
                             modifier = Modifier.size(48.dp)
                         ) {
                             if (completado) {
                                 Icon(
                                     imageVector = Icons.Default.Check,
                                     contentDescription = "Completado",
-                                    tint = Blanco,
+                                    tint = White,
                                     modifier = Modifier.padding(8.dp)
                                 )
                             }
@@ -419,7 +419,7 @@ fun HabitoCarruselItem(titulo: String, descripcion: String, imagenId: Int, onCli
         modifier = Modifier
             .size(width = 200.dp, height = 120.dp)
             .clip(RoundedCornerShape(16.dp))
-            .border(1.dp, VerdeBorde, RoundedCornerShape(16.dp))
+            .border(1.dp, BorderColor, RoundedCornerShape(16.dp))
             .clickable { onClick() }
     ) {
         Image(
@@ -448,13 +448,13 @@ fun HabitoCarruselItem(titulo: String, descripcion: String, imagenId: Int, onCli
             Column {
                 Text(
                     titulo,
-                    color = Blanco,
+                    color = White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp
                 )
                 Text(
                     descripcion,
-                    color = Blanco,
+                    color = White,
                     fontSize = 10.sp,
                     maxLines = 2
                 )
@@ -978,8 +978,8 @@ fun HabitoCardPredeterminado(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .border(1.dp, VerdeBorde, RoundedCornerShape(16.dp))
-            .background(VerdeContenedor.copy(alpha = 0.3f), shape = RoundedCornerShape(16.dp))
+            .border(1.dp, BorderColor, RoundedCornerShape(16.dp))
+            .background(ContainerColor.copy(alpha = 0.3f), shape = RoundedCornerShape(16.dp))
             .padding(16.dp)
     ) {
         Row(
@@ -1044,7 +1044,7 @@ fun HabitoCardPredeterminado(
 
                             // Fondo animado sobrepuesto
                             drawArc(
-                                color = VerdePrincipal,
+                                color = PrimaryColor,
                                 startAngle = -90f,
                                 sweepAngle = 360 * animatedProgress,
                                 useCenter = false,

@@ -132,34 +132,34 @@ private fun BotonesAjustes(navController: NavHostController) {
 
     Button(
         onClick = { navController.navigate("nosotros") },
-        colors = ButtonDefaults.buttonColors(containerColor = VerdePrincipal),
+        colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor),
         modifier = botonModifier
     ) {
-        Text("Sobre Nosotros", color = Blanco)
+        Text("Sobre Nosotros", color = White)
     }
 
     Button(
         onClick = { navController.navigate("privacidad") },
-        colors = ButtonDefaults.buttonColors(containerColor = VerdePrincipal),
+        colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor),
         modifier = botonModifier
     ) {
-        Text("Privacidad", color = Blanco)
+        Text("Privacidad", color = White)
     }
 
     Button(
         onClick = { navController.navigate("TyC") },
-        colors = ButtonDefaults.buttonColors(containerColor = VerdePrincipal),
+        colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor),
         modifier = botonModifier
     ) {
-        Text("Términos y Condiciones", color = Blanco)
+        Text("Términos y Condiciones", color = White)
     }
 
     Button(
         onClick = { navController.navigate("cambiar_contrasena") },
-        colors = ButtonDefaults.buttonColors(containerColor = VerdePrincipal),
+        colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor),
         modifier = botonModifier
     ) {
-        Text("Cambiar Contraseña", color = Blanco)
+        Text("Cambiar Contraseña", color = White)
     }
 
     Button(
@@ -167,7 +167,7 @@ private fun BotonesAjustes(navController: NavHostController) {
         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEC615B)),
         modifier = botonModifier
     ) {
-        Text("Cerrar sesión", color = Blanco)
+        Text("Cerrar sesión", color = White)
     }
 
     var mostrarDialogoEliminarCuenta by remember { mutableStateOf(false) }
@@ -324,7 +324,7 @@ private fun BotonesAjustes(navController: NavHostController) {
         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEC615B)),
         modifier = botonModifier
     ) {
-        Text("Borrar Cuenta", color = Blanco)
+        Text("Borrar Cuenta", color = White)
     }
 }
 

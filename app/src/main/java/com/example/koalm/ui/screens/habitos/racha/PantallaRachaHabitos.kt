@@ -26,7 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
-import com.example.koalm.ui.theme.VerdeContenedor
+import com.example.koalm.ui.theme.ContainerColor
 import androidx.compose.foundation.border
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -200,7 +200,7 @@ fun DiaRacha(icono: EstadoDia) {
     Box(
         modifier = Modifier
             .size(40.dp)
-            .background(color = VerdeContenedor, shape = CircleShape)
+            .background(color = ContainerColor, shape = CircleShape)
             .border(width = 2.dp, color = colorBorde, shape = CircleShape),
         contentAlignment = Alignment.Center
     ) {
@@ -216,7 +216,7 @@ fun TarjetaRacha(dias: List<EstadoDia>) {
         modifier = Modifier
             .padding(top = 32.dp)
             .fillMaxWidth(),
-        colors  = CardDefaults.cardColors(containerColor = VerdeContenedor),
+        colors  = CardDefaults.cardColors(containerColor = ContainerColor),
         shape   = RoundedCornerShape(16.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {

@@ -264,9 +264,9 @@ fun HabitoPlantillaCardFisico(habito: Habito, navController: NavHostController) 
         },
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, VerdeBorde, RoundedCornerShape(16.dp)),
+            .border(1.dp, BorderColor, RoundedCornerShape(16.dp)),
         colors = CardDefaults.cardColors(
-            containerColor = VerdeContenedor
+            containerColor = ContainerColor
         )
     ) {
         Row(
@@ -278,7 +278,7 @@ fun HabitoPlantillaCardFisico(habito: Habito, navController: NavHostController) 
             Icon(
                 imageVector = Icons.Default.AddCircle,
                 contentDescription = "Agregar hábito",
-                tint = VerdePrincipal,
+                tint = PrimaryColor,
                 modifier = Modifier.size(24.dp)
             )
 
@@ -293,7 +293,7 @@ fun HabitoPlantillaCardFisico(habito: Habito, navController: NavHostController) 
                 Text(
                     text = habito.descripcion,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = GrisMedio
+                    color = TertiaryMediumColor
                 )
             }
         }
@@ -352,9 +352,9 @@ fun HabitoActivoCardFisico(
         onClick = {},
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, VerdeBorde, RoundedCornerShape(16.dp)),
+            .border(1.dp, BorderColor, RoundedCornerShape(16.dp)),
         colors = CardDefaults.cardColors(
-            containerColor = VerdeContenedor.copy(alpha = 0.3f)
+            containerColor = ContainerColor.copy(alpha = 0.3f)
         )
     ) {
         Row(
@@ -387,7 +387,7 @@ fun HabitoActivoCardFisico(
                 Text(
                     text = habito.descripcion,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = GrisMedio,
+                    color = TertiaryMediumColor,
                     maxLines = 1
                 )
                 Row(

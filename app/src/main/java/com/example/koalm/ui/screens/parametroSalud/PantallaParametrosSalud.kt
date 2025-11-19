@@ -189,8 +189,8 @@ fun TituloYBarra(titulo: String, progreso: Float) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(8.dp),
-            color = if (progreso > 0f) VerdePrincipal else GrisClaro,
-            trackColor = GrisClaro
+            color = if (progreso > 0f) PrimaryColor else TertiaryColor,
+            trackColor = TertiaryColor
         )
     }
 }
@@ -223,7 +223,7 @@ fun InfoCard(
             .let { if (onClick != null) it.clickable(onClick = onClick) else it },
         shape = RoundedCornerShape(12.dp),
         tonalElevation = 2.dp,
-        color = VerdeContenedor,
+        color = ContainerColor,
         border = BorderStroke(1.dp, Color.LightGray)
     ) {
         Row(
@@ -242,15 +242,15 @@ fun InfoCard(
                         progress = { progreso },
                         modifier = Modifier.fillMaxSize(),
                         strokeWidth = 4.dp,
-                        color = VerdePrincipal
+                        color = PrimaryColor
                     )
                     if (titulo == "Sueño") {
-                        Text("/8 h", fontSize = 10.sp, color = Negro, fontWeight = FontWeight.SemiBold)
+                        Text("/8 h", fontSize = 10.sp, color = Black, fontWeight = FontWeight.SemiBold)
                     } else if (titulo == "Estrés") {
                         Icon(
                             Icons.Default.SentimentNeutral,
                             contentDescription = null,
-                            tint = Negro,
+                            tint = Black,
                             modifier = Modifier.size(20.dp)
                         )
                     }
