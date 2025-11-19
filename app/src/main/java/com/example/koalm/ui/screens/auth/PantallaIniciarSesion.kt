@@ -84,23 +84,25 @@ fun PantallaIniciarSesion(
             TopAppBar(
                 title = { Text("Iniciar sesión") },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = MaterialTheme.colorScheme.onBackground
+                    containerColor = MaterialTheme.colorScheme.primary,//background,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary//Background
                 )
             )
         }
     ) { padding ->
         Column(
             modifier = Modifier
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .fillMaxSize()
-                .padding(horizontal = 24.dp),
+                .fillMaxSize()                         // 1. PRIMERO: Ocupar todo el tamaño disponible (que se reduce al salir el teclado)
+                .padding(padding)                      // 2. Respetar el padding del Scaffold
+                .imePadding()
+                .verticalScroll(rememberScrollState()) // 3. Habilitar scroll si el contenido no cabe
+                .padding(horizontal = 24.dp),          // 4. Padding interno horizontal
+
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             LoginLogo()
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(15.dp))
 
             EmailField(
                 value = email,
@@ -262,15 +264,15 @@ fun PantallaIniciarSesion(
 
 @Composable
 fun LoginLogo() {
-    val isDark = isSystemInDarkTheme()
-    val tintColor = if (isDark) Color.White else Color.Black
+    val isDark = isSystemInDarkTheme() // Detecta si el tema actual es oscuro
+    val tintColor = if (isDark) Color.White else Color.Black // Si es oscuro, blanco; si no, negro.
 
     Image(
         painter = painterResource(id = R.drawable.login),
         contentDescription = "Koala",
-        modifier = Modifier.size(300.dp)/*,
+        modifier = Modifier.size(300.dp),
+        // APLICA EL FILTRO DE COLOR AQUÍ:
         colorFilter = ColorFilter.tint(tintColor)
-        */
     )
 }
 

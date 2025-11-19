@@ -43,10 +43,14 @@ private val DarkColorScheme = darkColorScheme(
 
 @Composable
 fun KoalmTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(), // Detecta si el sistema está en oscuro
     content: @Composable () -> Unit
 ) {
+    // Elige la paleta automáticamente según el sistema
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+
     MaterialTheme(
-        colorScheme = LightColorScheme,
+        colorScheme = colorScheme, // Aquí usas la variable dinámica
         typography = Typography,
         shapes = Shapes,
         content = content
