@@ -1,33 +1,35 @@
 package com.example.koalm.ui.theme
+
 import androidx.compose.ui.graphics.Color
 
-// Colores principales
-val PrimaryColor = Color(0xFF478D4F)      // Botón "Iniciar sesión"
-val SecondaryColor = Color(0xFF478D4F)     // Enlaces tipo Google
-val PrimaryLightColor = Color(0xFF81C784)          // Efecto hover o acentos suaves
-val ContainerColor = Color(0xFFF6FBF2)     // Color de fondo para contenedores
-val BorderColor = Color(0xFFC1C8BD)          // Color para bordes de contenedores
+val PrimaryColor = Color(0xFFF16707)        // Naranja principal (pelaje)
+val SecondaryColor = Color(0xFFBE0B03)      // Rojo profundo (sombras, cola)
+val PrimaryLightColor = Color(0xFFFFD08A)   // Naranja claro (brillos, hover)
 
-// Grises y neutros
-val TertiaryColor = Color(0xFFE0E0E0)           // Fondos secundarios
-val TertiaryMediumColor = Color(0xFF9E9E9E)           // Texto o bordes inactivos
-val TertiaryCardColor = Color(0xFFF3F3F3)            // Fondo de cards
-val TertiaryDarkColor = Color(0xFF868686)
+val ContainerColor = Color(0xFFFFF5E9)      // Fondo cálido de contenedores
+val BorderColor = Color(0xFFF4C08A)         // Bordes suaves en tono durazno
 
-// Complementarios
+val TertiaryColor = Color(0xFFF3E5DE)       // Fondos secundarios
+val TertiaryMediumColor = Color(0xFFB0A6A0) // Texto/bordes inactivos
+val TertiaryCardColor = Color(0xFFFFEFE0)   // Fondo de cards
+val TertiaryDarkColor = Color(0xFF7A6C63)   // Texto neutro oscuro
+
 val White = Color(0xFFFFFFFF)              // Fondo principal
 val Black = Color(0xFF000000)              // Texto principal
 
-// Colores grafica ritmo cardiaco
-val InfoColor = Color(0xFF00CFF9)        
-val SuccessColor = Color(0xFF8D9D3D)     
-val WarningColor = Color(0xFFFFA20D)     
-val AlertColor = Color(0xFFFF5E3A)      
-val CriticalColor = Color(0xFFFF1A1A)    
+val InfoColor = Color(0xFFFFD6A3)          // Muy suave
+val SuccessColor = Color(0xFFFFA043)       // Naranja medio
+val WarningColor = Color(0xFFF16707)       // Naranja intenso
+val AlertColor = Color(0xFFFF4A1C)         // Rojo-naranja
+val CriticalColor = Color(0xFFBE0B03)      // Rojo profundo
 
-val BrandPrimaryColor = Color(0xFF5D4037)  
+// Marrón del panda (orejas, patitas) como color de marca
+val BrandPrimaryColor = Color(0xFF6A4031)
 
-// Dark mode
-val DarkBackgroundColor = Color(0xFF0E1312) // Antes: DarkBackgroundColor
+// Modo oscuro (fondo oscuro cálido)
+val DarkBackgroundColor = Color(0xFF130C0A)
 
-val LightErrorColor = Color(0xFFEC615B)
+// Error / eliminar
+val LightErrorColor = Color(0xFFFF8480)
+
+
