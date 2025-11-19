@@ -190,9 +190,11 @@ fun LogoRegistro() {
     Image(
         painter = painterResource(id = R.drawable.greeting),
         contentDescription = "Koala registrarse",
-        modifier = Modifier.size(270.dp)/*,
-        colorFilter = ColorFilter.tint(tintColor)*/
+        modifier = Modifier
+            .fillMaxWidth(0.9f)   // 90% del ancho
+            .aspectRatio(16f / 9f) // o la relación que tenga tu vector
     )
+
 }
 
 @Composable
