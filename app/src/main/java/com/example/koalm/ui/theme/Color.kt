@@ -2,34 +2,35 @@ package com.example.koalm.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val PrimaryColor = Color(0xFFF16707)        // Naranja principal (pelaje)
-val SecondaryColor = Color(0xFFBE0B03)      // Rojo profundo (sombras, cola)
-val PrimaryLightColor = Color(0xFFFFD08A)   // Naranja claro (brillos, hover)
+// Colores principales (tema azul pingüino)
+val PrimaryColor = Color(0xFF2962FF)        // Azul principal (botones)
+val SecondaryColor = Color(0xFF1E88E5)      // Azul medio (enlaces, acentos)
+val PrimaryLightColor = Color(0xFFBBDEFB)   // Azul claro (hover, fondos suaves)
+val ContainerColor = Color(0xFFF5F8FF)      // Fondo de contenedores frío
+val BorderColor = Color(0xFFC5D3F2)         // Bordes suaves azulados
 
-val ContainerColor = Color(0xFFFFF5E9)      // Fondo cálido de contenedores
-val BorderColor = Color(0xFFF4C08A)         // Bordes suaves en tono durazno
+// Grises y neutros (inspirados en el cuerpo del pingüino)
+val TertiaryColor = Color(0xFFECEFF1)       // Fondos secundarios
+val TertiaryMediumColor = Color(0xFF90A4AE) // Texto / bordes inactivos
+val TertiaryCardColor = Color(0xFFF9FAFB)   // Fondo de cards
+val TertiaryDarkColor = Color(0xFF37474F)   // Texto neutro oscuro
 
-val TertiaryColor = Color(0xFFF3E5DE)       // Fondos secundarios
-val TertiaryMediumColor = Color(0xFFB0A6A0) // Texto/bordes inactivos
-val TertiaryCardColor = Color(0xFFFFEFE0)   // Fondo de cards
-val TertiaryDarkColor = Color(0xFF7A6C63)   // Texto neutro oscuro
-
+// Básicos
 val White = Color(0xFFFFFFFF)              // Fondo principal
 val Black = Color(0xFF000000)              // Texto principal
 
-val InfoColor = Color(0xFFFFD6A3)          // Muy suave
-val SuccessColor = Color(0xFFFFA043)       // Naranja medio
-val WarningColor = Color(0xFFF16707)       // Naranja intenso
-val AlertColor = Color(0xFFFF4A1C)         // Rojo-naranja
-val CriticalColor = Color(0xFFBE0B03)      // Rojo profundo
+// Colores gráfica ritmo cardiaco (fríos + acentos del pingüino)
+val InfoColor = Color(0xFF42A5F5)          // Azul info
+val SuccessColor = Color(0xFF26A69A)       // Verde/azulado éxito
+val WarningColor = Color(0xFFFFCA28)       // Amarillo (alerta suave)
+val AlertColor = Color(0xFFFB8C00)         // Naranja (pico/pies)
+val CriticalColor = Color(0xFFE53935)      // Rojo (moñito)
 
-// Marrón del panda (orejas, patitas) como color de marca
-val BrandPrimaryColor = Color(0xFF6A4031)
+// Color de marca (negro del pingüino)
+val BrandPrimaryColor = Color(0xFF1C1F26)
 
-// Modo oscuro (fondo oscuro cálido)
-val DarkBackgroundColor = Color(0xFF130C0A)
+// Modo oscuro (fondo azul muy oscuro)
+val DarkBackgroundColor = Color(0xFF0B0E17)
 
-// Error / eliminar
-val LightErrorColor = Color(0xFFFF8480)
-
-
+// Error suave
+val LightErrorColor = Color(0xFFFF8A80)
