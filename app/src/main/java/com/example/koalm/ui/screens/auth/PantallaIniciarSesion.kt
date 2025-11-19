@@ -82,10 +82,10 @@ fun PantallaIniciarSesion(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Iniciar sesión") },
+                title = { Text("Bienvenido a PinguBalance") },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,//background,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary//Background
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
         }
@@ -265,14 +265,14 @@ fun PantallaIniciarSesion(
 @Composable
 fun LoginLogo() {
     val isDark = isSystemInDarkTheme() // Detecta si el tema actual es oscuro
-    val tintColor = if (isDark) Color.White else Color.Black // Si es oscuro, blanco; si no, negro.
+    val tintColor = if (isDark) Color.White else Color.Black
 
     Image(
         painter = painterResource(id = R.drawable.login),
-        contentDescription = "Koala",
-        modifier = Modifier.size(300.dp),
-        // APLICA EL FILTRO DE COLOR AQUÍ:
-        colorFilter = ColorFilter.tint(tintColor)
+        contentDescription = "Pinguino inicio sesion",
+        modifier = Modifier
+            .fillMaxWidth(0.9f)
+            .aspectRatio(16f / 9f)
     )
 }
 

@@ -189,10 +189,10 @@ fun LogoRegistro() {
 
     Image(
         painter = painterResource(id = R.drawable.greeting),
-        contentDescription = "Koala registrarse",
+        contentDescription = "Pinguino registro",
         modifier = Modifier
-            .fillMaxWidth(0.9f)   // 90% del ancho
-            .aspectRatio(16f / 9f) // o la relación que tenga tu vector
+            .fillMaxWidth(0.9f)
+            .aspectRatio(16f / 9f)
     )
 
 }
