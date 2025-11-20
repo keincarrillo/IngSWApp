@@ -5,8 +5,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -39,6 +41,9 @@ fun PantallaRecuperarContrasena(navController: NavController) {
     val context = LocalContext.current
     var correo by remember { mutableStateOf("") }
 
+    // 1. Creamos el estado del scroll
+    val scrollState = rememberScrollState()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -53,20 +58,32 @@ fun PantallaRecuperarContrasena(navController: NavController) {
     ) { padding ->
         Column(
             modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
+                .fillMaxSize()            // 1. Ocupar toda la pantalla
+                .padding(padding)         // 2. Respetar TopBar
+                .imePadding()             // 3. Empujar contenido con el teclado
+                .verticalScroll(scrollState) // 4. Habilitar scroll
                 .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            horizontalAlignment = Alignment.CenterHorizontally
+            // Eliminamos Arrangement.Center para evitar conflictos con el scroll
         ) {
+            // Agregamos un espacio superior para centrar visualmente el contenido
+            Spacer(modifier = Modifier.height(40.dp))
+
             ImagenKoalaRecuperar()
             Spacer(modifier = Modifier.height(24.dp))
+
             CampoCorreoRecuperar(correo) { correo = it }
+
             MensajeExplicacion()
             Spacer(modifier = Modifier.height(16.dp))
+
             BotonEnviarCorreo(correo, navController, context)
             Spacer(modifier = Modifier.height(32.dp))
+
             TextoIrARegistro(navController)
+
+            // Espacio final para asegurar que se vea todo al hacer scroll
+            Spacer(modifier = Modifier.height(100.dp))
         }
     }
 }
@@ -79,8 +96,9 @@ fun ImagenKoalaRecuperar() {
     Image(
         painter = painterResource(id = R.drawable.query),
         contentDescription = "Koala pregunta",
-        modifier = Modifier.size(300.dp)/*,
-        colorFilter = ColorFilter.tint(tintColor)*/
+        modifier = Modifier.size(300.dp)
+        /*, colorFilter = ColorFilter.tint(tintColor) */
+        // Nota: Si quieres aplicar el mismo diseño de círculo del login, avísame
     )
 }
 
