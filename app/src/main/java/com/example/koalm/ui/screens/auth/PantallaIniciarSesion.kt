@@ -1,6 +1,8 @@
 package com.example.koalm.ui.screens.auth
 
 import android.widget.Toast
+import androidx.compose.foundation.background  // <--- Necesario para .background()
+import androidx.compose.foundation.shape.CircleShape // <--- Necesario para CircleShape
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -264,16 +266,28 @@ fun PantallaIniciarSesion(
 
 @Composable
 fun LoginLogo() {
-    val isDark = isSystemInDarkTheme() // Detecta si el tema actual es oscuro
-    val tintColor = if (isDark) Color.White else Color.Black
+    val isDark = isSystemInDarkTheme()
+
+    // OPCIÓN A: Fondo GRIS CLARO (Para que resalte el negro)
+    val colorFondo = if (isDark) Color.LightGray else Color.Transparent
+
+    // OPCIÓN B: Fondo AZUL DEL TEMA (Para combinar, usando primaryContainer que es un azul más suave)
+    //val colorFondo = if (isDark) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
+
+    // OPCIÓN C: Fondo BLANCO (Máximo contraste)
+    // val colorFondo = if (isDark) Color.White else Color.Transparent
 
     Image(
         painter = painterResource(id = R.drawable.login),
-        contentDescription = "Pinguino inicio sesion",
+        contentDescription = "Koala",
         modifier = Modifier
-            .fillMaxWidth(0.9f)
-            .aspectRatio(16f / 9f)
+            .size(200.dp) // Tamaño total
+            .clip(CircleShape) // 1. Recortamos en forma de círculo (o RoundedCornerShape(16.dp))
+            .background(colorFondo) // 2. Pintamos el fondo (solo se verá en modo oscuro)
+            .padding(16.dp) // 3. Margen interno: Esto aleja al Koala del borde del fondo
+        // .padding(bottom = 16.dp) // Si necesitas separarlo del texto de abajo
     )
+    // Nota: Ya NO usamos 'colorFilter', así el logo se queda negro original.
 }
 
 @Composable
