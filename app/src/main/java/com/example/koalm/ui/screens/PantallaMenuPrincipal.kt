@@ -119,7 +119,7 @@ fun PantallaMenuPrincipal(navController: NavHostController) {
             routeKey = "Hidratación koalística",
             tituloUi = "Hidratación polar",
             descripcion = "Mantén tu cuerpo fresco como un pingüino en aguas heladas: bebe suficiente agua.",
-            imagenId = R.drawable.koala_bebiendo
+            imagenId = R.drawable.pinguino_bebiendo
         ),
         HabitoPingu(
             routeKey = "Descanso koalístico",
