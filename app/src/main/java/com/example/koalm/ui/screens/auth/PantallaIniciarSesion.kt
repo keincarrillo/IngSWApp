@@ -1,23 +1,20 @@
 package com.example.koalm.ui.screens.auth
 
 import android.widget.Toast
-import androidx.compose.foundation.background  // <--- Necesario para .background()
-import androidx.compose.foundation.shape.CircleShape // <--- Necesario para CircleShape
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
@@ -26,7 +23,6 @@ import androidx.compose.ui.text.input.*
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.navigation.NavHostController
 import com.example.koalm.R
 import com.example.koalm.ui.theme.*
@@ -36,6 +32,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.example.koalm.model.Usuario
 import com.example.koalm.ui.components.FalloDialogoGuardadoAnimado
+import com.example.koalm.ui.components.Logo
 import com.example.koalm.ui.components.ValidacionesDialogoAnimado
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,7 +56,7 @@ fun PantallaIniciarSesion(
         )
     }
 
-    var mostrarDialogoFallo by remember{ mutableStateOf(false) }
+    var mostrarDialogoFallo by remember { mutableStateOf(false) }
     if (mostrarDialogoFallo) {
         FalloDialogoGuardadoAnimado(
             mensaje = "Usuario no registrado previamente.",
@@ -69,41 +66,51 @@ fun PantallaIniciarSesion(
         )
     }
 
-    // Estados de input
     var email by remember { mutableStateOf("") }
     val isValidEmail = email.contains("@") && listOf(
-        "gmail.com","hotmail.com","yahoo.com","icloud.com",
-        "live.com","outlook.com","proton.me","protonmail.com",
-        "aol.com","mail.com","zoho.com","yandex.com"
+        "gmail.com", "hotmail.com", "yahoo.com", "icloud.com",
+        "live.com", "outlook.com", "proton.me", "protonmail.com",
+        "aol.com", "mail.com", "zoho.com", "yandex.com"
     ).any { domain -> email.endsWith("@$domain") }
 
     var password by remember { mutableStateOf("") }
     val isValidPassword = password.length >= 8
     var passwordVisible by remember { mutableStateOf(false) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Bienvenido a PinguBalance") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            )
-        }
-    ) { padding ->
+    Scaffold { padding ->
         Column(
             modifier = Modifier
-                .fillMaxSize()                         // 1. PRIMERO: Ocupar todo el tamaño disponible (que se reduce al salir el teclado)
-                .padding(padding)                      // 2. Respetar el padding del Scaffold
+                .fillMaxSize()
+                .padding(padding)
                 .imePadding()
-                .verticalScroll(rememberScrollState()) // 3. Habilitar scroll si el contenido no cabe
-                .padding(horizontal = 24.dp),          // 4. Padding interno horizontal
-
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Top
         ) {
-            LoginLogo()
+            Spacer(modifier = Modifier.height(16.dp))
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.Start
+            ) {
+                Text(
+                    text = "Bienvenido a",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f)
+                )
+                Text(
+                    text = "PinguBalance",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Logo(
+                logoRes = R.drawable.greeting,
+                contentDescription = "Pinguino Saludando"
+            )
             Spacer(modifier = Modifier.height(15.dp))
 
             EmailField(
@@ -122,47 +129,57 @@ fun PantallaIniciarSesion(
             )
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Botón de login
             Button(
                 onClick = {
                     when {
-                        !isValidEmail -> Toast.makeText(context, "Correo inválido", Toast.LENGTH_SHORT).show()
-                        !isValidPassword -> Toast.makeText(context, "Contraseña muy corta", Toast.LENGTH_SHORT).show()
+                        !isValidEmail -> Toast.makeText(
+                            context,
+                            "Correo inválido",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        !isValidPassword -> Toast.makeText(
+                            context,
+                            "Contraseña muy corta",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
                         else -> {
                             auth.signInWithEmailAndPassword(email, password)
                                 .addOnCompleteListener { task ->
                                     if (task.isSuccessful) {
                                         val user = auth.currentUser!!
                                         if (!user.isEmailVerified) {
-                                            mensajeValidacion = "Por favor verifica tu correo antes de iniciar sesión"
+                                            mensajeValidacion =
+                                                "Por favor verifica tu correo antes de iniciar sesión"
                                             return@addOnCompleteListener
                                         }
 
                                         val correoReal = user.email!!
 
-                                        // Recuperar el documento de usuario existente
                                         db.collection("usuarios").document(correoReal).get()
                                             .addOnSuccessListener { doc ->
                                                 if (doc.exists()) {
-                                                    // Obtener los valores actuales de los campos que no deben cambiar
                                                     val userId = doc.getString("userId") ?: ""
                                                     val emailU = doc.getString("email") ?: ""
                                                     val username = doc.getString("username") ?: ""
 
-                                                    // Obtener los valores que se pueden actualiar
-                                                    val imagenBase64 = doc.getString("imagenBase64") ?: ""
+                                                    val imagenBase64 =
+                                                        doc.getString("imagenBase64") ?: ""
                                                     val nombre = doc.getString("nombre") ?: ""
                                                     val apellido = doc.getString("apellido") ?: ""
-                                                    val nacimiento = doc.getString("nacimiento") ?: ""
+                                                    val nacimiento =
+                                                        doc.getString("nacimiento") ?: ""
                                                     val genero = doc.getString("genero") ?: ""
-                                                    val peso = doc.getDouble("peso")?.toFloat()
-                                                    val altura = doc.getLong("altura")?.toInt()
+                                                    val peso =
+                                                        doc.getDouble("peso")?.toFloat()
+                                                    val altura =
+                                                        doc.getLong("altura")?.toInt()
 
-                                                    // Creamos el objeto con los datos nuevos (y conservamos los antiguos campos que no cambian uwu)
                                                     val uLogin = Usuario(
-                                                        userId = userId,  // No cambia
-                                                        email = emailU,     // No cambia
-                                                        username = username, // No cambia
+                                                        userId = userId,
+                                                        email = emailU,
+                                                        username = username,
                                                         imagenBase64 = imagenBase64,
                                                         nombre = nombre,
                                                         apellido = apellido,
@@ -172,15 +189,10 @@ fun PantallaIniciarSesion(
                                                         altura = altura
                                                     )
 
-                                                    // Se actualiza el documento manteniendo los campos que no deben cambiar
                                                     db.collection("usuarios")
                                                         .document(correoReal)
                                                         .set(uLogin.toMap(), SetOptions.merge())
                                                         .addOnSuccessListener {
-
-
-
-                                                            // Verificamos si el perfil está completo o no
                                                             val completo = listOf(
                                                                 nombre.isNotBlank(),
                                                                 apellido.isNotBlank(),
@@ -190,60 +202,52 @@ fun PantallaIniciarSesion(
                                                                 altura != null
                                                             ).all { it }
 
-                                                            // Determinamos la pantalla de destino dependiendo de si el perfil está completo
-                                                            val destino = if (completo) "menu" else "personalizar"
-                                                            /*
-                                                            Toast.makeText(
-                                                                context,
-                                                                if (completo) "Bienvenid@ $username"
-                                                                else "Completa tu perfil antes de continuar",
-                                                                Toast.LENGTH_SHORT
-                                                            ).show()
-                                                             */
-                                                            // Navegamos a las pantallas según el estado del perfil
+                                                            val destino =
+                                                                if (completo) "menu" else "personalizar"
+
                                                             navController.navigate(destino) {
                                                                 popUpTo("iniciar") { inclusive = true }
                                                                 launchSingleTop = true
                                                             }
 
-                                                            //Parametros para poder asignar metricas de salud
                                                             val metasRef = db.collection("usuarios")
                                                                 .document(correoReal)
                                                                 .collection("metasSalud")
                                                                 .document("valores")
 
-                                                            metasRef.get().addOnSuccessListener { metasDoc ->
-                                                                if (!metasDoc.exists()) {
-                                                                    metasRef.set(
-                                                                        mapOf(
-                                                                            "metaPasos" to 6000,
-                                                                            "metaMinutos" to 60,
-                                                                            "metaCalorias" to 300
+                                                            metasRef.get()
+                                                                .addOnSuccessListener { metasDoc ->
+                                                                    if (!metasDoc.exists()) {
+                                                                        metasRef.set(
+                                                                            mapOf(
+                                                                                "metaPasos" to 6000,
+                                                                                "metaMinutos" to 60,
+                                                                                "metaCalorias" to 300
+                                                                            )
                                                                         )
-                                                                    )
+                                                                    }
                                                                 }
-                                                            }
                                                         }
                                                 } else {
-                                                    // Si el documento no existe, manejamos el caso comoo:
                                                     mostrarDialogoFallo = true
                                                 }
                                             }
                                     } else {
-                                        // Si el inicio de sesión falla, se muestra un mensaje de error
                                         val err = task.exception
-                                        mensajeValidacion = if (err is FirebaseAuthInvalidCredentialsException)
-                                            "Credenciales incorrectas"
-                                        else
-                                            "Error: ${err?.localizedMessage ?: "Ha ocurrido un error inesperado"}"
+                                        mensajeValidacion =
+                                            if (err is FirebaseAuthInvalidCredentialsException)
+                                                "Credenciales incorrectas"
+                                            else
+                                                "Error: ${err?.localizedMessage ?: "Ha ocurrido un error inesperado"}"
                                     }
-
                                 }
                         }
                     }
                 },
                 modifier = Modifier.width(200.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
             ) {
                 Text("Iniciar sesión", color = MaterialTheme.colorScheme.onPrimary)
             }
@@ -262,32 +266,6 @@ fun PantallaIniciarSesion(
             LoginFooterText(navController)
         }
     }
-}
-
-@Composable
-fun LoginLogo() {
-    val isDark = isSystemInDarkTheme()
-
-    // OPCIÓN A: Fondo GRIS CLARO (Para que resalte el negro)
-    val colorFondo = if (isDark) Color.LightGray else Color.Transparent
-
-    // OPCIÓN B: Fondo AZUL DEL TEMA (Para combinar, usando primaryContainer que es un azul más suave)
-    //val colorFondo = if (isDark) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
-
-    // OPCIÓN C: Fondo BLANCO (Máximo contraste)
-    // val colorFondo = if (isDark) Color.White else Color.Transparent
-
-    Image(
-        painter = painterResource(id = R.drawable.login),
-        contentDescription = "Koala",
-        modifier = Modifier
-            .size(200.dp) // Tamaño total
-            .clip(CircleShape) // 1. Recortamos en forma de círculo (o RoundedCornerShape(16.dp))
-            .background(colorFondo) // 2. Pintamos el fondo (solo se verá en modo oscuro)
-            .padding(16.dp) // 3. Margen interno: Esto aleja al Koala del borde del fondo
-        // .padding(bottom = 16.dp) // Si necesitas separarlo del texto de abajo
-    )
-    // Nota: Ya NO usamos 'colorFilter', así el logo se queda negro original.
 }
 
 @Composable
@@ -338,7 +316,10 @@ fun PasswordField(
             .fillMaxWidth(0.97f)
             .clip(RoundedCornerShape(6.dp)),
         shape = RoundedCornerShape(6.dp),
-        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+        visualTransformation = if (passwordVisible)
+            VisualTransformation.None
+        else
+            PasswordVisualTransformation(),
         trailingIcon = {
             val icon = if (passwordVisible)
                 painterResource(id = R.drawable.ic_eye)
@@ -364,7 +345,6 @@ fun PasswordField(
         }
     )
 }
-
 
 @Composable
 fun LoginFooterText(navController: NavHostController) {

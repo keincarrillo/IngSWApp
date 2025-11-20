@@ -25,6 +25,7 @@ private val LightColorScheme = lightColorScheme(
 )
 
 // Paleta oscura
+// Paleta oscura
 private val DarkColorScheme = darkColorScheme(
     primary = PrimaryColor,
     onPrimary = Color.White,
@@ -32,14 +33,18 @@ private val DarkColorScheme = darkColorScheme(
     onSecondary = Color.White,
     tertiary = PrimaryLightColor,
     onTertiary = Color.Black,
+
     background = DarkBackgroundColor,
     onBackground = Color.White,
-    surface = Color.Black,
+
+    surface = DarkSurfaceColor,
     onSurface = Color.White,
+
     surfaceVariant = TertiaryColor,
     onSurfaceVariant = Color.White,
     surfaceTint = PrimaryColor
 )
+
 
 @Composable
 fun KoalmTheme(

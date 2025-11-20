@@ -43,6 +43,7 @@ import com.example.koalm.ui.components.FalloDialogoGuardadoAnimado
 import com.example.koalm.ui.components.ValidacionesDialogoAnimado
 import kotlinx.coroutines.*
 import androidx.compose.runtime.*
+import com.example.koalm.ui.components.Logo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -122,7 +123,11 @@ fun PantallaRegistro(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
-            LogoRegistro()
+            Spacer(modifier = Modifier.height(16.dp))
+            Logo(
+                logoRes = R.drawable.greeting,
+                contentDescription = "Pinguino Saludando"
+            )
             Spacer(modifier = Modifier.height(16.dp))
             CampoCorreo(
                 value = email,
@@ -142,18 +147,18 @@ fun PantallaRegistro(
                 }
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             CampoNombreUsuario(
                 value = username,
                 onValueChange = { nuevoValor ->
                    username = nuevoValor
                 }
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             CampoContrasena(password, passwordVisible, onValueChange = { password = it }) {
                 passwordVisible = !passwordVisible
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             CampoConfirmarContrasena(
                 value = confirmPassword,
                 visible = confirmPasswordVisible,
@@ -162,13 +167,13 @@ fun PantallaRegistro(
                 onToggle = { confirmPasswordVisible = !confirmPasswordVisible }
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             CheckboxTerminos(
                 navController = navController,
                 checked = termsAccepted,
                 onCheckedChange = { termsAccepted = it }
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             BotonesRegistro(
                 email, username, password, confirmPassword,
                 isValidEmail, yaExisteCorreo,
@@ -176,25 +181,9 @@ fun PantallaRegistro(
                 onMensajeValidacionChange = { mensajeValidacion = it },
                 onGoogleSignInClick = onGoogleSignInClick
             )
-            Spacer(modifier = Modifier.height(16.dp))
             TextoIrIniciarSesion(navController)
         }
     }
-}
-
-@Composable
-fun LogoRegistro() {
-    val isDark = isSystemInDarkTheme()
-    val tintColor = if (isDark) Color.White else Color.Black
-
-    Image(
-        painter = painterResource(id = R.drawable.greeting),
-        contentDescription = "Pinguino registro",
-        modifier = Modifier
-            .fillMaxWidth(0.9f)
-            .aspectRatio(16f / 9f)
-    )
-
 }
 
 @Composable
@@ -731,8 +720,5 @@ fun TextoIrIniciarSesion(navController: NavController) {
             .clickable {
                 navController.navigate("iniciar")
             }
-
-
-
     )
 }

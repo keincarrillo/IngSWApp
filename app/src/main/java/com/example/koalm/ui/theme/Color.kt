@@ -30,7 +30,10 @@ val CriticalColor = Color(0xFFE53935)      // Rojo (moñito)
 val BrandPrimaryColor = Color(0xFF1C1F26)
 
 // Modo oscuro (fondo azul muy oscuro)
-val DarkBackgroundColor = Color(0xFF0B0E17)
+// Modo oscuro (fondo azul muy oscuro)
+val DarkBackgroundColor = Color(0xFF121C26)   // Fondo principal
+val DarkSurfaceColor    = Color(0xFF192532)   // Superficies (cards, appbar, etc.)
+
 
 // Error suave
 val LightErrorColor = Color(0xFFFF8A80)
