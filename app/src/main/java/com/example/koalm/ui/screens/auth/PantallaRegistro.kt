@@ -116,12 +116,13 @@ fun PantallaRegistro(
     ) { padding ->
         Column(
             modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(horizontal = 24.dp),
+                .fillMaxSize()            // 1. Ocupar toda la pantalla
+                .padding(padding)         // 2. Respetar la barra superior (TopBar)
+                .imePadding()             // 3. <--- AQUÍ ESTÁ LA CLAVE: Empuja el contenido cuando sale el teclado
+                .verticalScroll(scrollState) // 4. Habilita el scroll en el espacio restante
+                .padding(horizontal = 24.dp), // 5. Margen a los lados
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top
+            verticalArrangement = Arrangement.Top // En registro es mejor Top para ir llenando hacia abajo
         ) {
             Spacer(modifier = Modifier.height(16.dp))
             Logo(
