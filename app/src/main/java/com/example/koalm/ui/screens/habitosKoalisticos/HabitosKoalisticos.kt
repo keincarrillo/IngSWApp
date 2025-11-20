@@ -140,7 +140,7 @@ fun obtenerDatosHabito(habito: HabitoKoalistico): DatosHabitoKoalistico {
         HabitoKoalistico.DESCONEXION -> DatosHabitoKoalistico(
             titulo = R.string.titulo_kdesconexion,
             mensaje = R.string.mensaje_kdesconexion,
-            imagenResId = R.drawable.koala_naturaleza
+            imagenResId = R.drawable.pinguino_naturaleza
         )
         HabitoKoalistico.ALIMENTACION -> DatosHabitoKoalistico(
             titulo = R.string.titulo_kalimentacion,

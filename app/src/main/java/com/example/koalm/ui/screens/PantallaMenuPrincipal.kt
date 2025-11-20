@@ -1,4 +1,5 @@
 package com.example.koalm.ui.screens
+
 import android.content.Context
 import android.util.Log
 import androidx.compose.animation.core.animateFloatAsState
@@ -13,124 +14,150 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.runtime.saveable.rememberSaveable
+
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Nightlight
 import androidx.compose.material.icons.filled.PhoneDisabled
-import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.LocalDrink
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.filled.AddAlert
-import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.LocalDrink
-import androidx.compose.material.icons.filled.Nightlight
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
-import com.example.koalm.R
-import com.example.koalm.ui.theme.*
-import com.example.koalm.ui.components.BarraNavegacionInferior
-import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.launch
-import com.google.android.gms.auth.api.identity.Identity
-import com.example.koalm.model.HabitoPersonalizado
-import com.example.koalm.ui.viewmodels.DashboardViewModel
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import com.example.koalm.R
 import com.example.koalm.data.HabitosRepository
 import com.example.koalm.model.Habito
+import com.example.koalm.model.HabitoPersonalizado
 import com.example.koalm.model.ProgresoDiario
 import com.example.koalm.model.TipoHabito
+import com.example.koalm.ui.components.BarraNavegacionInferior
 import com.example.koalm.ui.components.BienvenidoDialogoAnimado
-import com.example.koalm.ui.components.ExitoDialogoGuardadoAnimado
 import com.example.koalm.ui.components.LogroDialogoAnimado
 import com.example.koalm.ui.components.ValidacionesDialogoAnimado
 import com.example.koalm.ui.components.obtenerIconoPorNombre
 import com.example.koalm.ui.screens.habitos.personalizados.parseColorFromFirebase
-import com.example.koalm.ui.viewmodels.InicioSesionPreferences
-import com.example.koalm.ui.viewmodels.LogrosPreferences
-import com.google.firebase.firestore.FirebaseFirestore
-//import kotlinx.coroutines.flow.internal.NoOpContinuation.context
-import kotlinx.coroutines.tasks.await
-import java.time.LocalDate
-//import kotlin.coroutines.jvm.internal.CompletedContinuation.context
-import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.Badge
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import com.example.koalm.ui.screens.habitos.saludMental.PantallaLibros
 import com.example.koalm.ui.screens.habitos.saludMental.PantallaNotas
+import com.example.koalm.ui.theme.*
+import com.example.koalm.ui.viewmodels.DashboardViewModel
+import com.example.koalm.ui.viewmodels.InicioSesionPreferences
+import com.example.koalm.ui.viewmodels.LogrosPreferences
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import java.time.LocalDate
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.Badge
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 
+// Modelo para separar lo que se muestra en UI de lo que se usa como ID en la navegación
+data class HabitoPingu(
+    val routeKey: String,   // lo que espera la pantalla de hábitos koalísticos
+    val tituloUi: String,   // título que ve el usuario
+    val descripcion: String,
+    val imagenId: Int
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaMenuPrincipal(navController: NavHostController) {
-    val diasDeLaSemana = listOf("L", "M", "M", "J", "V", "S", "D")
-    val progreso = listOf(true, true, true, true, false, false, false)
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    val habitosKoalisticos = listOf(
-        Triple("Desconexión koalística", "Encuentra tu paz interior como un koala en su árbol favorito.", R.drawable.koala_naturaleza),
-        Triple("Alimentación consciente", "Disfruta cada hoja de eucalipto como si fuera la primera.", R.drawable.koala_comiendo),
-        Triple("Meditación koalística", "Meditar como un koala: profundo y reparador.", R.drawable.koala_meditando),
-        Triple("Hidratación koalística", "Bebe agua como un koala saboreando el rocío de la mañana.", R.drawable.koala_bebiendo),
-        Triple("Descanso koalístico", "Duerme como un koala después de un día de abrazar árboles.", R.drawable.koala_durmiendo),
-        Triple("Escritura koalística", "Anota tranquilo, estilo koala.", R.drawable.koala_escribiendo),
-        Triple("Lectura koalística", "Sumérgete en las hojas de un buen libro como si fueran ramas de eucalipto.", R.drawable.koala_leyendo)
+    val habitosPingu = listOf(
+        HabitoPingu(
+            routeKey = "Desconexión koalística",
+            tituloUi = "Desconexión pingüina",
+            descripcion = "Haz una pausa y descansa como un pingüino relajado sobre el hielo.",
+            imagenId = R.drawable.pinguino_naturaleza
+        ),
+        HabitoPingu(
+            routeKey = "Alimentación consciente",
+            tituloUi = "Alimentación equilibrada",
+            descripcion = "Disfruta tus comidas como un pingüino saboreando su pez favorito.",
+            imagenId = R.drawable.koala_comiendo
+        ),
+        HabitoPingu(
+            routeKey = "Meditación koalística",
+            tituloUi = "Respira como pingüino",
+            descripcion = "Toma un momento para respirar profundo antes de tu siguiente zambullida del día.",
+            imagenId = R.drawable.koala_meditando
+        ),
+        HabitoPingu(
+            routeKey = "Hidratación koalística",
+            tituloUi = "Hidratación polar",
+            descripcion = "Mantén tu cuerpo fresco como un pingüino en aguas heladas: bebe suficiente agua.",
+            imagenId = R.drawable.koala_bebiendo
+        ),
+        HabitoPingu(
+            routeKey = "Descanso koalístico",
+            tituloUi = "Sueño reparador",
+            descripcion = "Duerme abrigado como un pingüino en su colonia durante la noche.",
+            imagenId = R.drawable.koala_durmiendo
+        ),
+        HabitoPingu(
+            routeKey = "Escritura koalística",
+            tituloUi = "Escritura polar",
+            descripcion = "Escribe tus ideas como huellitas en la nieve: claras y únicas.",
+            imagenId = R.drawable.koala_escribiendo
+        ),
+        HabitoPingu(
+            routeKey = "Lectura koalística",
+            tituloUi = "Lectura abrigada",
+            descripcion = "Refúgiate con un buen libro como pingüino que se protege del viento.",
+            imagenId = R.drawable.koala_leyendo
+        )
     )
 
-    // Obtener el nombre de nuestro usuaio KOOL
+    // Datos de usuario
     val usuarioEmail = FirebaseAuth.getInstance().currentUser?.email
     val userId = FirebaseAuth.getInstance().currentUser?.uid
     val db = FirebaseFirestore.getInstance()
     var username by remember { mutableStateOf("") }
 
-
     LaunchedEffect(usuarioEmail) {
-        if (usuarioEmail != null) {
-            if (usuarioEmail.isNotEmpty()) {
-                db.collection("usuarios")
-                    .document(usuarioEmail)
-                    .get()
-                    .addOnSuccessListener { doc ->
-                        username = doc.getString("username").orEmpty()
-                    }
-                    .addOnFailureListener {
-                        username = "Kool"
-                    }
-            }
+        if (!usuarioEmail.isNullOrEmpty()) {
+            db.collection("usuarios")
+                .document(usuarioEmail)
+                .get()
+                .addOnSuccessListener { doc ->
+                    username = doc.getString("username").orEmpty()
+                }
+                .addOnFailureListener {
+                    username = "Kool"
+                }
         }
     }
 
@@ -138,25 +165,21 @@ fun PantallaMenuPrincipal(navController: NavHostController) {
     val prefs = remember { InicioSesionPreferences(context) }
     var mostrarDialogoBienvenida by rememberSaveable { mutableStateOf(false) }
 
-    // Mostrar solo si no ha sido mostrada antes
-        LaunchedEffect(Unit) {
-            if (!prefs.fueMostradaAnimacion()) {
-                mostrarDialogoBienvenida = true
+    LaunchedEffect(Unit) {
+        if (!prefs.fueMostradaAnimacion()) {
+            mostrarDialogoBienvenida = true
+        }
+    }
+
+    if (mostrarDialogoBienvenida) {
+        BienvenidoDialogoAnimado(
+            mensaje = "Bienvenid@ $username",
+            onDismiss = {
+                mostrarDialogoBienvenida = false
+                prefs.marcarAnimacionComoMostrada()
             }
-        }
-
-    // Mostrar diálogo si el estado está en true
-        if (mostrarDialogoBienvenida) {
-            BienvenidoDialogoAnimado(
-                mensaje = "Bienvenid@ $username",
-                onDismiss = {
-                    mostrarDialogoBienvenida = false
-                    prefs.marcarAnimacionComoMostrada()
-                }
-            )
-        }
-
-
+        )
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -166,10 +189,10 @@ fun PantallaMenuPrincipal(navController: NavHostController) {
             }
         }
     ) {
-    Scaffold(
+        Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("¡Hola, $username! 🐨✨") },
+                    title = { Text("¡Hola, $username! 🐧✨") },
                     navigationIcon = {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
                             Icon(Icons.Default.Menu, contentDescription = "Menú")
@@ -181,7 +204,9 @@ fun PantallaMenuPrincipal(navController: NavHostController) {
                             Icon(Icons.Default.Settings, contentDescription = "Configuración")
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
                 )
             },
             bottomBar = {
@@ -205,30 +230,37 @@ fun PantallaMenuPrincipal(navController: NavHostController) {
                 SeccionTitulo("Racha semanal")
                 FormatoRacha(
                     dias = racha,
-                    onClick = {
-                        //navController.navigate("racha_habitos")
-                        }
+                    onClick = { /* navController.navigate("racha_habitos") */ }
                 )
 
                 SeccionTitulo("Hábitos koalísticos")
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    items(habitosKoalisticos) { (titulo, descripcion, imagenId) ->
-                        HabitoCarruselItem(titulo, descripcion, imagenId,onClick = {
-                            // Manda el título como ID para el ejemplo
-                            navController.navigate("pantalla_habitos_koalisticos/${titulo}")
-                        })
+                    items(habitosPingu) { habito ->
+                        HabitoCarruselItem(
+                            titulo = habito.tituloUi,
+                            descripcion = habito.descripcion,
+                            imagenId = habito.imagenId,
+                            onClick = {
+                                navController.navigate(
+                                    "pantalla_habitos_koalisticos/${habito.routeKey}"
+                                )
+                            }
+                        )
                     }
                 }
 
                 SeccionTitulo("Mis hábitos")
-                if (usuarioEmail != null) {
-                    if (userId != null) {
-                        DashboardScreen(usuarioEmail = usuarioEmail, userId = userId, navController = navController,)
-                    }
+                if (usuarioEmail != null && userId != null) {
+                    DashboardScreen(
+                        usuarioEmail = usuarioEmail,
+                        userId = userId,
+                        navController = navController
+                    )
                 }
 
-                //SeccionTitulo("Estadísticas")
-                //EstadisticasCard()
+                // Si luego quieres activar estadísticas:
+                // SeccionTitulo("Estadísticas")
+                // EstadisticasCard()
             }
         }
     }
@@ -243,7 +275,6 @@ fun SeccionTitulo(texto: String) {
         color = PrimaryColor
     )
 }
-
 
 @Composable
 fun EstadisticasCard() {
@@ -265,102 +296,121 @@ fun EstadisticasCard() {
     }
 }
 
-
-
-
 @Composable
 fun DrawerContenido(navController: NavHostController, userEmail: String) {
     val scope = rememberCoroutineScope()
     ModalDrawerSheet {
-        Text("Koalm", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.headlineMedium)
+        Text(
+            "Koalm",
+            modifier = Modifier.padding(16.dp),
+            style = MaterialTheme.typography.headlineMedium
+        )
         HorizontalDivider()
         listOf("Inicio", "Test de ansiedad").forEach {
-            NavigationDrawerItem(label = { Text(it) }, selected = it == "Inicio", onClick = {
-                when (it) {
-                    "Test de ansiedad" -> navController.navigate("test_de_ansiedad")
+            NavigationDrawerItem(
+                label = { Text(it) },
+                selected = it == "Inicio",
+                onClick = {
+                    when (it) {
+                        "Test de ansiedad" -> navController.navigate("test_de_ansiedad")
+                    }
                 }
-            })
+            )
         }
         HorizontalDivider()
-        Text("Estadísticas de Hábitos", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.titleSmall)
+        Text(
+            "Estadísticas de Hábitos",
+            modifier = Modifier.padding(16.dp),
+            style = MaterialTheme.typography.titleSmall
+        )
         listOf("Salud física", "Salud mental", "Personalizados").forEach {
-            NavigationDrawerItem(label = { Text(it) }, selected = false, onClick = {
-                when (it) {
-                    "Salud física" -> {
-                        scope.launch {
-                            val db = FirebaseFirestore.getInstance()
-                            val snapshot = db.collection("habitos")
-                                .document(userEmail)
-                                .collection("predeterminados")
-                                .whereEqualTo("clase", "FISICO")
-                                .get()
-                                .await()
+            NavigationDrawerItem(
+                label = { Text(it) },
+                selected = false,
+                onClick = {
+                    when (it) {
+                        "Salud física" -> {
+                            scope.launch {
+                                val db = FirebaseFirestore.getInstance()
+                                val snapshot = db.collection("habitos")
+                                    .document(userEmail)
+                                    .collection("predeterminados")
+                                    .whereEqualTo("clase", "FISICO")
+                                    .get()
+                                    .await()
 
-                            if (snapshot.isEmpty) {
-                                navController.navigate("salud_fisica")
-                            } else {
-                                navController.navigate("estadisticas_salud_fisica")
+                                if (snapshot.isEmpty) {
+                                    navController.navigate("salud_fisica")
+                                } else {
+                                    navController.navigate("estadisticas_salud_fisica")
+                                }
+                            }
+                        }
+
+                        "Salud mental" -> {
+                            scope.launch {
+                                val db = FirebaseFirestore.getInstance()
+                                val snapshot = db.collection("habitos")
+                                    .document(userEmail)
+                                    .collection("predeterminados")
+                                    .whereEqualTo("clase", "MENTAL")
+                                    .get()
+                                    .await()
+
+                                if (snapshot.isEmpty) {
+                                    navController.navigate("salud_mental")
+                                } else {
+                                    navController.navigate("estadisticas_salud_mental")
+                                }
+                            }
+                        }
+
+                        "Personalizados" -> {
+                            scope.launch {
+                                val db = FirebaseFirestore.getInstance()
+                                val snapshot = db.collection("habitos")
+                                    .document(userEmail)
+                                    .collection("personalizados")
+                                    .get()
+                                    .await()
+
+                                if (snapshot.isEmpty) {
+                                    navController.navigate("gestion_habitos_personalizados")
+                                } else {
+                                    navController.navigate("estadisticas_habito_perzonalizado")
+                                }
                             }
                         }
                     }
-                    "Salud mental" -> {
-                        scope.launch {
-                            val db = FirebaseFirestore.getInstance()
-                            val snapshot = db.collection("habitos")
-                                .document(userEmail)
-                                .collection("predeterminados")
-                                .whereEqualTo("clase", "MENTAL")
-                                .get()
-                                .await()
-
-                            if (snapshot.isEmpty) {
-                                navController.navigate("salud_mental")
-                            } else {
-                                navController.navigate("estadisticas_salud_mental")
-                            }
-                        }
-                    }
-                    "Personalizados" -> {
-                        scope.launch {
-                            val db = FirebaseFirestore.getInstance()
-                            val snapshot = db.collection("habitos")
-                                .document(userEmail)
-                                .collection("personalizados")
-                                .get()
-                                .await()
-
-                            if (snapshot.isEmpty) {
-                                navController.navigate("gestion_habitos_personalizados")
-                            } else {
-                                navController.navigate("estadisticas_habito_perzonalizado")
-                            }
-                        }
-                    }
-
                 }
-            })
+            )
         }
 
         HorizontalDivider()
-        Text("Rincón creativo", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.titleSmall)
+        Text(
+            "Rincón creativo",
+            modifier = Modifier.padding(16.dp),
+            style = MaterialTheme.typography.titleSmall
+        )
         listOf("Mis notas", "Mis libros").forEach {
-            NavigationDrawerItem(label = { Text(it) }, selected = false, onClick = {
-                when (it) {
-                    "Mis notas" -> {
-                        navController.navigate("notas")
-                    }
-                    "Mis libros" -> {
-                        navController.navigate("libros")
+            NavigationDrawerItem(
+                label = { Text(it) },
+                selected = false,
+                onClick = {
+                    when (it) {
+                        "Mis notas" -> navController.navigate("notas")
+                        "Mis libros" -> navController.navigate("libros")
                     }
                 }
-            })
+            )
         }
     }
 }
 
-
 @Composable
-fun FormatoRacha(dias: List<Pair<String, Boolean>>,  onClick: () -> Unit = {}
+fun FormatoRacha(
+    dias: List<Pair<String, Boolean>>,
+    onClick: () -> Unit = {}
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -371,7 +421,6 @@ fun FormatoRacha(dias: List<Pair<String, Boolean>>,  onClick: () -> Unit = {}
             .clickable { onClick() }
     ) {
         if (dias.isEmpty() || dias.all { !it.second }) {
-            // Mostrar mensaje para usuario nuevo o sin días completados
             Text(
                 text = "¡Empieza hoy y construye tu racha!",
                 style = MaterialTheme.typography.bodyMedium,
@@ -414,7 +463,12 @@ fun FormatoRacha(dias: List<Pair<String, Boolean>>,  onClick: () -> Unit = {}
 }
 
 @Composable
-fun HabitoCarruselItem(titulo: String, descripcion: String, imagenId: Int, onClick: () -> Unit) {
+fun HabitoCarruselItem(
+    titulo: String,
+    descripcion: String,
+    imagenId: Int,
+    onClick: () -> Unit
+) {
     Box(
         modifier = Modifier
             .size(width = 200.dp, height = 120.dp)
@@ -462,8 +516,6 @@ fun HabitoCarruselItem(titulo: String, descripcion: String, imagenId: Int, onCli
         }
     }
 }
-
-
 @Composable
 fun DashboardScreen(
     usuarioEmail: String,
