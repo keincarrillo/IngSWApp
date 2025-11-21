@@ -295,9 +295,11 @@ fun EstadisticasCard() {
 @Composable
 fun DrawerContenido(navController: NavHostController, userEmail: String) {
     val scope = rememberCoroutineScope()
-    ModalDrawerSheet {
+    ModalDrawerSheet(
+        modifier = Modifier.fillMaxWidth(0.5f) // Ocupará el 75% de la pantalla
+    ) {
         Text(
-            "Koalm",
+            "Pingüi",
             modifier = Modifier.padding(16.dp),
             style = MaterialTheme.typography.headlineMedium
         )
