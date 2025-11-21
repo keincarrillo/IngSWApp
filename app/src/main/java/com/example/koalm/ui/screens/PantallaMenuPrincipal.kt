@@ -185,7 +185,13 @@ fun PantallaMenuPrincipal(navController: NavHostController) {
         drawerState = drawerState,
         drawerContent = {
             if (usuarioEmail != null) {
-                DrawerContenido(navController, usuarioEmail)
+                DrawerContenido(
+                    navController = navController,
+                    userEmail = usuarioEmail,
+                    onDestinationClicked = {
+                        scope.launch { drawerState.close() }
+                    }
+                )
             }
         }
     ) {
@@ -293,117 +299,229 @@ fun EstadisticasCard() {
 }
 
 @Composable
-fun DrawerContenido(navController: NavHostController, userEmail: String) {
+fun DrawerContenido(
+    navController: NavHostController,
+    userEmail: String,
+    onDestinationClicked: () -> Unit
+) {
     val scope = rememberCoroutineScope()
+    val db = FirebaseFirestore.getInstance()
+
     ModalDrawerSheet(
-        modifier = Modifier.fillMaxWidth(0.5f) // Ocupará el 75% de la pantalla
+        modifier = Modifier.fillMaxWidth(0.8f),
+        drawerShape = RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp),
+        drawerContainerColor = MaterialTheme.colorScheme.surface,
+        drawerContentColor = MaterialTheme.colorScheme.onSurface
     ) {
-        Text(
-            "Pingüi",
-            modifier = Modifier.padding(16.dp),
-            style = MaterialTheme.typography.headlineMedium
-        )
-        HorizontalDivider()
-        listOf("Inicio", "Test de ansiedad").forEach {
-            NavigationDrawerItem(
-                label = { Text(it) },
-                selected = it == "Inicio",
-                onClick = {
-                    when (it) {
-                        "Test de ansiedad" -> navController.navigate("test_de_ansiedad")
+        Column(
+            modifier = Modifier
+                .fillMaxHeight()
+                .verticalScroll(rememberScrollState())
+        ) {
+            // HEADER BONITO
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(PrimaryColor, SecondaryColor)
+                        )
+                    )
+                    .padding(horizontal = 16.dp, vertical = 20.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .background(
+                                color = White.copy(alpha = 0.18f),
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.SelfImprovement,
+                            contentDescription = null,
+                            tint = White
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column {
+                        Text(
+                            text = "PinguBalance",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = White
+                        )
+                        Text(
+                            text = userEmail,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = White.copy(alpha = 0.85f)
+                        )
+                        Text(
+                            text = "Tu espacio para cuidar tus hábitos",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = White.copy(alpha = 0.75f)
+                        )
                     }
                 }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // SECCIÓN: NAVEGACIÓN PRINCIPAL
+            Text(
+                "Navegación",
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary
             )
-        }
-        HorizontalDivider()
-        Text(
-            "Estadísticas de Hábitos",
-            modifier = Modifier.padding(16.dp),
-            style = MaterialTheme.typography.titleSmall
-        )
-        listOf("Salud física", "Salud mental", "Personalizados").forEach {
+
             NavigationDrawerItem(
-                label = { Text(it) },
+                label = { Text("Inicio") },
                 selected = false,
+                icon = { Icon(Icons.Default.Menu, contentDescription = null) },
                 onClick = {
-                    when (it) {
-                        "Salud física" -> {
-                            scope.launch {
-                                val db = FirebaseFirestore.getInstance()
-                                val snapshot = db.collection("habitos")
-                                    .document(userEmail)
-                                    .collection("predeterminados")
-                                    .whereEqualTo("clase", "FISICO")
-                                    .get()
-                                    .await()
-
-                                if (snapshot.isEmpty) {
-                                    navController.navigate("salud_fisica")
-                                } else {
-                                    navController.navigate("estadisticas_salud_fisica")
-                                }
-                            }
-                        }
-
-                        "Salud mental" -> {
-                            scope.launch {
-                                val db = FirebaseFirestore.getInstance()
-                                val snapshot = db.collection("habitos")
-                                    .document(userEmail)
-                                    .collection("predeterminados")
-                                    .whereEqualTo("clase", "MENTAL")
-                                    .get()
-                                    .await()
-
-                                if (snapshot.isEmpty) {
-                                    navController.navigate("salud_mental")
-                                } else {
-                                    navController.navigate("estadisticas_salud_mental")
-                                }
-                            }
-                        }
-
-                        "Personalizados" -> {
-                            scope.launch {
-                                val db = FirebaseFirestore.getInstance()
-                                val snapshot = db.collection("habitos")
-                                    .document(userEmail)
-                                    .collection("personalizados")
-                                    .get()
-                                    .await()
-
-                                if (snapshot.isEmpty) {
-                                    navController.navigate("gestion_habitos_personalizados")
-                                } else {
-                                    navController.navigate("estadisticas_habito_perzonalizado")
-                                }
-                            }
-                        }
+                    onDestinationClicked()
+                    navController.navigate("menu") {
+                        launchSingleTop = true
+                        popUpTo("menu") { inclusive = false }
                     }
-                }
+                },
+                modifier = Modifier.padding(horizontal = 8.dp)
             )
-        }
 
-        HorizontalDivider()
-        Text(
-            "Rincón creativo",
-            modifier = Modifier.padding(16.dp),
-            style = MaterialTheme.typography.titleSmall
-        )
-        listOf("Mis notas", "Mis libros").forEach {
             NavigationDrawerItem(
-                label = { Text(it) },
+                label = { Text("Test de ansiedad") },
                 selected = false,
+                icon = { Icon(Icons.Default.SelfImprovement, contentDescription = null) },
                 onClick = {
-                    when (it) {
-                        "Mis notas" -> navController.navigate("notas")
-                        "Mis libros" -> navController.navigate("libros")
-                    }
-                }
+                    onDestinationClicked()
+                    navController.navigate("test_de_ansiedad")
+                },
+                modifier = Modifier.padding(horizontal = 8.dp)
             )
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            // SECCIÓN: ESTADÍSTICAS DE HÁBITOS
+            Text(
+                "Estadísticas de hábitos",
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            NavigationDrawerItem(
+                label = { Text("Salud física") },
+                selected = false,
+                icon = { Icon(Icons.Default.LocalDrink, contentDescription = null) },
+                onClick = {
+                    onDestinationClicked()
+                    scope.launch {
+                        val snapshot = db.collection("habitos")
+                            .document(userEmail)
+                            .collection("predeterminados")
+                            .whereEqualTo("clase", "FISICO")
+                            .get()
+                            .await()
+
+                        if (snapshot.isEmpty) {
+                            navController.navigate("salud_fisica")
+                        } else {
+                            navController.navigate("estadisticas_salud_fisica")
+                        }
+                    }
+                },
+                modifier = Modifier.padding(horizontal = 8.dp)
+            )
+
+            NavigationDrawerItem(
+                label = { Text("Salud mental") },
+                selected = false,
+                icon = { Icon(Icons.Default.Nightlight, contentDescription = null) },
+                onClick = {
+                    onDestinationClicked()
+                    scope.launch {
+                        val snapshot = db.collection("habitos")
+                            .document(userEmail)
+                            .collection("predeterminados")
+                            .whereEqualTo("clase", "MENTAL")
+                            .get()
+                            .await()
+
+                        if (snapshot.isEmpty) {
+                            navController.navigate("salud_mental")
+                        } else {
+                            navController.navigate("estadisticas_salud_mental")
+                        }
+                    }
+                },
+                modifier = Modifier.padding(horizontal = 8.dp)
+            )
+
+            NavigationDrawerItem(
+                label = { Text("Personalizados") },
+                selected = false,
+                icon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                onClick = {
+                    onDestinationClicked()
+                    scope.launch {
+                        val snapshot = db.collection("habitos")
+                            .document(userEmail)
+                            .collection("personalizados")
+                            .get()
+                            .await()
+
+                        if (snapshot.isEmpty) {
+                            navController.navigate("gestion_habitos_personalizados")
+                        } else {
+                            navController.navigate("estadisticas_habito_perzonalizado")
+                        }
+                    }
+                },
+                modifier = Modifier.padding(horizontal = 8.dp)
+            )
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            // SECCIÓN: RINCÓN CREATIVO
+            Text(
+                "Rincón creativo",
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            NavigationDrawerItem(
+                label = { Text("Mis notas") },
+                selected = false,
+                icon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                onClick = {
+                    onDestinationClicked()
+                    navController.navigate("notas")
+                },
+                modifier = Modifier.padding(horizontal = 8.dp)
+            )
+
+            NavigationDrawerItem(
+                label = { Text("Mis libros") },
+                selected = false,
+                icon = { Icon(Icons.Default.MenuBook, contentDescription = null) },
+                onClick = {
+                    onDestinationClicked()
+                    navController.navigate("libros")
+                },
+                modifier = Modifier.padding(horizontal = 8.dp)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
+
 
 @Composable
 fun FormatoRacha(
