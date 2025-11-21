@@ -1,6 +1,7 @@
 package com.example.koalm.ui.screens.tests
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -55,7 +56,7 @@ fun obtenerResultadoAnsiedad(puntaje: Int): ResultadoAnsiedad {
         )
         else -> ResultadoAnsiedad(
             nivel = "Ansiedad Severa",
-            descripcion = "Los síntomas indican un nivel severo d e ansiedad que requiere atención profesional.",
+            descripcion = "Los síntomas indican un nivel severo de ansiedad que requiere atención profesional.",
             recomendaciones = "• Busca ayuda profesional inmediata\n• Mantén contacto regular con tu red de apoyo\n• Aprende técnicas de manejo de crisis\n• Sigue un plan de tratamiento estructurado",
             color = Color(0xFFF44336)
         )
@@ -73,11 +74,12 @@ fun PantallaResultadoAnsiedad(
     val auth = FirebaseAuth.getInstance()
     val userEmail = auth.currentUser?.email
 
+    val colorScheme = MaterialTheme.colorScheme
+    val isDarkTheme = isSystemInDarkTheme()
+
     LaunchedEffect(Unit) {
         if (userEmail != null) {
             try {
-                val fechaId = java.time.LocalDate.now().toString()  // e.g. "2024-06-15"
-
                 val datos = mapOf(
                     "nivel" to resultado.nivel,
                     "puntaje" to puntaje,
@@ -123,16 +125,31 @@ fun PantallaResultadoAnsiedad(
             }
         }
     }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Resultado del Test", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        "Resultado del Test",
+                        fontWeight = FontWeight.Bold,
+                        color = colorScheme.onSurface
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Atrás",
+                            tint = colorScheme.onSurface
+                        )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = if (isDarkTheme) colorScheme.surface else TertiaryColor,
+                    titleContentColor = colorScheme.onSurface,
+                    navigationIconContentColor = colorScheme.onSurface
+                )
             )
         },
         bottomBar = {
@@ -143,14 +160,18 @@ fun PantallaResultadoAnsiedad(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
+                .background(colorScheme.background)
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Card del puntaje y nivel
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = resultado.color.copy(alpha = 0.1f))
+                colors = CardDefaults.cardColors(
+                    containerColor = resultado.color.copy(alpha = 0.12f)
+                )
             ) {
                 Column(
                     modifier = Modifier.padding(24.dp),
@@ -162,23 +183,28 @@ fun PantallaResultadoAnsiedad(
                         fontWeight = FontWeight.Bold,
                         color = resultado.color
                     )
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     Text(
                         text = resultado.nivel,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
-                        color = resultado.color
+                        color = resultado.color,
+                        textAlign = TextAlign.Center
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Card de explicación
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (isDarkTheme) colorScheme.surface else TertiaryCardColor
+                )
             ) {
                 Column(
                     modifier = Modifier.padding(24.dp)
@@ -187,15 +213,15 @@ fun PantallaResultadoAnsiedad(
                         text = "¿Qué significa?",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = colorScheme.onSurface
                     )
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     Text(
                         text = resultado.descripcion,
                         fontSize = 16.sp,
-                        color = Color.Black.copy(alpha = 0.8f),
+                        color = colorScheme.onSurface.copy(alpha = 0.9f),
                         lineHeight = 24.sp
                     )
                 }
@@ -203,9 +229,13 @@ fun PantallaResultadoAnsiedad(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Card de recomendaciones
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (isDarkTheme) colorScheme.surface else TertiaryCardColor
+                )
             ) {
                 Column(
                     modifier = Modifier.padding(24.dp)
@@ -214,15 +244,15 @@ fun PantallaResultadoAnsiedad(
                         text = "Recomendaciones",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = colorScheme.onSurface
                     )
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     Text(
                         text = resultado.recomendaciones,
                         fontSize = 16.sp,
-                        color = Color.Black.copy(alpha = 0.8f),
+                        color = colorScheme.onSurface.copy(alpha = 0.9f),
                         lineHeight = 24.sp
                     )
                 }
@@ -238,7 +268,11 @@ fun PantallaResultadoAnsiedad(
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Text("Volver al inicio", fontSize = 16.sp)
+                Text(
+                    "Volver al inicio",
+                    fontSize = 16.sp,
+                    color = Color.White
+                )
             }
         }
     }
