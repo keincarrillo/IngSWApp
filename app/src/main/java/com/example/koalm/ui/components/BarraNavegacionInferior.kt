@@ -16,9 +16,11 @@ fun BarraNavegacionInferior(
     navController: NavHostController,
     rutaActual: String
 ) {
+    val colorScheme = MaterialTheme.colorScheme
+
     NavigationBar(
-        containerColor = TertiaryColor,
-        contentColor = TertiaryMediumColor,
+        containerColor = colorScheme.surface,          // Se adapta a claro/oscuro
+        contentColor = colorScheme.onSurface,
         tonalElevation = 8.dp
     ) {
         listOf(
@@ -27,9 +29,11 @@ fun BarraNavegacionInferior(
             Triple("Salud", Icons.Default.Favorite, "estadisticas"),
             Triple("Perfil", Icons.Default.Person, "personalizar")
         ).forEach { (label, icon, route) ->
+            val selected = rutaActual == route
+
             NavigationBarItem(
-                selected = rutaActual == route,
-                onClick = { 
+                selected = selected,
+                onClick = {
                     if (rutaActual != route) {
                         navController.navigate(route) {
                             popUpTo(navController.graph.startDestinationId)
@@ -37,27 +41,34 @@ fun BarraNavegacionInferior(
                         }
                     }
                 },
-                icon = { 
+                icon = {
                     Icon(
                         imageVector = icon,
                         contentDescription = label,
-                        tint = if (rutaActual == route) PrimaryColor else TertiaryMediumColor
+                        tint = if (selected)
+                            PrimaryColor
+                        else
+                            colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                 },
-                label = { 
+                label = {
                     Text(
                         text = label,
-                        color = if (rutaActual == route) PrimaryColor else TertiaryMediumColor
-                    ) 
+                        color = if (selected)
+                            PrimaryColor
+                        else
+                            colorScheme.onSurface.copy(alpha = 0.7f),
+                        style = MaterialTheme.typography.labelSmall
+                    )
                 },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = PrimaryColor,
-                    unselectedIconColor = TertiaryMediumColor,
+                    unselectedIconColor = colorScheme.onSurface.copy(alpha = 0.6f),
                     selectedTextColor = PrimaryColor,
-                    unselectedTextColor = TertiaryMediumColor,
-                    indicatorColor = PrimaryColor.copy(alpha = 0.1f)
+                    unselectedTextColor = colorScheme.onSurface.copy(alpha = 0.7f),
+                    indicatorColor = PrimaryColor.copy(alpha = 0.12f)
                 )
             )
         }
     }
-} 
+}
