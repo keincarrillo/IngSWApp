@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.sp
 fun PantallaHabitosKoalisticos(navController: NavHostController, tituloHabito: String) {
     val context = LocalContext.current
 
-    // Aquí haces la conversión robusta dentro de la pantalla:
+    // Conversión de título a tipo de hábito
     val tipoHabito = when (tituloHabito) {
         "Meditación koalística" -> HabitoKoalistico.MEDITACION
         "Alimentación consciente" -> HabitoKoalistico.ALIMENTACION
@@ -57,7 +57,7 @@ fun PantallaHabitosKoalisticos(navController: NavHostController, tituloHabito: S
             TopAppBar(
                 title = {
                     Text(
-                        text = "Hábitos Koalisticos",
+                        text = "Hábitos Pingü",
                         color = PrimaryColor,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold
@@ -65,36 +65,56 @@ fun PantallaHabitosKoalisticos(navController: NavHostController, tituloHabito: S
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Volver",
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.onBackground,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onBackground
+                )
             )
         },
-            bottomBar = {
-                BarraNavegacionInferior(navController, "Racha_Habitos")
-            }
+        bottomBar = {
+            BarraNavegacionInferior(navController, "Racha_Habitos")
+        }
     ) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
-                .padding(horizontal = 24.dp, vertical = 30.dp)
-                .fillMaxSize(),
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp, vertical = 24.dp),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // BOX con toda la info
-            Box(
+            // Card con toda la info
+            Card(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White, RoundedCornerShape(16.dp))
-                    .padding(16.dp)
+                    .fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Text(
                         text = stringResource(datos.titulo),
-                        style = MaterialTheme.typography.headlineLarge.copy(fontSize = 28.sp),
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.SemiBold
+                        ),
                         textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -103,18 +123,24 @@ fun PantallaHabitosKoalisticos(navController: NavHostController, tituloHabito: S
                     Image(
                         painter = painterResource(id = datos.imagenResId),
                         contentDescription = null,
-                        modifier = Modifier.size(400.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 180.dp, max = 260.dp)
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
                         text = stringResource(datos.mensaje),
-                        style = MaterialTheme.typography.bodyLarge,
-                        textAlign = TextAlign.Justify
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Justify,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
+
+            // Espacio extra para que no se corte con la barra inferior
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }

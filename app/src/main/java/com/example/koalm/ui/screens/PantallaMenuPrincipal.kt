@@ -233,7 +233,7 @@ fun PantallaMenuPrincipal(navController: NavHostController) {
                     onClick = { /* navController.navigate("racha_habitos") */ }
                 )
 
-                SeccionTitulo("Hábitos koalísticos")
+                SeccionTitulo("Hábitos pingü")
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     items(habitosPingu) { habito ->
                         HabitoCarruselItem(
@@ -257,10 +257,6 @@ fun PantallaMenuPrincipal(navController: NavHostController) {
                         navController = navController
                     )
                 }
-
-                // Si luego quieres activar estadísticas:
-                // SeccionTitulo("Estadísticas")
-                // EstadisticasCard()
             }
         }
     }
