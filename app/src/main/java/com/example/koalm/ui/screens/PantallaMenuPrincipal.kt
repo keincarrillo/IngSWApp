@@ -200,7 +200,7 @@ fun PantallaMenuPrincipal(navController: NavHostController) {
                 DrawerContenido(
                     navController = navController,
                     userEmail = usuarioEmail,
-                    imagenBase64 = imagenPerfilBase64, // NUEVO
+                    imagenBase64 = imagenPerfilBase64,
                     onDestinationClicked = {
                         scope.launch { drawerState.close() }
                     }
