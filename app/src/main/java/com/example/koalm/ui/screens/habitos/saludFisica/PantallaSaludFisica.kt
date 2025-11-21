@@ -3,6 +3,7 @@ package com.example.koalm.ui.screens.habitos.saludFisica
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.border
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,15 +26,10 @@ import com.example.koalm.repository.HabitoRepository
 import com.example.koalm.ui.components.BarraNavegacionInferior
 import com.example.koalm.ui.theme.*
 import kotlinx.coroutines.launch
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import com.example.koalm.services.notifications.AlimentationNotificationService
-
 import com.google.firebase.auth.FirebaseAuth
-import com.example.koalm.services.notifications.NotificationBase
 import com.example.koalm.ui.components.ExitoDialogoGuardadoAnimado
 import com.example.koalm.ui.screens.habitos.saludMental.ConfirmacionDialogoEliminarAnimado
 
@@ -56,14 +52,13 @@ fun PantallaSaludFisica(navController: NavHostController) {
     val scope = rememberCoroutineScope()
     val auth = FirebaseAuth.getInstance()
 
-    // Estado de la UI
     var habitosActivos by remember {
-        mutableStateOf<List<Habito>>(emptyList())}
+        mutableStateOf<List<Habito>>(emptyList())
+    }
     var isLoading by remember { mutableStateOf(true) }
     var showError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
 
-    // Función para recargar los hábitos físicos
     fun cargarHabitos() {
         scope.launch {
             try {
@@ -79,14 +74,21 @@ fun PantallaSaludFisica(navController: NavHostController) {
                 habitosRepository.obtenerHabitosFisicos(currentUser.uid).fold(
                     onSuccess = { habitos ->
                         habitosActivos = habitos.map { habito ->
-                            Log.d(TAG, "Procesando habito: ${habito.titulo}, tipo: ${habito.tipo}, horarios: ${habito.horarios}, hora: ${habito.hora}")
-                            val habitoConHorarios = if (habito.tipo == TipoHabito.ALIMENTACION && habito.horarios.isNullOrEmpty()) {
-                                habito.copy(horarios = listOf(habito.hora))
-                            } else {
-                                habito
-                            }
+                            Log.d(
+                                TAG,
+                                "Procesando habito: ${habito.titulo}, tipo: ${habito.tipo}, horarios: ${habito.horarios}, hora: ${habito.hora}"
+                            )
+                            val habitoConHorarios =
+                                if (habito.tipo == TipoHabito.ALIMENTACION && habito.horarios.isNullOrEmpty()) {
+                                    habito.copy(horarios = listOf(habito.hora))
+                                } else {
+                                    habito
+                                }
 
-                            Log.d(TAG, "Resultado habito: ${habitoConHorarios.titulo}, Horarios: ${habitoConHorarios.horarios}")
+                            Log.d(
+                                TAG,
+                                "Resultado habito: ${habitoConHorarios.titulo}, Horarios: ${habitoConHorarios.horarios}"
+                            )
                             habitoConHorarios
                         }
 
@@ -106,7 +108,6 @@ fun PantallaSaludFisica(navController: NavHostController) {
         }
     }
 
-    // Cargar hábitos al iniciar
     LaunchedEffect(Unit) {
         cargarHabitos()
     }
@@ -151,7 +152,8 @@ fun PantallaSaludFisica(navController: NavHostController) {
                 navController = navController,
                 rutaActual = "salud_fisica"
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -161,7 +163,6 @@ fun PantallaSaludFisica(navController: NavHostController) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Sección de plantilla de hábitos
             Text(
                 text = "Configura tus hábitos",
                 style = MaterialTheme.typography.titleMedium,
@@ -175,7 +176,6 @@ fun PantallaSaludFisica(navController: NavHostController) {
 
             HorizontalDivider()
 
-            // Sección de hábitos activos
             if (isLoading) {
                 Box(
                     modifier = Modifier.fillMaxWidth(),
@@ -211,7 +211,6 @@ fun PantallaSaludFisica(navController: NavHostController) {
         }
     }
 
-    // Diálogo de error
     if (showError) {
         AlertDialog(
             onDismissRequest = { showError = false },
@@ -229,6 +228,11 @@ fun PantallaSaludFisica(navController: NavHostController) {
 @Composable
 fun HabitoPlantillaCardFisico(habito: Habito, navController: NavHostController) {
     val context = LocalContext.current
+    val isDark = isSystemInDarkTheme()
+    val colorScheme = MaterialTheme.colorScheme
+
+    val borderColor = if (isDark) colorScheme.outlineVariant else BorderColor
+    val cardColor = if (isDark) colorScheme.surface else ContainerColor
 
     Card(
         onClick = {
@@ -248,10 +252,10 @@ fun HabitoPlantillaCardFisico(habito: Habito, navController: NavHostController) 
                         launchSingleTop = true
                         restoreState = true
                     }
-                    TipoHabito.LECTURA -> { /* No hacer nada o manejar caso mental */ }
-                    TipoHabito.MEDITACION -> { /* No hacer nada o manejar caso mental */ }
-                    TipoHabito.DESCONEXION_DIGITAL -> { /* No hacer nada o manejar caso mental */ }
-                    TipoHabito.ESCRITURA -> { /* No hacer nada o manejar caso mental */ }
+                    TipoHabito.LECTURA -> { }
+                    TipoHabito.MEDITACION -> { }
+                    TipoHabito.DESCONEXION_DIGITAL -> { }
+                    TipoHabito.ESCRITURA -> { }
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error al navegar: ${e.message}", e)
@@ -264,9 +268,9 @@ fun HabitoPlantillaCardFisico(habito: Habito, navController: NavHostController) 
         },
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, BorderColor, RoundedCornerShape(16.dp)),
+            .border(1.dp, borderColor, RoundedCornerShape(16.dp)),
         colors = CardDefaults.cardColors(
-            containerColor = ContainerColor
+            containerColor = cardColor
         )
     ) {
         Row(
@@ -314,8 +318,7 @@ fun HabitoActivoCardFisico(
     var isProcessing by remember { mutableStateOf(false) }
     var mostrarDialogoConfirmacion by remember { mutableStateOf(false) }
 
-    //Mensaje de exito
-    var mostrarDialogoExito by remember{ mutableStateOf(false) }
+    var mostrarDialogoExito by remember { mutableStateOf(false) }
     if (mostrarDialogoExito) {
         ExitoDialogoGuardadoAnimado(
             mensaje = "¡Hábito eliminado con éxito!",
@@ -326,17 +329,16 @@ fun HabitoActivoCardFisico(
         )
     }
 
-    // Calcular la hora de despertar para hábitos de sueño
     val horaDespertar = if (habito.tipo == TipoHabito.SUEÑO) {
         val horaDormir = habito.hora.split(":").let {
             (it[0].toInt() to it[1].toInt())
         }
         val duracionHoras = habito.duracionMinutos / 60
         val duracionMinutos = habito.duracionMinutos % 60
-        
+
         var horaFinal = horaDormir.first + duracionHoras
         var minutosFinal = horaDormir.second + duracionMinutos
-        
+
         if (minutosFinal >= 60) {
             horaFinal += 1
             minutosFinal -= 60
@@ -344,17 +346,24 @@ fun HabitoActivoCardFisico(
         if (horaFinal >= 24) {
             horaFinal -= 24
         }
-        
+
         String.format("%02d:%02d", horaFinal, minutosFinal)
     } else null
+
+    val isDark = isSystemInDarkTheme()
+    val colorScheme = MaterialTheme.colorScheme
+
+    val borderColor = if (isDark) colorScheme.outlineVariant else BorderColor
+    val cardColor =
+        if (isDark) colorScheme.surface else ContainerColor.copy(alpha = 0.3f)
 
     Card(
         onClick = {},
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, BorderColor, RoundedCornerShape(16.dp)),
+            .border(1.dp, borderColor, RoundedCornerShape(16.dp)),
         colors = CardDefaults.cardColors(
-            containerColor = ContainerColor.copy(alpha = 0.3f)
+            containerColor = cardColor
         )
     ) {
         Row(
@@ -394,7 +403,6 @@ fun HabitoActivoCardFisico(
                     modifier = Modifier.padding(top = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Mostrar horario
                     Icon(
                         imageVector = Icons.Default.Schedule,
                         contentDescription = null,
@@ -429,10 +437,8 @@ fun HabitoActivoCardFisico(
                         )
                     }
 
-
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    // Mostrar días
                     Icon(
                         imageVector = Icons.Default.DateRange,
                         contentDescription = null,
@@ -442,7 +448,7 @@ fun HabitoActivoCardFisico(
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = if (habito.diasSeleccionados.all { it }) {
-                            "L-D"  // Todos los días seleccionados
+                            "L-D"
                         } else {
                             habito.diasSeleccionados.mapIndexed { index, seleccionado ->
                                 if (seleccionado) diasSemana[index] else ""
@@ -452,7 +458,6 @@ fun HabitoActivoCardFisico(
                         color = MaterialTheme.colorScheme.primary
                     )
 
-                    // Mostrar duración para hábitos de sueño
                     if (habito.tipo == TipoHabito.SUEÑO) {
                         Spacer(modifier = Modifier.width(8.dp))
                         Icon(
@@ -469,7 +474,6 @@ fun HabitoActivoCardFisico(
                         )
                     }
 
-                    // Mostrar objetivo de hidratación para hábitos de hidratación
                     if (habito.tipo == TipoHabito.HIDRATACION) {
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
@@ -481,7 +485,6 @@ fun HabitoActivoCardFisico(
                 }
             }
 
-            // Menú de opciones
             Box {
                 IconButton(onClick = { showMenu = true }) {
                     Icon(Icons.Default.MoreVert, contentDescription = "Opciones")
@@ -510,12 +513,15 @@ fun HabitoActivoCardFisico(
                                 TipoHabito.SUEÑO -> {
                                     navController.navigate("configurar_habito_sueno/${habito.id}")
                                 }
+
                                 TipoHabito.ALIMENTACION -> {
                                     navController.navigate("configurar_habito_alimentacion/${habito.id}")
                                 }
+
                                 TipoHabito.HIDRATACION -> {
                                     navController.navigate("configurar_habito_hidratacion/${habito.id}")
                                 }
+
                                 else -> {
                                     Log.w("EditarHabito", "Tipo no soportado: ${habito.tipo}")
                                 }
@@ -531,12 +537,10 @@ fun HabitoActivoCardFisico(
                         }
                     )
                 }
-
-
             }
         }
     }
-    // Diálogo de confirmación
+
     if (mostrarDialogoConfirmacion) {
         ConfirmacionDialogoEliminarAnimado(
             onCancelar = { mostrarDialogoConfirmacion = false },
