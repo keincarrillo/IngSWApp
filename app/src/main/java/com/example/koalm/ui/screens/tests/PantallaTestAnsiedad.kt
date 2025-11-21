@@ -2,6 +2,7 @@ package com.example.koalm.ui.screens.tests
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -38,21 +39,36 @@ fun PantallaTestAnsiedad(navController: NavHostController? = null) {
     val opciones = listOf("Nunca", "Varios días", "Más de la mitad del tiempo", "Casi todos los días")
     val respuestas = remember { mutableStateListOf<Int>().apply { repeat(preguntas.size) { add(-1) } } }
 
+    val colorScheme = MaterialTheme.colorScheme
+    val isDarkTheme = isSystemInDarkTheme()
+
     Scaffold(
         bottomBar = {
             navController?.let { BarraNavegacionInferior(it, "estadisticas") }
         },
         topBar = {
             TopAppBar(
-                title = { Text("Test de ansiedad", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
+                title = {
+                    Text(
+                        "Test de ansiedad",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = colorScheme.onSurface
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = { navController?.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Atrás",
+                            tint = colorScheme.onSurface
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    titleContentColor = Color.Black
+                    containerColor = if (isDarkTheme) colorScheme.surface else TertiaryColor,
+                    titleContentColor = colorScheme.onSurface,
+                    navigationIconContentColor = colorScheme.onSurface
                 )
             )
         }
@@ -60,17 +76,17 @@ fun PantallaTestAnsiedad(navController: NavHostController? = null) {
         Column(
             modifier = Modifier
                 .padding(padding)
-                .padding(horizontal = 16.dp)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .background(Color.White)
+                .background(colorScheme.background)
+                .padding(horizontal = 16.dp)
         ) {
             Text(
                 text = "En las últimas 2 semanas, ¿con qué frecuencia has experimentado alguno de los siguientes problemas?",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.padding(vertical = 24.dp),
-                color = Color.Black
+                color = colorScheme.onBackground
             )
 
             preguntas.forEachIndexed { index, pregunta ->
@@ -122,12 +138,18 @@ fun PreguntaCard(
     seleccionada: Int,
     onSeleccionar: (Int) -> Unit
 ) {
+    val colorScheme = MaterialTheme.colorScheme
+    val isDarkTheme = isSystemInDarkTheme()
+
     OutlinedCard(
         modifier = Modifier
             .fillMaxWidth(),
-        border = BorderStroke(1.dp, BorderColor),
+        border = BorderStroke(
+            1.dp,
+            if (isDarkTheme) colorScheme.outline else BorderColor
+        ),
         colors = CardDefaults.outlinedCardColors(
-            containerColor = ContainerColor
+            containerColor = if (isDarkTheme) colorScheme.surface else ContainerColor
         ),
         shape = RoundedCornerShape(16.dp)
     ) {
@@ -139,11 +161,11 @@ fun PreguntaCard(
             Text(
                 text = pregunta,
                 fontSize = 15.sp,
-                color = Color.Black,
+                color = colorScheme.onSurface,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
-            
+
             opciones.forEachIndexed { index, opcion ->
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -156,13 +178,13 @@ fun PreguntaCard(
                         onClick = { onSeleccionar(index) },
                         colors = RadioButtonDefaults.colors(
                             selectedColor = PrimaryColor,
-                            unselectedColor = PrimaryColor.copy(alpha = 0.6f)
+                            unselectedColor = colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                     )
                     Text(
                         text = opcion,
                         fontSize = 14.sp,
-                        color = Color.Black.copy(alpha = 0.8f),
+                        color = colorScheme.onSurface.copy(alpha = 0.8f),
                         modifier = Modifier.padding(start = 8.dp)
                     )
                 }
@@ -174,12 +196,3 @@ fun PreguntaCard(
 fun calcularResultado(respuestas: List<Int>): Int {
     return respuestas.sumOf { it + 1 }
 }
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewPantallaTestAnsiedad() {
-    MaterialTheme {
-        PantallaTestAnsiedad()
-    }
-}
-
