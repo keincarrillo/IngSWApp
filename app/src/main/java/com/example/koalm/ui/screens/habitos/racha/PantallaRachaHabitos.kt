@@ -146,18 +146,18 @@ fun obtenerDatosRacha(estado: EstadoRacha): DatosRachaUI {
         EstadoRacha.SIN_RACHA -> DatosRachaUI(
             titulo = R.string.label_sin_racha,
             mensaje = R.string.mensaje_sin_racha,
-            imagenResId = R.drawable.koala_durmiendo, //MODIFICAR POR LA IMAGEN CORRECTA
+            imagenResId = R.drawable.pinguino_durmiendo, //MODIFICAR POR LA IMAGEN CORRECTA
             textoBoton = "Comenzar nueva racha"
         )
         EstadoRacha.EN_PROGRESO -> DatosRachaUI(
             titulo = R.string.titulo_racha_en_progreso,
             mensaje = R.string.mensaje_racha_en_progreso,
-            imagenResId = R.drawable.koala_tomando //MODIFICAR POR LA IMAGEN CORRECTA
+            imagenResId = R.drawable.pinguino_bebiendo //MODIFICAR POR LA IMAGEN CORRECTA
         )
         EstadoRacha.COMPLETADA -> DatosRachaUI(
             titulo = R.string.titulo_racha_finalizada,
             mensaje = R.string.mensaje_racha_finzalizada,
-            imagenResId = R.drawable.koala_meditando //MODIFICAR POR LA IMAGEN CORRECTA
+            imagenResId = R.drawable.pinguino_meditando //MODIFICAR POR LA IMAGEN CORRECTA
         )
     }
 }

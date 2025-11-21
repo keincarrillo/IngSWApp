@@ -97,7 +97,7 @@ fun PantallaNosotros(navController: NavHostController){
             ListaIntegrantes()
 
             Image(
-                painter = painterResource(id = R.drawable.koala_comiendo),//Remplazar foto por una del logo o equipo
+                painter = painterResource(id = R.drawable.pinguino_comiendo),//Remplazar foto por una del logo o equipo
                 contentDescription = "Equipo Koalm",
                 modifier = Modifier.size(300.dp)
             )

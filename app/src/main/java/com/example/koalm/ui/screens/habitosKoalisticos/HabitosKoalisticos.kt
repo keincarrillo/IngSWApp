@@ -145,12 +145,12 @@ fun obtenerDatosHabito(habito: HabitoKoalistico): DatosHabitoKoalistico {
         HabitoKoalistico.ALIMENTACION -> DatosHabitoKoalistico(
             titulo = R.string.titulo_kalimentacion,
             mensaje = R.string.mensaje_kalimentacion,
-            imagenResId = R.drawable.koala_comiendo
+            imagenResId = R.drawable.pinguino_comiendo
         )
         HabitoKoalistico.MEDITACION -> DatosHabitoKoalistico(
             titulo = R.string.titulo_kmeditacion,
             mensaje = R.string.mensaje_kmeditacion,
-            imagenResId = R.drawable.koala_meditando
+            imagenResId = R.drawable.pinguino_meditando
         )
         HabitoKoalistico.HIDRATACION -> DatosHabitoKoalistico(
             titulo = R.string.titulo_khidratacion,
@@ -160,17 +160,17 @@ fun obtenerDatosHabito(habito: HabitoKoalistico): DatosHabitoKoalistico {
         HabitoKoalistico.DESCANSO -> DatosHabitoKoalistico(
             titulo = R.string.titulo_kdescanso,
             mensaje = R.string.mensaje_kdescanso,
-            imagenResId = R.drawable.koala_durmiendo
+            imagenResId = R.drawable.pinguino_durmiendo
         )
         HabitoKoalistico.ESCRITURA -> DatosHabitoKoalistico(
             titulo = R.string.titulo_kescritura,
             mensaje = R.string.mensaje_kescritura,
-            imagenResId = R.drawable.koala_escribiendo
+            imagenResId = R.drawable.pinguino_escribiendo
         )
         HabitoKoalistico.LECTURA -> DatosHabitoKoalistico(
             titulo = R.string.titulo_klectura,
             mensaje = R.string.mensaje_klectura,
-            imagenResId = R.drawable.koala_leyendo
+            imagenResId = R.drawable.pinguino_leyendo
         )
     }
 }

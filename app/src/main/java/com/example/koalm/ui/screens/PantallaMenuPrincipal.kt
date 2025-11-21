@@ -107,13 +107,13 @@ fun PantallaMenuPrincipal(navController: NavHostController) {
             routeKey = "Alimentación consciente",
             tituloUi = "Alimentación equilibrada",
             descripcion = "Disfruta tus comidas como un pingüino saboreando su pez favorito.",
-            imagenId = R.drawable.koala_comiendo
+            imagenId = R.drawable.pinguino_comiendo
         ),
         HabitoPingu(
             routeKey = "Meditación koalística",
             tituloUi = "Respira como pingüino",
             descripcion = "Toma un momento para respirar profundo antes de tu siguiente zambullida del día.",
-            imagenId = R.drawable.koala_meditando
+            imagenId = R.drawable.pinguino_meditando
         ),
         HabitoPingu(
             routeKey = "Hidratación koalística",
@@ -125,19 +125,19 @@ fun PantallaMenuPrincipal(navController: NavHostController) {
             routeKey = "Descanso koalístico",
             tituloUi = "Sueño reparador",
             descripcion = "Duerme abrigado como un pingüino en su colonia durante la noche.",
-            imagenId = R.drawable.koala_durmiendo
+            imagenId = R.drawable.pinguino_durmiendo
         ),
         HabitoPingu(
             routeKey = "Escritura koalística",
             tituloUi = "Escritura polar",
             descripcion = "Escribe tus ideas como huellitas en la nieve: claras y únicas.",
-            imagenId = R.drawable.koala_escribiendo
+            imagenId = R.drawable.pinguino_escribiendo
         ),
         HabitoPingu(
             routeKey = "Lectura koalística",
             tituloUi = "Lectura abrigada",
             descripcion = "Refúgiate con un buen libro como pingüino que se protege del viento.",
-            imagenId = R.drawable.koala_leyendo
+            imagenId = R.drawable.pinguino_leyendo
         )
     )
 
