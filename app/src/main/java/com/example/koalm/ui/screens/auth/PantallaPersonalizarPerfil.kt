@@ -104,10 +104,14 @@
             ) { uri: Uri? ->
                 uri?.let {
                     imagenUri = it
-                    val inputStream = context.contentResolver.openInputStream(it)
-                    val bytes = inputStream?.readBytes()
-                    imagenBase64 = Base64.encodeToString(bytes, Base64.DEFAULT)
-                    inputStream?.close()
+                    // Usamos la función auxiliar para comprimir al vuelo
+                    val base64Comprimido = uriToCompressedBase64(context, it)
+
+                    if (base64Comprimido != null) {
+                        imagenBase64 = base64Comprimido
+                    } else {
+                        Toast.makeText(context, "Error al procesar la imagen", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
 
@@ -706,5 +710,48 @@
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
                 Text("Guardar", color = MaterialTheme.colorScheme.onPrimary)
+            }
+        }
+        // Función para comprimir y redimensionar la imagen antes de convertirla a Base64
+        fun uriToCompressedBase64(context: android.content.Context, uri: Uri): String? {
+            return try {
+                val inputStream = context.contentResolver.openInputStream(uri)
+                // 1. Decodificar la imagen
+                val originalBitmap = BitmapFactory.decodeStream(inputStream)
+                inputStream?.close()
+
+                if (originalBitmap == null) return null
+
+                // 2. Calcular nuevas dimensiones (Máximo 600x600 para perfil)
+                val maxWidth = 600
+                val maxHeight = 600
+                var width = originalBitmap.width
+                var height = originalBitmap.height
+
+                val ratioBitmap = width.toFloat() / height.toFloat()
+                val ratioMax = maxWidth.toFloat() / maxHeight.toFloat()
+
+                var finalWidth = maxWidth
+                var finalHeight = maxHeight
+
+                if (ratioMax > ratioBitmap) {
+                    finalWidth = (maxHeight.toFloat() * ratioBitmap).toInt()
+                } else {
+                    finalHeight = (maxWidth.toFloat() / ratioBitmap).toInt()
+                }
+
+                // 3. Redimensionar
+                val resizedBitmap = Bitmap.createScaledBitmap(originalBitmap, finalWidth, finalHeight, true)
+
+                // 4. Comprimir a JPEG (calidad 70 es buen balance)
+                val outputStream = java.io.ByteArrayOutputStream()
+                resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 70, outputStream)
+                val byteArrays = outputStream.toByteArray()
+
+                // 5. Convertir a Base64
+                Base64.encodeToString(byteArrays, Base64.DEFAULT)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                null
             }
         }
