@@ -7,6 +7,16 @@ import android.util.Base64
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -43,19 +53,21 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavHostController
 import com.example.koalm.R
 import com.example.koalm.model.Usuario
 import com.example.koalm.ui.components.BarraNavegacionInferior
-import com.example.koalm.ui.components.ExitoDialogoGuardadoAnimado
 import com.example.koalm.ui.components.FalloDialogoGuardadoAnimado
 import com.example.koalm.ui.components.ValidacionesDialogoAnimado
+import com.example.koalm.ui.theme.Black
 import com.example.koalm.ui.theme.BrandPrimaryColor
 import com.example.koalm.ui.theme.LightErrorColor
 import com.example.koalm.ui.theme.PrimaryColor
@@ -91,20 +103,9 @@ fun PantallaPersonalizarPerfil(navController: NavHostController) {
 
     var perfilGuardado by remember { mutableStateOf(false) }
 
+    // Estados de diálogos
     var mostrarDialogoExito by remember { mutableStateOf(false) }
-    if (mostrarDialogoExito) {
-        ExitoDialogoGuardadoAnimado(
-            mensaje = "¡Perfil guardado correctamente!",
-            onDismiss = {
-                mostrarDialogoExito = false
-                perfilGuardado = true
-                navController.navigate("menu") {
-                    popUpTo("personalizar") { inclusive = true }
-                    launchSingleTop = true
-                }
-            }
-        )
-    }
+    var validacionesDialogo by remember { mutableStateOf(false) }
 
     val auth = FirebaseAuth.getInstance()
     val uid = auth.currentUser?.uid
@@ -157,14 +158,6 @@ fun PantallaPersonalizarPerfil(navController: NavHostController) {
         }
     }
 
-    var validacionesDialogo by remember { mutableStateOf(false) }
-    if (validacionesDialogo) {
-        ValidacionesDialogoAnimado(
-            mensaje = "Por favor, completa todos los campos para continuar",
-            onDismiss = { validacionesDialogo = false }
-        )
-    }
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -201,130 +194,163 @@ fun PantallaPersonalizarPerfil(navController: NavHostController) {
             }
         }
     ) { innerPadding ->
-        Column(
+        // Box para poder superponer diálogos sobre el contenido
+        Box(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
                 .background(colorScheme.background)
-                .verticalScroll(scrollState)
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(20.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(20.dp))
 
-            ImagenUsuario(
-                imagenBase64 = imagenBase64,
-                onEditClick = { launcher.launch("image/*") },
-                onDeleteClick = {
-                    imagenUri = null
-                    imagenBase64 = null
-                }
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            CampoUsuario(username) { username = it }
-            CampoNombre(nombre) { nombre = it }
-            CampoApellidos(apellidos) { apellidos = it }
-
-            CampoFechaNacimiento(fechasec) { showDatePicker = true }
-
-            FechaNacimientoSelector(
-                showDatePicker = showDatePicker,
-                onDismiss = { showDatePicker = false },
-                onValidDateSelected = { fechaSeleccionada ->
-                    fechasec = fechaSeleccionada
-                    showDatePicker = false
-                }
-            )
-
-            CampoPeso(peso) { peso = it }
-            CampoAltura(altura) { altura = it }
-            SelectorGenero(opcionesGenero, generoSeleccionado) { generoSeleccionado = it }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            BotonGuardarPerfil {
-                if (uid != null) {
-                    if (email == null) {
-                        Toast.makeText(
-                            context,
-                            "No se pudo obtener el correo",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        return@BotonGuardarPerfil
+                ImagenUsuario(
+                    imagenBase64 = imagenBase64,
+                    onEditClick = { launcher.launch("image/*") },
+                    onDeleteClick = {
+                        imagenUri = null
+                        imagenBase64 = null
                     }
+                )
 
-                    val regex = "^[a-zA-Z0-9_ ]*$".toRegex()
+                Spacer(modifier = Modifier.height(20.dp))
 
-                    if (
-                        username.isBlank() ||
-                        !regex.matches(username) ||
-                        username.trim().length < 3 ||
-                        nombre.isBlank() ||
-                        apellidos.isBlank() ||
-                        fechasec.isEmpty() ||
-                        peso.isEmpty() ||
-                        peso.toFloatOrNull() == null ||
-                        altura.isEmpty() ||
-                        altura.toIntOrNull() == null ||
-                        generoSeleccionado.isEmpty()
-                    ) {
-                        validacionesDialogo = true
-                        return@BotonGuardarPerfil
+                CampoUsuario(username) { username = it }
+                CampoNombre(nombre) { nombre = it }
+                CampoApellidos(apellidos) { apellidos = it }
+
+                CampoFechaNacimiento(fechasec) { showDatePicker = true }
+
+                FechaNacimientoSelector(
+                    showDatePicker = showDatePicker,
+                    onDismiss = { showDatePicker = false },
+                    onValidDateSelected = { fechaSeleccionada ->
+                        fechasec = fechaSeleccionada
+                        showDatePicker = false
                     }
+                )
 
-                    val usuario = Usuario(
-                        imagenBase64 = imagenBase64,
-                        userId = uid,
-                        email = email,
-                        username = username,
-                        nombre = nombre,
-                        apellido = apellidos,
-                        nacimiento = fechasec,
-                        peso = String.format(
-                            Locale.US,
-                            "%.2f",
-                            peso.toFloatOrNull() ?: 0f
-                        ).toFloat(),
-                        altura = altura.toIntOrNull()?.takeIf { it in 1..999 },
-                        genero = generoSeleccionado
-                    )
+                CampoPeso(peso) { peso = it }
+                CampoAltura(altura) { altura = it }
+                SelectorGenero(opcionesGenero, generoSeleccionado) { generoSeleccionado = it }
 
-                    val fechaHoy: String = LocalDate
-                        .now()
-                        .format(
-                            DateTimeFormatter.ofPattern(
-                                "d MMMM, yyyy",
-                                Locale("es", "MX")
-                            )
-                        )
+                Spacer(modifier = Modifier.weight(1f))
 
-                    val mapOriginal: Map<String, Any?> = usuario.toMap()
-                    val dataUsuario: MutableMap<String, Any> = mapOriginal
-                        .filterValues { it != null }
-                        .mapValues { it.value as Any }
-                        .toMutableMap()
-
-                    dataUsuario["fechaCreacion"] = fechaHoy
-
-                    db.collection("usuarios")
-                        .document(email)
-                        .set(dataUsuario, SetOptions.merge())
-                        .addOnSuccessListener {
-                            mostrarDialogoExito = true
-                        }
-                        .addOnFailureListener { e ->
+                BotonGuardarPerfil {
+                    if (uid != null) {
+                        if (email == null) {
                             Toast.makeText(
                                 context,
-                                "Error al guardar: ${e.localizedMessage}",
-                                Toast.LENGTH_LONG
+                                "No se pudo obtener el correo",
+                                Toast.LENGTH_SHORT
                             ).show()
+                            return@BotonGuardarPerfil
                         }
+
+                        val regex = "^[a-zA-Z0-9_ ]*$".toRegex()
+
+                        if (
+                            username.isBlank() ||
+                            !regex.matches(username) ||
+                            username.trim().length < 3 ||
+                            nombre.isBlank() ||
+                            apellidos.isBlank() ||
+                            fechasec.isEmpty() ||
+                            peso.isEmpty() ||
+                            peso.toFloatOrNull() == null ||
+                            altura.isEmpty() ||
+                            altura.toIntOrNull() == null ||
+                            generoSeleccionado.isEmpty()
+                        ) {
+                            validacionesDialogo = true
+                            return@BotonGuardarPerfil
+                        }
+
+                        val usuario = Usuario(
+                            imagenBase64 = imagenBase64,
+                            userId = uid,
+                            email = email,
+                            username = username,
+                            nombre = nombre,
+                            apellido = apellidos,
+                            nacimiento = fechasec,
+                            peso = String.format(
+                                Locale.US,
+                                "%.2f",
+                                peso.toFloatOrNull() ?: 0f
+                            ).toFloat(),
+                            altura = altura.toIntOrNull()?.takeIf { it in 1..999 },
+                            genero = generoSeleccionado
+                        )
+
+                        val fechaHoy: String = LocalDate
+                            .now()
+                            .format(
+                                DateTimeFormatter.ofPattern(
+                                    "d MMMM, yyyy",
+                                    Locale("es", "MX")
+                                )
+                            )
+
+                        val mapOriginal: Map<String, Any?> = usuario.toMap()
+                        val dataUsuario: MutableMap<String, Any> = mapOriginal
+                            .filterValues { it != null }
+                            .mapValues { it.value as Any }
+                            .toMutableMap()
+
+                        dataUsuario["fechaCreacion"] = fechaHoy
+
+                        // 🔹 MOSTRAR EL MODAL EN CUANTO SE COMPLETAN VALIDACIONES
+                        mostrarDialogoExito = true
+
+                        db.collection("usuarios")
+                            .document(email)
+                            .set(dataUsuario, SetOptions.merge())
+                            .addOnFailureListener { e ->
+                                // Si falla el guardado, cerramos el modal y mostramos error
+                                mostrarDialogoExito = false
+                                Toast.makeText(
+                                    context,
+                                    "Error al guardar: ${e.localizedMessage}",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                    }
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            // Diálogo de validaciones
+            if (validacionesDialogo) {
+                ValidacionesDialogoAnimado(
+                    mensaje = "Por favor, completa todos los campos para continuar",
+                    onDismiss = { validacionesDialogo = false }
+                )
+            }
+
+            // 🔹 Diálogo de éxito bonito con animación y mascota
+            if (mostrarDialogoExito) {
+                PerfilGuardadoDialog(
+                    onConfirm = {
+                        mostrarDialogoExito = false
+                        perfilGuardado = true
+                        navController.navigate("menu") {
+                            popUpTo("personalizar") { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
+                    onDismiss = {
+                        mostrarDialogoExito = false
+                    }
+                )
+            }
         }
     }
 }
@@ -778,6 +804,120 @@ fun SelectorGenero(
         Spacer(modifier = Modifier.height(12.dp))
     }
 }
+
+@Composable
+fun PerfilGuardadoDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val colorScheme = androidx.compose.material3.MaterialTheme.colorScheme
+    val isDark = isSystemInDarkTheme()
+
+    Dialog(onDismissRequest = onDismiss) {
+
+        // Animación de entrada del modal
+        var visible by remember { mutableStateOf(false) }
+        LaunchedEffect(Unit) {
+            visible = true
+        }
+
+        AnimatedVisibility(
+            visible = visible,
+            enter = scaleIn(initialScale = 0.85f) + fadeIn(),
+            exit = scaleOut(targetScale = 0.85f) + fadeOut()
+        ) {
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(colorScheme.surface)
+                    .padding(horizontal = 24.dp, vertical = 20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+
+                val infiniteTransition = rememberInfiniteTransition(label = "mascotaTransition")
+                val scale by infiniteTransition.animateFloat(
+                    initialValue = 0.95f,
+                    targetValue = 1.05f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(durationMillis = 900),
+                        repeatMode = RepeatMode.Reverse
+                    ),
+                    label = "mascotaScale"
+                )
+
+                val circleBg = if (isDark) {
+                    colorScheme.surfaceVariant.copy(alpha = 0.7f)
+                } else {
+                    colorScheme.primary.copy(alpha = 0.10f)
+                }
+
+                val mascotaTint: Color? = if (isDark) {
+                    Black  // gris de tu paleta
+                } else {
+                    null
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(96.dp)
+                        .background(
+                            color = circleBg,
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.greeting),
+                        contentDescription = "Mascota Koalm feliz",
+                        modifier = Modifier
+                            .size(72.dp)
+                            .graphicsLayer(
+                                scaleX = scale,
+                                scaleY = scale
+                            ),
+                        colorFilter = mascotaTint?.let { ColorFilter.tint(it) }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "¡Perfil guardado!",
+                    color = colorScheme.onSurface,
+                    fontSize = 20.sp
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Tus datos se actualizaron correctamente.",
+                    color = colorScheme.onSurface.copy(alpha = 0.8f),
+                    fontSize = 14.sp
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Button(
+                    onClick = onConfirm,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = colorScheme.primary
+                    )
+                ) {
+                    Text(
+                        text = "Ir al menú",
+                        color = colorScheme.onPrimary
+                    )
+                }
+            }
+        }
+    }
+}
+
 
 fun uriToCompressedBase64(context: android.content.Context, uri: Uri): String? {
     return try {
