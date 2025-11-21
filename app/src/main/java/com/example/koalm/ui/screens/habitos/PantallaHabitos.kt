@@ -1,4 +1,6 @@
 package com.example.koalm.ui.screens.habitos
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.ui.graphics.Color
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -83,12 +85,23 @@ fun HabitoCategoriaCard(
     icono: ImageVector,
     onClick: () -> Unit = {}
 ) {
+    // 1. Detectamos el tema
+    val isDark = isSystemInDarkTheme()
+
+    // 2. Definimos el color de fondo de la tarjeta
+    // Si es oscuro, usamos TertiaryDarkColor (gris azulado oscuro de tu tema).
+    // Si es claro, usamos ContainerColor (el azul muy clarito original).
+    val containerColor = if (isDark) TertiaryDarkColor else ContainerColor
+
+    // 3. Definimos el color del texto de descripción
+    // Si es oscuro, usamos gris claro para que se lea sobre el fondo oscuro.
+    val descripcionColor = if (isDark) Color.LightGray else TertiaryMediumColor
+
     Card(
         onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = ContainerColor
+            containerColor = containerColor // <--- Aquí aplicamos el color dinámico
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 2.dp
@@ -117,24 +130,27 @@ fun HabitoCategoriaCard(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.width(16.dp))
-            
+
             Column {
                 Text(
                     text = titulo,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    // En modo oscuro, el texto por defecto (onSurface) es blanco,
+                    // así que se verá bien sobre el fondo oscuro automáticamente.
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = descripcion,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TertiaryMediumColor
+                    color = descripcionColor // <--- Aquí aplicamos el color de texto dinámico
                 )
             }
-            
+
             Spacer(modifier = Modifier.weight(1f))
         }
     }
-} 
+}
