@@ -1,36 +1,52 @@
 package com.example.koalm.ui.screens.ajustes
 
 import android.content.Context
-import android.widget.NumberPicker.OnValueChangeListener
 import android.widget.Toast
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.*
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.edit
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
 import com.example.koalm.R
 import com.example.koalm.ui.components.ExitoDialogoGuardadoAnimado
 import com.example.koalm.ui.components.ValidacionesDialogoAnimado
-import com.example.koalm.ui.theme.*
+import com.example.koalm.ui.theme.BorderColor
+import com.example.koalm.ui.theme.ContainerColor
+import com.example.koalm.ui.theme.PrimaryColor
+import com.example.koalm.ui.theme.TertiaryMediumColor
+import com.example.koalm.ui.theme.White
 import com.example.koalm.ui.viewmodels.InicioSesionPreferences
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.firebase.auth.ActionCodeSettings
@@ -38,23 +54,36 @@ import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PantallaCambiarContrasena(navController: NavController){
-    val context = LocalContext.current
-    var password by remember { mutableStateOf("")}
+fun PantallaCambiarContrasena(navController: NavController) {
+    val colorScheme = MaterialTheme.colorScheme
 
     Scaffold(
+        containerColor = colorScheme.background,
         topBar = {
             TopAppBar(
-                title = {Text("Cambiar contraseña")},
+                title = {
+                    Text(
+                        text = "Cambiar contraseña",
+                        color = colorScheme.onSurface
+                    )
+                },
                 navigationIcon = {
-                    IconButton(onClick = {navController.navigateUp()}) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Regresar")
+                    IconButton(onClick = { navController.navigateUp() }) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Regresar",
+                            tint = colorScheme.onSurface
+                        )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = colorScheme.surface,
+                    titleContentColor = colorScheme.onSurface,
+                    navigationIconContentColor = colorScheme.onSurface
+                )
             )
         }
-    )
-    {padding ->
+    ) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
@@ -63,46 +92,82 @@ fun PantallaCambiarContrasena(navController: NavController){
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.koala_lupa),
-                contentDescription = "Koala lupa",
-                modifier = Modifier.size(300.dp)
-            )
+            MascotaCambiarContrasena()
 
             Spacer(modifier = Modifier.height(20.dp))
+
             ValidarContrasenaActual(navController = navController) {}
         }
-
     }
 }
 
-/*Se requerira la contraseña para enviar un correo de validación*/
 @Composable
-fun CampoValidarContrasena (value: String, onValueChange: (String) -> Unit){
+fun MascotaCambiarContrasena() {
+    val isDark = isSystemInDarkTheme()
+    val colorScheme = MaterialTheme.colorScheme
+
+    val circleBackground = if (isDark) {
+        colorScheme.surfaceVariant
+    } else {
+        ContainerColor
+    }
+
+    val borderColor = if (isDark) {
+        colorScheme.outlineVariant
+    } else {
+        BorderColor
+    }
+
+    Box(
+        modifier = Modifier
+            .size(320.dp)
+            .padding(bottom = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(CircleShape)
+                .background(circleBackground)
+                .border(1.dp, borderColor, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.pinguino_contrasena),
+                contentDescription = "Pinguino cambio de contraseña",
+                modifier = Modifier
+                    .fillMaxSize(0.95f),
+                contentScale = ContentScale.Fit
+            )
+        }
+    }
+}
+
+@Composable
+fun CampoValidarContrasena(value: String, onValueChange: (String) -> Unit) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         label = { Text("Ingresa tu contraseña") },
-
         modifier = Modifier.fillMaxWidth(0.97f),
         shape = RoundedCornerShape(16.dp),
-
-        //keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
         singleLine = true,
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = PrimaryColor,
             unfocusedBorderColor = TertiaryMediumColor,
-            unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            focusedLabelColor = PrimaryColor,
+            unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+            cursorColor = MaterialTheme.colorScheme.primary
         )
     )
 }
 
 @Composable
-fun MensajeExplicacionCambio(){
+fun MensajeExplicacionCambio() {
     Text(
-        text = "Te enviaremos un enlace de restablecimiento al correo asociado a tu cuenta",
+        text = "Te enviaremos un enlace de restablecimiento al correo asociado a tu cuenta.",
         fontSize = 12.sp,
-        color = TertiaryMediumColor,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier
             .fillMaxWidth(0.85f)
             .padding(top = 4.dp)
@@ -118,9 +183,8 @@ fun cerrarSesion(context: Context, navController: NavController) {
     Identity.getSignInClient(context)
         .signOut()
         .addOnCompleteListener {
-            // …
         }
-    // 3. Borra SharedPreferences con extensión KTX
+
     context.getSharedPreferences(
         context.getString(R.string.prefs_file),
         Context.MODE_PRIVATE
@@ -128,7 +192,6 @@ fun cerrarSesion(context: Context, navController: NavController) {
         clear()
     }
 
-    // 4. Redirige a la pantalla de inicio y limpia el back stack
     navController.navigate("iniciar") {
         popUpTo("menu") { inclusive = true }
     }
@@ -148,10 +211,10 @@ fun ValidarContrasenaActual(
     var mensajeValidacion by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
 
-    var mostrarDialogoExito by remember{ mutableStateOf(false) }
+    var mostrarDialogoExito by remember { mutableStateOf(false) }
     if (mostrarDialogoExito) {
         ExitoDialogoGuardadoAnimado(
-            mensaje = "Revisa tu bandeja de entrada; te enviamos el enlace a tu correo ${correo}",
+            mensaje = "Revisa tu bandeja de entrada; te enviamos el enlace a tu correo $correo",
             onDismiss = {
                 mostrarDialogoExito = false
                 cerrarSesion(context, navController)
@@ -159,70 +222,76 @@ fun ValidarContrasenaActual(
         )
     }
 
-        CampoValidarContrasena(
-            value = contrasenaActual,
-            onValueChange = { contrasenaActual = it }
-        )
-        MensajeExplicacionCambio()
-        Spacer(modifier = Modifier.height(16.dp))
+    CampoValidarContrasena(
+        value = contrasenaActual,
+        onValueChange = { contrasenaActual = it }
+    )
 
-        Button(
-            onClick = {
-                if (correo.isBlank()) {
-                    mensajeValidacion = "No se encontró correo del usuario actual"
-                    return@Button
-                }
-                if (contrasenaActual.isBlank()) {
-                    mensajeValidacion = "Ingresa tu contraseña actual"
-                    return@Button
-                }
+    MensajeExplicacionCambio()
 
-                isLoading = true
-                auth.signInWithEmailAndPassword(correo, contrasenaActual)
-                    .addOnCompleteListener { task ->
-                        isLoading = false
-                        if (task.isSuccessful) {
-                            onValidacionExitosa()
-                            //Enviar correo de restablecimiento
-                            val auth = FirebaseAuth.getInstance()
-                            val actionCodeSettings = ActionCodeSettings.newBuilder()
-                                .setUrl("https://koalm-94491.web.app")
-                                .setHandleCodeInApp(false)
-                                .setAndroidPackageName("com.example.koalm", true, "35")
-                                .build()
+    Spacer(modifier = Modifier.height(16.dp))
 
-                            auth.sendPasswordResetEmail(correo, actionCodeSettings)
-                                .addOnSuccessListener {
-                                    mostrarDialogoExito = true
-                                }
-                                .addOnFailureListener {
-                                    Toast.makeText(context, it.localizedMessage, Toast.LENGTH_LONG).show()
-                                }
-                        } else {
-                            mensajeValidacion = "La contraseña ingresada no es correcta"
-                        }
-                    }
-            },
-            colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor),
-            enabled = !isLoading
-        ) {
-            if (isLoading) {
-                CircularProgressIndicator(
-                    color = White,
-                    modifier = Modifier.size(20.dp),
-                    strokeWidth = 2.dp
-                )
-            } else {
-                Text("Validar contraseña", color = White)
+    Button(
+        onClick = {
+            if (correo.isBlank()) {
+                mensajeValidacion = "No se encontró correo del usuario actual"
+                return@Button
             }
-        }
+            if (contrasenaActual.isBlank()) {
+                mensajeValidacion = "Ingresa tu contraseña actual"
+                return@Button
+            }
 
-        // Mostrar diálogo o mensaje de validación
-        if (mensajeValidacion != null) {
-            ValidacionesDialogoAnimado(
-                mensaje = mensajeValidacion!!,
-                onDismiss = { mensajeValidacion = null }
+            isLoading = true
+            auth.signInWithEmailAndPassword(correo, contrasenaActual)
+                .addOnCompleteListener { task ->
+                    isLoading = false
+                    if (task.isSuccessful) {
+                        onValidacionExitosa()
+
+                        val actionCodeSettings = ActionCodeSettings.newBuilder()
+                            .setUrl("https://koalm-94491.web.app")
+                            .setHandleCodeInApp(false)
+                            .setAndroidPackageName("com.example.koalm", true, "35")
+                            .build()
+
+                        auth.sendPasswordResetEmail(correo, actionCodeSettings)
+                            .addOnSuccessListener {
+                                mostrarDialogoExito = true
+                            }
+                            .addOnFailureListener {
+                                Toast.makeText(
+                                    context,
+                                    it.localizedMessage,
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                    } else {
+                        mensajeValidacion = "La contraseña ingresada no es correcta"
+                    }
+                }
+        },
+        colors = ButtonDefaults.buttonColors(
+            containerColor = PrimaryColor,
+            contentColor = White
+        ),
+        enabled = !isLoading
+    ) {
+        if (isLoading) {
+            CircularProgressIndicator(
+                color = White,
+                modifier = Modifier.size(20.dp),
+                strokeWidth = 2.dp
             )
+        } else {
+            Text("Validar contraseña", color = White)
         }
+    }
 
+    if (mensajeValidacion != null) {
+        ValidacionesDialogoAnimado(
+            mensaje = mensajeValidacion!!,
+            onDismiss = { mensajeValidacion = null }
+        )
+    }
 }
