@@ -1,6 +1,8 @@
 package com.example.koalm.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -16,12 +18,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.dotlottie.dlplayer.Mode
+import com.example.koalm.R
 import com.lottiefiles.dotlottie.core.compose.ui.DotLottieAnimation
 import com.lottiefiles.dotlottie.core.util.DotLottieSource
 
@@ -56,7 +63,6 @@ fun ExitoDialogoGuardadoAnimado(
                     playMode = Mode.FORWARD,
                     modifier = Modifier
                         .size(120.dp)
-                        //.background(MaterialTheme.colorScheme.surface, shape = CircleShape)
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -109,7 +115,6 @@ fun FalloDialogoGuardadoAnimado(
                     playMode = Mode.FORWARD,
                     modifier = Modifier
                         .size(120.dp)
-                        //.background(MaterialTheme.colorScheme.surface, shape = CircleShape)
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -162,7 +167,6 @@ fun LogroDialogoAnimado(
                     playMode = Mode.FORWARD,
                     modifier = Modifier
                         .size(120.dp)
-                        //.background(MaterialTheme.colorScheme.surface, shape = CircleShape)
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -215,7 +219,6 @@ fun ValidacionesDialogoAnimado(
                     playMode = Mode.FORWARD,
                     modifier = Modifier
                         .size(120.dp)
-                        //.background(MaterialTheme.colorScheme.surface, shape = CircleShape)
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -259,18 +262,19 @@ fun BienvenidoDialogoAnimado(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                // DotLottieAnimation
-                DotLottieAnimation(
-                    source = DotLottieSource.Url("https://lottie.host/9a1808be-0436-42cd-918c-55963c8e71a5/zCh5lTbX1N.lottie"),
-                    autoplay = true,
-                    loop = false,
-                    speed = 1.8f,
-                    useFrameInterpolation = false,
-                    playMode = Mode.FORWARD,
+                val isDark = isSystemInDarkTheme()
+                val colorFondo = if (isDark) Color.LightGray else Color.Transparent
+                val iconColor = if (isDark) Color.Black else MaterialTheme.colorScheme.onSurface
+
+                Image(
+                    painter = painterResource(id = R.drawable.profile),
+                    contentDescription = "Profile",
+                    colorFilter = ColorFilter.tint(iconColor),
                     modifier = Modifier
-                        .size(200.dp)
-                        .background(MaterialTheme.colorScheme.surface, shape = CircleShape)
-                        .pointerInput(Unit) {}
+                        .size(120.dp)
+                        .clip(CircleShape)
+                        .background(colorFondo)
+                        .padding(16.dp)
                 )
 
 

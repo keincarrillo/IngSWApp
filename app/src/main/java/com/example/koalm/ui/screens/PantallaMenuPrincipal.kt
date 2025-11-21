@@ -167,7 +167,7 @@ fun PantallaMenuPrincipal(navController: NavHostController) {
                     imagenPerfilBase64 = doc.getString("imagenBase64")
                 }
                 .addOnFailureListener {
-                    username = "Kool"
+                    username = "Pingu"
                     imagenPerfilBase64 = null
                 }
         }
