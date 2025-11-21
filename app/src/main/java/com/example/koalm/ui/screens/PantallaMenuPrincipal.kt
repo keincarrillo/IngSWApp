@@ -232,8 +232,9 @@ fun PantallaMenuPrincipal(navController: NavHostController) {
             ) {
                 val viewModel: DashboardViewModel = viewModel()
                 val racha = viewModel.rachaSemanal
-
+                Spacer(modifier = Modifier.height(1.dp))
                 SeccionTitulo("Racha semanal")
+
                 FormatoRacha(
                     dias = racha,
                     onClick = { /* navController.navigate("racha_habitos") */ }
@@ -377,20 +378,6 @@ fun DrawerContenido(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.primary
-            )
-
-            NavigationDrawerItem(
-                label = { Text("Inicio") },
-                selected = false,
-                icon = { Icon(Icons.Default.Menu, contentDescription = null) },
-                onClick = {
-                    onDestinationClicked()
-                    navController.navigate("menu") {
-                        launchSingleTop = true
-                        popUpTo("menu") { inclusive = false }
-                    }
-                },
-                modifier = Modifier.padding(horizontal = 8.dp)
             )
 
             NavigationDrawerItem(

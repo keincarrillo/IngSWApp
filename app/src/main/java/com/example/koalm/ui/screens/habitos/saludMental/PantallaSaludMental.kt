@@ -4,46 +4,45 @@ import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.dotlottie.dlplayer.Mode
+import com.example.koalm.R
 import com.example.koalm.model.Habito
 import com.example.koalm.model.TipoHabito
 import com.example.koalm.repository.HabitoRepository
 import com.example.koalm.ui.components.BarraNavegacionInferior
+import com.example.koalm.ui.components.ExitoDialogoGuardadoAnimado
 import com.example.koalm.ui.theme.*
+import com.google.firebase.auth.FirebaseAuth
+import com.lottiefiles.dotlottie.core.compose.ui.DotLottieAnimation
+import com.lottiefiles.dotlottie.core.util.DotLottieSource
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.dotlottie.dlplayer.Mode
-import com.example.koalm.R
-import com.example.koalm.ui.components.ExitoDialogoGuardadoAnimado
-import com.example.koalm.ui.screens.habitos.personalizados.eliminarHabitoPersonalizado
-import com.google.firebase.auth.FirebaseAuth
-import com.example.koalm.utils.TimeUtils
-import com.lottiefiles.dotlottie.core.compose.ui.DotLottieAnimation
-import com.lottiefiles.dotlottie.core.util.DotLottieSource
 
 private const val TAG = "PantallaSaludMental"
 
@@ -88,7 +87,7 @@ fun PantallaSaludMental(navController: NavHostController) {
 
                 val userId = currentUser.uid
                 Log.d(TAG, "Buscando hábitos para userId: $userId")
-                
+
                 habitosRepository.obtenerHabitosActivos(userId).fold(
                     onSuccess = { habitos ->
                         Log.d(TAG, "Hábitos encontrados: ${habitos.size}")
@@ -249,6 +248,20 @@ fun PantallaSaludMental(navController: NavHostController) {
 @Composable
 private fun HabitoPlantillaCard(habito: Habito, navController: NavHostController) {
     val context = LocalContext.current
+    val isDarkTheme = isSystemInDarkTheme()
+
+    val borderColor = if (isDarkTheme) {
+        MaterialTheme.colorScheme.outlineVariant
+    } else {
+        BorderColor
+    }
+
+    val cardColor = if (isDarkTheme) {
+        // Igual que salud física: usamos surface oscuro
+        MaterialTheme.colorScheme.surface
+    } else {
+        ContainerColor
+    }
 
     Card(
         onClick = {
@@ -271,7 +284,6 @@ private fun HabitoPlantillaCard(habito: Habito, navController: NavHostController
                         restoreState = true
                     }
                     else -> {
-                        // Manejar otros tipos o no hacer nada
                         Log.w(TAG, "Tipo de hábito no manejado en salud mental: ${habito.tipo}")
                     }
                 }
@@ -286,9 +298,9 @@ private fun HabitoPlantillaCard(habito: Habito, navController: NavHostController
         },
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, BorderColor, RoundedCornerShape(16.dp)),
+            .border(1.dp, borderColor, RoundedCornerShape(16.dp)),
         colors = CardDefaults.cardColors(
-            containerColor = ContainerColor
+            containerColor = cardColor
         )
     ) {
         Row(
@@ -315,7 +327,10 @@ private fun HabitoPlantillaCard(habito: Habito, navController: NavHostController
                 Text(
                     text = habito.descripcion,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TertiaryMediumColor
+                    color = if (isDarkTheme)
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    else
+                        TertiaryMediumColor
                 )
             }
         }
@@ -324,7 +339,7 @@ private fun HabitoPlantillaCard(habito: Habito, navController: NavHostController
 
 @Composable
 private fun HabitoActivoCardMental(
-    habito: Habito, 
+    habito: Habito,
     navController: NavHostController,
     onHabitDeleted: () -> Unit
 ) {
@@ -336,8 +351,29 @@ private fun HabitoActivoCardMental(
     var isProcessing by remember { mutableStateOf(false) }
     var mostrarDialogoConfirmacion by remember { mutableStateOf(false) }
 
+    val isDarkTheme = isSystemInDarkTheme()
+
+    val borderColor = if (isDarkTheme) {
+        MaterialTheme.colorScheme.outlineVariant
+    } else {
+        BorderColor
+    }
+
+    val cardColor = if (isDarkTheme) {
+        // Mismo estilo que salud física en dark
+        MaterialTheme.colorScheme.surface
+    } else {
+        ContainerColor.copy(alpha = 0.3f)
+    }
+
+    val secondaryTextColor = if (isDarkTheme) {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    } else {
+        TertiaryMediumColor
+    }
+
     //Mensaje de exito
-    var mostrarDialogoExito by remember{ mutableStateOf(false) }
+    var mostrarDialogoExito by remember { mutableStateOf(false) }
     if (mostrarDialogoExito) {
         ExitoDialogoGuardadoAnimado(
             mensaje = "¡Hábito eliminado con éxito!",
@@ -347,13 +383,14 @@ private fun HabitoActivoCardMental(
             }
         )
     }
+
     Card(
         onClick = {},
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, BorderColor, RoundedCornerShape(16.dp)),
+            .border(1.dp, borderColor, RoundedCornerShape(16.dp)),
         colors = CardDefaults.cardColors(
-            containerColor = ContainerColor.copy(alpha = 0.3f)
+            containerColor = cardColor
         )
     ) {
         Row(
@@ -387,7 +424,7 @@ private fun HabitoActivoCardMental(
                 Text(
                     text = habito.descripcion,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TertiaryMediumColor,
+                    color = secondaryTextColor,
                     maxLines = 1
                 )
                 Row(
@@ -431,7 +468,7 @@ private fun HabitoActivoCardMental(
                     Spacer(modifier = Modifier.width(4.dp))
 
                     Text(
-                        text = if (habito.tipo == TipoHabito.ESCRITURA || habito.tipo == TipoHabito.LECTURA ) {
+                        text = if (habito.tipo == TipoHabito.ESCRITURA || habito.tipo == TipoHabito.LECTURA) {
                             "${formatearDuracion(habito.duracionMinutos)} · ${habito.objetivoPaginas} pág/día"
                         } else {
                             formatearDuracion(habito.duracionMinutos)
@@ -439,8 +476,6 @@ private fun HabitoActivoCardMental(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary
                     )
-
-
                 }
             }
 
@@ -519,11 +554,10 @@ private fun HabitoActivoCardMental(
                         }
                     )
                 }
-
-
             }
         }
     }
+
     // Diálogo de confirmación
     if (mostrarDialogoConfirmacion) {
         ConfirmacionDialogoEliminarAnimado(
@@ -591,7 +625,6 @@ fun ConfirmacionDialogoEliminarAnimado(
                     playMode = Mode.FORWARD,
                     modifier = Modifier
                         .size(120.dp)
-                        //.background(MaterialTheme.colorScheme.surface, shape = CircleShape)
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
