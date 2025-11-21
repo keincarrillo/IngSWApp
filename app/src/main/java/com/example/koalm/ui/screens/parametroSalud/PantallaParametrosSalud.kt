@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.navigation.NavHostController
 import com.example.koalm.R
 import com.example.koalm.services.obtenerMinutosLocales
@@ -182,15 +183,24 @@ fun PantallaParametrosSalud(
 /* ----------  BARRA CON TÍTULO ---------- */
 @Composable
 fun TituloYBarra(titulo: String, progreso: Float) {
+    val isDark = isSystemInDarkTheme()
+    // Usamos un gris oscuro para el fondo de la barra en modo nocturno
+    val trackColor = if (isDark) Color.DarkGray else TertiaryColor
+
     Column {
-        Text(titulo, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+        Text(
+            titulo,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onBackground // Asegura que el texto se vea
+        )
         LinearProgressIndicator(
             progress = { progreso.coerceIn(0f, 1f) },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(8.dp),
-            color = if (progreso > 0f) PrimaryColor else TertiaryColor,
-            trackColor = TertiaryColor
+            color = if (progreso > 0f) PrimaryColor else trackColor,
+            trackColor = trackColor // <--- APLICAMOS EL COLOR DE FONDO DINÁMICO
         )
     }
 }
@@ -216,6 +226,19 @@ fun InfoCard(
     progreso: Float? = null,
     onClick: (() -> Unit)? = null
 ) {
+    // 1. Detectamos si es modo oscuro
+    val isDark = isSystemInDarkTheme()
+
+    // 2. Definimos los colores según el tema
+    // Fondo: Oscuro en dark mode, Azul claro (ContainerColor) en light mode
+    val cardColor = if (isDark) TertiaryDarkColor else ContainerColor
+
+    // Borde: Gris oscuro en dark mode para que no brille tanto
+    val borderColor = if (isDark) Color.DarkGray else Color.LightGray
+
+    // Texto e Icono: Se ajustan automáticamente con onSurface, pero podemos forzarlo si es necesario
+    val contentColor = MaterialTheme.colorScheme.onSurface
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -223,39 +246,27 @@ fun InfoCard(
             .let { if (onClick != null) it.clickable(onClick = onClick) else it },
         shape = RoundedCornerShape(12.dp),
         tonalElevation = 2.dp,
-        color = ContainerColor,
-        border = BorderStroke(1.dp, Color.LightGray)
+        color = cardColor, // <--- APLICAMOS EL COLOR DINÁMICO AQUÍ
+        border = BorderStroke(1.dp, borderColor) // <--- BORDE DINÁMICO
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(16.dp)
         ) {
-            Icon(icono, contentDescription = titulo, modifier = Modifier.size(32.dp))
+            Icon(
+                imageVector = icono,
+                contentDescription = titulo,
+                modifier = Modifier.size(32.dp),
+                tint = MaterialTheme.colorScheme.primary // El icono en color primario se ve bien en ambos temas
+            )
             Spacer(Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(titulo, fontWeight = FontWeight.Bold)
-                if (dato.isNotBlank()) Text(dato)
+                Text(titulo, fontWeight = FontWeight.Bold, color = contentColor)
+                if (dato.isNotBlank()) Text(dato, color = contentColor)
             }
-            /*if (progreso != null) {
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.size(40.dp)) {
-                    CircularProgressIndicator(
-                        progress = { progreso },
-                        modifier = Modifier.fillMaxSize(),
-                        strokeWidth = 4.dp,
-                        color = PrimaryColor
-                    )
-                    if (titulo == "Sueño") {
-                        Text("/8 h", fontSize = 10.sp, color = Black, fontWeight = FontWeight.SemiBold)
-                    } else if (titulo == "Estrés") {
-                        Icon(
-                            Icons.Default.SentimentNeutral,
-                            contentDescription = null,
-                            tint = Black,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-            }*/
+
+            // Si tenías código comentado para el progreso circular,
+            // asegúrate de que los colores ahí también usen contentColor o Primary.
         }
     }
 }
