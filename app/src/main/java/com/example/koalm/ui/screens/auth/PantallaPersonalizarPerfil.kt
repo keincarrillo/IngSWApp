@@ -213,6 +213,7 @@
                     Spacer(modifier = Modifier.weight(1f))
 
                     // Botón “Guardar”
+                    // Botón “Guardar”
                     BotonGuardarPerfil {
                         if (uid != null) {
                             if (email == null) {
@@ -220,8 +221,9 @@
                                 return@BotonGuardarPerfil
                             }
 
-                            val regex = "^[a-zA-Z0-9_ ]*$".toRegex() // Letras, números, guion bajo y espacios
-                            // Validar campos requeridos
+                            val regex = "^[a-zA-Z0-9_ ]*$".toRegex()
+
+                            // Validaciones
                             if (
                                 username.isBlank() ||
                                 !regex.matches(username) ||
@@ -239,7 +241,7 @@
                                 return@BotonGuardarPerfil
                             }
 
-                            // Construir objeto usuario
+                            // 1. Construir objeto usuario
                             val usuario = Usuario(
                                 imagenBase64 = imagenBase64,
                                 userId     = uid,
@@ -253,43 +255,29 @@
                                 genero     = generoSeleccionado
                             )
 
-                            // ==== Aquí hacemos la modificación para agregar "fechaCreacion" ====
+                            // 2. Preparar fecha de creación
                             val fechaHoy: String = LocalDate
                                 .now()
                                 .format(
                                     DateTimeFormatter.ofPattern("d MMMM, yyyy", Locale("es", "MX"))
                                 )
 
-                            // (b) Convertimos el Map<String, Any?> que devuelve usuario.toMap() en MutableMap<String, Any>
+                            // 3. Convertir a mapa, limpiar nulos y agregar fecha
                             val mapOriginal: Map<String, Any?> = usuario.toMap()
-
                             val dataUsuario: MutableMap<String, Any> = mapOriginal
-                                .filterValues { it != null }             // Eliminamos las entradas con valor null
-                                .mapValues { it.value as Any }            // Convertimos Any? → Any
+                                .filterValues { it != null }
+                                .mapValues { it.value as Any }
                                 .toMutableMap()
 
-                            // (c) Agregamos sólo día/mes/año bajo la clave "fechaCreacion"
                             dataUsuario["fechaCreacion"] = fechaHoy
 
-                            // (d) Guardamos en Firestore usando merge:
-                            FirebaseFirestore.getInstance()
-                                .collection("usuarios")
-                                .document(email)
-                                .set(dataUsuario, SetOptions.merge())
-                                .addOnSuccessListener {
-                                    // Éxito al guardar usuario + fechaCreacion (solo dd/MM/yyyy)
-                                }
-                                .addOnFailureListener { e ->
-                                    // Error al guardar
-                                }
-                            // =====================================================================
-
-                            // Guardar (merge) en Firestore
+                            // 4. GUARDADO ÚNICO EN FIRESTORE
+                            // Eliminamos el bloque duplicado anterior y dejamos solo este:
                             db.collection("usuarios")
                                 .document(email)
                                 .set(dataUsuario, SetOptions.merge())
                                 .addOnSuccessListener {
-                                    // Al guardar correctamente, mostramos diálogo de éxito
+                                    // Al guardar correctamente, activamos el diálogo que navega al menú
                                     mostrarDialogoExito = true
                                 }
                                 .addOnFailureListener { e ->
