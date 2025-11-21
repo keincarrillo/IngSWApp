@@ -10,12 +10,17 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.asImageBitmap
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.util.Base64
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.saveable.rememberSaveable
-
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -81,6 +86,8 @@ import androidx.compose.material3.Badge
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.graphics.asImageBitmap
+import com.example.koalm.ui.screens.auth.base64ToBitmap
 
 // Modelo para separar lo que se muestra en UI de lo que se usa como ID en la navegación
 data class HabitoPingu(
@@ -147,6 +154,9 @@ fun PantallaMenuPrincipal(navController: NavHostController) {
     val db = FirebaseFirestore.getInstance()
     var username by remember { mutableStateOf("") }
 
+    // NUEVO: estado para la foto de perfil
+    var imagenPerfilBase64 by remember { mutableStateOf<String?>(null) }
+
     LaunchedEffect(usuarioEmail) {
         if (!usuarioEmail.isNullOrEmpty()) {
             db.collection("usuarios")
@@ -154,9 +164,11 @@ fun PantallaMenuPrincipal(navController: NavHostController) {
                 .get()
                 .addOnSuccessListener { doc ->
                     username = doc.getString("username").orEmpty()
+                    imagenPerfilBase64 = doc.getString("imagenBase64")
                 }
                 .addOnFailureListener {
                     username = "Kool"
+                    imagenPerfilBase64 = null
                 }
         }
     }
@@ -188,6 +200,7 @@ fun PantallaMenuPrincipal(navController: NavHostController) {
                 DrawerContenido(
                     navController = navController,
                     userEmail = usuarioEmail,
+                    imagenBase64 = imagenPerfilBase64, // NUEVO
                     onDestinationClicked = {
                         scope.launch { drawerState.close() }
                     }
@@ -303,6 +316,7 @@ fun EstadisticasCard() {
 fun DrawerContenido(
     navController: NavHostController,
     userEmail: String,
+    imagenBase64: String?,              // NUEVO
     onDestinationClicked: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
@@ -331,20 +345,41 @@ fun DrawerContenido(
                     .padding(horizontal = 16.dp, vertical = 20.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
+
+                    // --- AVATAR DEL USUARIO (reemplaza al icono de meditar) ---
                     Box(
                         modifier = Modifier
                             .size(44.dp)
+                            .clip(CircleShape)
                             .background(
                                 color = White.copy(alpha = 0.18f),
                                 shape = CircleShape
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.SelfImprovement,
-                            contentDescription = null,
-                            tint = White
-                        )
+                        if (!imagenBase64.isNullOrEmpty()) {
+                            val bitmap = remember(imagenBase64) { base64ToBitmap(imagenBase64) }
+                            if (bitmap != null) {
+                                Image(
+                                    bitmap = bitmap.asImageBitmap(),
+                                    contentDescription = "Foto de perfil",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.SelfImprovement,
+                                    contentDescription = null,
+                                    tint = White
+                                )
+                            }
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.SelfImprovement,
+                                contentDescription = null,
+                                tint = White
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.width(12.dp))
@@ -509,7 +544,6 @@ fun DrawerContenido(
     }
 }
 
-
 @Composable
 fun FormatoRacha(
     dias: List<Pair<String, Boolean>>,
@@ -619,6 +653,8 @@ fun HabitoCarruselItem(
         }
     }
 }
+
+
 @Composable
 fun DashboardScreen(
     usuarioEmail: String,
@@ -641,7 +677,6 @@ fun DashboardScreen(
             }
         )
     }
-
 
     Log.d("HABITOS_DEBUG", "Cantidad de hábitos personalizados ${habitos.size}")
     Log.d("HABITOS_DEBUG", "Cantidad de hábitos predeterminados: ${habitosPre.size}")
@@ -835,10 +870,10 @@ fun HabitoCardPersonalizado(
 
     // Visualizar recordatorios
     val progresoText = if (realizados >= total && total > 0) {
-            "Completado: $realizados/$total"
-        } else {
-            "Objetivo por día: $realizados/$total"
-        }
+        "Completado: $realizados/$total"
+    } else {
+        "Objetivo por día: $realizados/$total"
+    }
 
     Column(
         modifier = Modifier
@@ -914,7 +949,7 @@ fun HabitoCardPersonalizado(
                                 size = Size(radius * 2, radius * 2)
                             )
                         }
-                )  {
+                ) {
                     IconButton(
                         onClick = { onIncrementar(1) },
                         modifier = Modifier.fillMaxSize()
@@ -968,11 +1003,10 @@ fun HabitoCardPredeterminado(
         )
     }
 
-   // Dialogo para ingresar el progreso
+    // Dialogo para ingresar el progreso
     if (mostrarDialogo) {
         Dialog(
-            onDismissRequest = { mostrarDialogo = false },
-            properties = DialogProperties(dismissOnClickOutside = false, dismissOnBackPress = false)
+            onDismissRequest = { mostrarDialogo = false }
         ) {
             Surface(
                 shape = RoundedCornerShape(16.dp),
@@ -997,7 +1031,6 @@ fun HabitoCardPredeterminado(
                             TipoHabito.SUEÑO -> "¿Cuántas horas dormiste?"
                             TipoHabito.ALIMENTACION -> "¿Cuántas comidas hiciste?"
                             TipoHabito.HIDRATACION -> "¿Cuántos litros de agua tomaste?"
-                            else -> "Ingresa el progreso"
                         },
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -1021,7 +1054,6 @@ fun HabitoCardPredeterminado(
                                     TipoHabito.SUEÑO -> "Horas"
                                     TipoHabito.ALIMENTACION -> "Cantidad"
                                     TipoHabito.HIDRATACION -> "Litros"
-                                    else -> "Cantidad"
                                 }
                             )
                         },
@@ -1071,8 +1103,6 @@ fun HabitoCardPredeterminado(
             }
         }
     }
-
-
 
     // Progreso del hábito visualmente
     val progresoPorcentaje = if (totalRecordatoriosxDia == 1) {
@@ -1211,7 +1241,7 @@ fun HabitoCardPredeterminado(
                                 size = Size(radius * 2, radius * 2)
                             )
                         }
-                )  {
+                ) {
                     IconButton(
                         onClick = { mostrarDialogo = true },
                         modifier = Modifier
@@ -1278,9 +1308,7 @@ fun IconoNotificacionesConBadge(
             Icon(Icons.Default.Notifications, contentDescription = "Notificaciones")
         }
     }
-
 }
-
 
 private fun formatearDuracion(minutos: Int): String {
     return if (minutos < 60) {
@@ -1292,5 +1320,54 @@ private fun formatearDuracion(minutos: Int): String {
     }
 }
 
+@Composable
+fun AvatarTopBar(imagenBase64: String?) {
+    val isDark = isSystemInDarkTheme()
+    val tint = if (isDark) Color.White else BrandPrimaryColor
 
+    Box(
+        modifier = Modifier
+            .size(36.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceVariant),
+        contentAlignment = Alignment.Center
+    ) {
+        if (!imagenBase64.isNullOrEmpty()) {
+            val bitmap = remember(imagenBase64) { base64ToBitmapDashboard(imagenBase64) }
+            if (bitmap != null) {
+                Image(
+                    bitmap = bitmap.asImageBitmap(),
+                    contentDescription = "Foto de perfil",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Image(
+                    painter = painterResource(id = R.drawable.profile),
+                    contentDescription = "Foto de perfil",
+                    modifier = Modifier.fillMaxSize(),
+                    colorFilter = ColorFilter.tint(tint)
+                )
+            }
+        } else {
+            Image(
+                painter = painterResource(id = R.drawable.profile),
+                contentDescription = "Foto de perfil",
+                modifier = Modifier.fillMaxSize(),
+                colorFilter = ColorFilter.tint(tint)
+            )
+        }
+    }
+}
 
+/**
+ * Versión local de base64ToBitmap para este archivo.
+ */
+private fun base64ToBitmapDashboard(base64Str: String): Bitmap? {
+    return try {
+        val decodedBytes = Base64.decode(base64Str, Base64.DEFAULT)
+        BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+    } catch (e: Exception) {
+        null
+    }
+}

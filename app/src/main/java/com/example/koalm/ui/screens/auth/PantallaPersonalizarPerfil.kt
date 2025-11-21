@@ -1,25 +1,49 @@
 package com.example.koalm.ui.screens.auth
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.util.Base64
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material3.Button
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDefaults
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -28,34 +52,30 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.koalm.R
 import com.example.koalm.model.Usuario
-import com.example.koalm.ui.theme.*
 import com.example.koalm.ui.components.BarraNavegacionInferior
 import com.example.koalm.ui.components.ExitoDialogoGuardadoAnimado
 import com.example.koalm.ui.components.FalloDialogoGuardadoAnimado
+import com.example.koalm.ui.components.ValidacionesDialogoAnimado
+import com.example.koalm.ui.theme.BrandPrimaryColor
+import com.example.koalm.ui.theme.LightErrorColor
+import com.example.koalm.ui.theme.PrimaryColor
+import com.example.koalm.ui.theme.TertiaryColor
+import com.example.koalm.ui.theme.TertiaryMediumColor
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
-import android.net.Uri
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.ui.layout.ContentScale
-import android.util.Base64
-import androidx.activity.compose.rememberLauncherForActivityResult
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.graphics.asImageBitmap
 import java.util.TimeZone
-import androidx.compose.foundation.background
-import com.example.koalm.ui.components.ValidacionesDialogoAnimado
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaPersonalizarPerfil(navController: NavHostController) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
-    val colorScheme = MaterialTheme.colorScheme
+    val colorScheme = androidx.compose.material3.MaterialTheme.colorScheme
     val isDarkTheme = isSystemInDarkTheme()
 
     var nombre by remember { mutableStateOf("") }
@@ -128,7 +148,11 @@ fun PantallaPersonalizarPerfil(navController: NavHostController) {
                     }
                 }
                 .addOnFailureListener { e ->
-                    Toast.makeText(context, "Error cargando perfil: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        context,
+                        "Error cargando perfil: ${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
         }
     }
@@ -137,9 +161,7 @@ fun PantallaPersonalizarPerfil(navController: NavHostController) {
     if (validacionesDialogo) {
         ValidacionesDialogoAnimado(
             mensaje = "Por favor, completa todos los campos para continuar",
-            onDismiss = {
-                validacionesDialogo = false
-            }
+            onDismiss = { validacionesDialogo = false }
         )
     }
 
@@ -149,7 +171,9 @@ fun PantallaPersonalizarPerfil(navController: NavHostController) {
                 title = {
                     Text(
                         "Personalizar perfil",
-                        color = colorScheme.onSurface
+                        color = colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 },
                 navigationIcon = {
@@ -198,11 +222,13 @@ fun PantallaPersonalizarPerfil(navController: NavHostController) {
             )
 
             Spacer(modifier = Modifier.height(20.dp))
+
             CampoUsuario(username) { username = it }
             CampoNombre(nombre) { nombre = it }
             CampoApellidos(apellidos) { apellidos = it }
 
             CampoFechaNacimiento(fechasec) { showDatePicker = true }
+
             FechaNacimientoSelector(
                 showDatePicker = showDatePicker,
                 onDismiss = { showDatePicker = false },
@@ -215,12 +241,17 @@ fun PantallaPersonalizarPerfil(navController: NavHostController) {
             CampoPeso(peso) { peso = it }
             CampoAltura(altura) { altura = it }
             SelectorGenero(opcionesGenero, generoSeleccionado) { generoSeleccionado = it }
+
             Spacer(modifier = Modifier.weight(1f))
 
             BotonGuardarPerfil {
                 if (uid != null) {
                     if (email == null) {
-                        Toast.makeText(context, "No se pudo obtener el correo", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            "No se pudo obtener el correo",
+                            Toast.LENGTH_SHORT
+                        ).show()
                         return@BotonGuardarPerfil
                     }
 
@@ -251,7 +282,11 @@ fun PantallaPersonalizarPerfil(navController: NavHostController) {
                         nombre = nombre,
                         apellido = apellidos,
                         nacimiento = fechasec,
-                        peso = String.format(Locale.US, "%.2f", peso.toFloatOrNull() ?: 0f).toFloat(),
+                        peso = String.format(
+                            Locale.US,
+                            "%.2f",
+                            peso.toFloatOrNull() ?: 0f
+                        ).toFloat(),
                         altura = altura.toIntOrNull()?.takeIf { it in 1..999 },
                         genero = generoSeleccionado
                     )
@@ -259,7 +294,10 @@ fun PantallaPersonalizarPerfil(navController: NavHostController) {
                     val fechaHoy: String = LocalDate
                         .now()
                         .format(
-                            DateTimeFormatter.ofPattern("d MMMM, yyyy", Locale("es", "MX"))
+                            DateTimeFormatter.ofPattern(
+                                "d MMMM, yyyy",
+                                Locale("es", "MX")
+                            )
                         )
 
                     val mapOriginal: Map<String, Any?> = usuario.toMap()
@@ -277,7 +315,11 @@ fun PantallaPersonalizarPerfil(navController: NavHostController) {
                             mostrarDialogoExito = true
                         }
                         .addOnFailureListener { e ->
-                            Toast.makeText(context, "Error al guardar: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+                            Toast.makeText(
+                                context,
+                                "Error al guardar: ${e.localizedMessage}",
+                                Toast.LENGTH_LONG
+                            ).show()
                         }
                 }
             }
@@ -286,6 +328,8 @@ fun PantallaPersonalizarPerfil(navController: NavHostController) {
         }
     }
 }
+
+// ---------- Helpers visuales / campos ----------
 
 fun base64ToBitmap(base64Str: String): Bitmap? {
     return try {
@@ -297,7 +341,11 @@ fun base64ToBitmap(base64Str: String): Bitmap? {
 }
 
 @Composable
-fun ImagenUsuario(imagenBase64: String?, onEditClick: () -> Unit, onDeleteClick: () -> Unit) {
+fun ImagenUsuario(
+    imagenBase64: String?,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit
+) {
     val isDark = isSystemInDarkTheme()
     val tint = if (isDark) Color.White else BrandPrimaryColor
 
@@ -317,16 +365,14 @@ fun ImagenUsuario(imagenBase64: String?, onEditClick: () -> Unit, onDeleteClick:
                     Image(
                         bitmap = bitmap.asImageBitmap(),
                         contentDescription = "Usuario",
-                        modifier = Modifier
-                            .fillMaxSize(),
+                        modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
                 } else {
                     Image(
                         painter = painterResource(id = R.drawable.profile),
                         contentDescription = "Usuario",
-                        modifier = Modifier
-                            .fillMaxSize(),
+                        modifier = Modifier.fillMaxSize(),
                         colorFilter = ColorFilter.tint(tint)
                     )
                 }
@@ -334,8 +380,7 @@ fun ImagenUsuario(imagenBase64: String?, onEditClick: () -> Unit, onDeleteClick:
                 Image(
                     painter = painterResource(id = R.drawable.profile),
                     contentDescription = "Usuario",
-                    modifier = Modifier
-                        .fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(),
                     colorFilter = ColorFilter.tint(tint)
                 )
             }
@@ -351,12 +396,15 @@ fun ImagenUsuario(imagenBase64: String?, onEditClick: () -> Unit, onDeleteClick:
                 onClick = onEditClick,
                 modifier = Modifier
                     .size(40.dp)
-                    .background(MaterialTheme.colorScheme.primary, CircleShape)
+                    .background(
+                        androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                        CircleShape
+                    )
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_edit),
                     contentDescription = "Editar foto",
-                    tint = MaterialTheme.colorScheme.onPrimary
+                    tint = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary
                 )
             }
             IconButton(
@@ -368,7 +416,7 @@ fun ImagenUsuario(imagenBase64: String?, onEditClick: () -> Unit, onDeleteClick:
                 Icon(
                     painter = painterResource(id = R.drawable.ic_delete),
                     contentDescription = "Eliminar foto",
-                    tint = MaterialTheme.colorScheme.onPrimary
+                    tint = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary
                 )
             }
         }
@@ -401,7 +449,7 @@ fun CampoUsuario(value: String, onValueChange: (String) -> Unit) {
             focusedBorderColor = if (valido) PrimaryColor else Color.Red,
             unfocusedBorderColor = if (valido || value.isEmpty()) TertiaryMediumColor else Color.Red,
             focusedLabelColor = if (valido) PrimaryColor else Color.Red,
-            unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+            unfocusedLabelColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             errorLabelColor = Color.Red
         ),
         supportingText = {
@@ -413,6 +461,7 @@ fun CampoUsuario(value: String, onValueChange: (String) -> Unit) {
                         fontSize = 12.sp
                     )
                 }
+
                 value.trim().length < 3 -> {
                     Text(
                         "Debe tener al menos 3 caracteres (excluyendo espacios).",
@@ -420,6 +469,7 @@ fun CampoUsuario(value: String, onValueChange: (String) -> Unit) {
                         fontSize = 12.sp
                     )
                 }
+
                 !regex.matches(value) -> {
                     Text(
                         "Solo se permiten letras, números, guion bajo y espacios.",
@@ -427,8 +477,13 @@ fun CampoUsuario(value: String, onValueChange: (String) -> Unit) {
                         fontSize = 12.sp
                     )
                 }
+
                 else -> {
-                    Text("Nombre de usuario válido.", color = TertiaryMediumColor, fontSize = 12.sp)
+                    Text(
+                        "Nombre de usuario válido.",
+                        color = TertiaryMediumColor,
+                        fontSize = 12.sp
+                    )
                 }
             }
         }
@@ -452,7 +507,9 @@ fun CampoNombre(value: String, onValueChange: (String) -> Unit) {
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = PrimaryColor,
             unfocusedBorderColor = TertiaryMediumColor,
-            unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            unfocusedLabelColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(
+                alpha = 0.7f
+            )
         )
     )
     Spacer(modifier = Modifier.height(12.dp))
@@ -473,7 +530,9 @@ fun CampoApellidos(value: String, onValueChange: (String) -> Unit) {
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = PrimaryColor,
             unfocusedBorderColor = TertiaryMediumColor,
-            unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            unfocusedLabelColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(
+                alpha = 0.7f
+            )
         )
     )
     Spacer(modifier = Modifier.height(12.dp))
@@ -486,84 +545,84 @@ fun FechaNacimientoSelector(
     onDismiss: () -> Unit,
     onValidDateSelected: (String) -> Unit
 ) {
-    if (showDatePicker) {
-        val context = LocalContext.current
-        val datePickerState = rememberDatePickerState()
+    if (!showDatePicker) return
 
-        var mostrarDialogoFallo by remember { mutableStateOf(false) }
-        if (mostrarDialogoFallo) {
-            FalloDialogoGuardadoAnimado(
-                mensaje = "La edad calculada no es válida para continuar. Debes tener más de 12 años.",
-                onDismiss = {
-                    mostrarDialogoFallo = false
-                }
-            )
-        }
+    val datePickerState = rememberDatePickerState()
 
-        DatePickerDialog(
-            onDismissRequest = { onDismiss() },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        val millisUTC = datePickerState.selectedDateMillis
-                        if (millisUTC != null) {
-                            val offset = TimeZone.getDefault().getOffset(millisUTC)
-                            val correctedMillis = millisUTC + offset
+    var mostrarDialogoFallo by remember { mutableStateOf(false) }
+    if (mostrarDialogoFallo) {
+        FalloDialogoGuardadoAnimado(
+            mensaje = "La edad calculada no es válida para continuar. Debes tener más de 12 años.",
+            onDismiss = { mostrarDialogoFallo = false }
+        )
+    }
 
-                            val cal = Calendar.getInstance().apply { timeInMillis = correctedMillis }
-                            val current = Calendar.getInstance()
+    DatePickerDialog(
+        onDismissRequest = { onDismiss() },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    val millisUTC = datePickerState.selectedDateMillis
+                    if (millisUTC != null) {
+                        val offset = TimeZone.getDefault().getOffset(millisUTC)
+                        val correctedMillis = millisUTC + offset
 
-                            val age = current.get(Calendar.YEAR) - cal.get(Calendar.YEAR)
-                            val cumpleEdad = age > 12 || (age == 12 &&
+                        val cal = Calendar.getInstance().apply { timeInMillis = correctedMillis }
+                        val current = Calendar.getInstance()
+
+                        val age = current.get(Calendar.YEAR) - cal.get(Calendar.YEAR)
+                        val cumpleEdad =
+                            age > 12 || (age == 12 &&
                                     (cal.get(Calendar.MONTH) < current.get(Calendar.MONTH) ||
                                             (cal.get(Calendar.MONTH) == current.get(Calendar.MONTH) &&
-                                                    cal.get(Calendar.DAY_OF_MONTH) <= current.get(Calendar.DAY_OF_MONTH)
+                                                    cal.get(Calendar.DAY_OF_MONTH) <= current.get(
+                                                Calendar.DAY_OF_MONTH
+                                            )
                                                     )
                                             )
                                     )
 
-                            if (cumpleEdad) {
-                                val fecha = String.format(
-                                    Locale("es", "MX"),
-                                    "%02d/%02d/%04d",
-                                    cal.get(Calendar.DAY_OF_MONTH) + 1,
-                                    cal.get(Calendar.MONTH) + 1,
-                                    cal.get(Calendar.YEAR)
-                                )
-                                onValidDateSelected(fecha)
-                                onDismiss()
-                            } else {
-                                mostrarDialogoFallo = true
-                            }
-                        } else {
+                        if (cumpleEdad) {
+                            val fecha = String.format(
+                                Locale("es", "MX"),
+                                "%02d/%02d/%04d",
+                                cal.get(Calendar.DAY_OF_MONTH),
+                                cal.get(Calendar.MONTH) + 1,
+                                cal.get(Calendar.YEAR)
+                            )
+                            onValidDateSelected(fecha)
                             onDismiss()
+                        } else {
+                            mostrarDialogoFallo = true
                         }
+                    } else {
+                        onDismiss()
                     }
-                ) {
-                    Text("OK")
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = { onDismiss() }) {
-                    Text("Cancelar")
-                }
+            ) {
+                Text("OK")
             }
-        ) {
-            DatePicker(
-                state = datePickerState,
-                showModeToggle = false,
-                colors = DatePickerDefaults.colors(
-                    selectedDayContainerColor = PrimaryColor,
-                    todayDateBorderColor = PrimaryColor
-                )
-            )
+        },
+        dismissButton = {
+            TextButton(onClick = { onDismiss() }) {
+                Text("Cancelar")
+            }
         }
+    ) {
+        DatePicker(
+            state = datePickerState,
+            showModeToggle = false,
+            colors = DatePickerDefaults.colors(
+                selectedDayContainerColor = PrimaryColor,
+                todayDateBorderColor = PrimaryColor
+            )
+        )
     }
 }
 
 @Composable
 fun CampoFechaNacimiento(value: String, onClick: () -> Unit) {
-    val iconTint = MaterialTheme.colorScheme.onSurface
+    val iconTint = androidx.compose.material3.MaterialTheme.colorScheme.onSurface
     OutlinedTextField(
         value = value,
         onValueChange = {},
@@ -585,7 +644,9 @@ fun CampoFechaNacimiento(value: String, onClick: () -> Unit) {
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = PrimaryColor,
             unfocusedBorderColor = TertiaryMediumColor,
-            unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            unfocusedLabelColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(
+                alpha = 0.7f
+            )
         )
     )
     Spacer(modifier = Modifier.height(12.dp))
@@ -611,7 +672,9 @@ fun CampoPeso(value: String, onValueChange: (String) -> Unit) {
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = PrimaryColor,
             unfocusedBorderColor = TertiaryMediumColor,
-            unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            unfocusedLabelColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(
+                alpha = 0.7f
+            )
         )
     )
     Spacer(modifier = Modifier.height(12.dp))
@@ -636,7 +699,9 @@ fun CampoAltura(value: String, onValueChange: (String) -> Unit) {
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = PrimaryColor,
             unfocusedBorderColor = TertiaryMediumColor,
-            unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            unfocusedLabelColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(
+                alpha = 0.7f
+            )
         )
     )
     Spacer(modifier = Modifier.height(12.dp))
@@ -650,9 +715,11 @@ fun BotonGuardarPerfil(onClick: () -> Unit) {
             .width(200.dp)
             .padding(horizontal = 16.dp, vertical = 8.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+            containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary
+        )
     ) {
-        Text("Guardar", color = MaterialTheme.colorScheme.onPrimary)
+        Text("Guardar", color = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary)
     }
 }
 
@@ -669,8 +736,8 @@ fun SelectorGenero(
     ) {
         Text(
             text = "Género *",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurface
+            style = androidx.compose.material3.MaterialTheme.typography.labelMedium,
+            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -696,13 +763,13 @@ fun SelectorGenero(
                         onClick = { onSelect(opcionCompleta) },
                         colors = RadioButtonDefaults.colors(
                             selectedColor = PrimaryColor,
-                            unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            unselectedColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     )
                     Text(
                         text = abreviatura,
                         fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.padding(start = 4.dp)
                     )
                 }
@@ -722,10 +789,7 @@ fun uriToCompressedBase64(context: android.content.Context, uri: Uri): String? {
 
         val maxWidth = 600
         val maxHeight = 600
-        var width = originalBitmap.width
-        var height = originalBitmap.height
-
-        val ratioBitmap = width.toFloat() / height.toFloat()
+        val ratioBitmap = originalBitmap.width.toFloat() / originalBitmap.height.toFloat()
         val ratioMax = maxWidth.toFloat() / maxHeight.toFloat()
 
         var finalWidth = maxWidth
@@ -737,7 +801,8 @@ fun uriToCompressedBase64(context: android.content.Context, uri: Uri): String? {
             finalHeight = (maxWidth.toFloat() / ratioBitmap).toInt()
         }
 
-        val resizedBitmap = Bitmap.createScaledBitmap(originalBitmap, finalWidth, finalHeight, true)
+        val resizedBitmap =
+            Bitmap.createScaledBitmap(originalBitmap, finalWidth, finalHeight, true)
 
         val outputStream = java.io.ByteArrayOutputStream()
         resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 70, outputStream)
