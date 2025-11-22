@@ -1,59 +1,61 @@
-t# KOALM - Aplicación de Seguimiento de Hábitos
+# PinguBalance – Aplicación móvil
 
-KOALM es una aplicación móvil desarrollada en Kotlin para Android que ayuda a los usuarios a realizar un seguimiento de sus hábitos y rutinas diarias.
+PinguBalance es una aplicación móvil desarrollada en **Kotlin** para **Android**.  
+Este repositorio contiene el código fuente de la app y su configuración para ejecutarse en Android Studio.
 
-## 📋 Requisitos Previos
+---
 
-Antes de comenzar, necesitarás:
+## 📋 Requisitos previos
 
-1. **Android Studio** (versión recomendada: 2023.1.1 o superior)
+Antes de comenzar, asegúrate de contar con:
 
-   - Descarga desde: [Android Studio](https://developer.android.com/studio)
-   - Instalación mínima: 8GB RAM, 8GB espacio en disc
+1. **Android Studio** (recomendado: versión 2023.1.1 o superior)  
+   - Descarga: https://developer.android.com/studio  
+   - Requisitos mínimos sugeridos:
+     - 8 GB de RAM
+     - 8 GB de espacio libre en disco
 
-2. **Java Development Kit (JDK)** 11 o superior
+2. **Java Development Kit (JDK) 11 o superior**  
+   - Descarga: https://www.oracle.com/java/technologies/downloads/
 
-   - Descarga desde: [JDK](https://www.oracle.com/java/technologies/downloads/)
+3. **Dispositivo Android o emulador**
+   - Mínimo: **Android 12 (API 31)**
+   - Recomendado: **Android 13 o superior**
 
-3. **Dispositivo Android** o emulador
-   - Mínimo Android 12 (API 31)
-   - Recomendado: Android 13 o superior
+---
 
 ## 🚀 Instalación
 
-### Para usuarios sin experiencia en Android Studio:
+### Si es tu primera vez usando Android Studio
 
 1. **Instalar Android Studio**
+   - Descarga el instalador desde el enlace anterior.
+   - Ejecuta el instalador y sigue las instrucciones.
+   - Cuando se te pregunte por el tipo de instalación, elige **“Standard”**.
 
-   - Descarga el instalador desde el enlace proporcionado
-   - Ejecuta el instalador y sigue las instrucciones
-   - Durante la instalación, selecciona "Standard" cuando se te pregunte
+2. **Abrir el proyecto**
+   - Abre Android Studio.
+   - Selecciona **“Open an existing project”**.
+   - Navega hasta la carpeta donde se encuentra el proyecto de **PinguBalance** y selecciónala.
+   - Espera a que Android Studio sincronice y descargue las dependencias (puede tardar algunos minutos).
 
-2. **Configurar el proyecto**
+3. **Configurar un emulador (opcional)**
+   - En Android Studio, ve a **Tools > Device Manager**.
+   - Haz clic en **“Create Device”**.
+   - Elige un dispositivo (por ejemplo, **Pixel 6**).
+   - Selecciona una imagen del sistema **API 31 o superior**.
+   - Finaliza la configuración.
 
-   - Abre Android Studio
-   - Selecciona "Open an existing project"
-   - Navega hasta la carpeta del proyecto y selecciónala
-   - Espera a que Android Studio sincronice el proyecto (puede tomar varios minutos)
-
-3. **Configurar el emulador**
-   - En Android Studio, ve a "Tools" > "Device Manager"
-   - Haz clic en "Create Device"
-   - Selecciona un teléfono (por ejemplo, Pixel 6)
-   - Selecciona una imagen del sistema (API 31 o superior)
-   - Completa la configuración del emulador
-
-### Para usuarios con experiencia:
+### Si ya tienes experiencia
 
 ```bash
 # Clonar el repositorio
+git clone https://github.com/keincarrillo/PinguBalance.git
+cd PinguBalance
 
-git clone https://github.com/Richyms/KOALM.git
-
-# Abrir el proyecto en Android Studio
-# O usar Gradle directamente:
+# Compilar con Gradle (opcional, también puedes usar solo Android Studio)
 ./gradlew build
-```
+
 
 ## 🔧 Compilación y Ejecución
 
