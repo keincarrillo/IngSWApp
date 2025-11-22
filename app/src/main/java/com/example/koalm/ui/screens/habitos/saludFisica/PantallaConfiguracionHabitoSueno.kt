@@ -15,11 +15,15 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
@@ -36,43 +40,38 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
+import com.example.koalm.R
+import com.example.koalm.model.ClaseHabito
+import com.example.koalm.model.Habito
+import com.example.koalm.model.MetricasHabito
 import com.example.koalm.model.ProgresoDiario
-import com.example.koalm.ui.components.HoraField
-import com.example.koalm.ui.components.DiaCircle
+import com.example.koalm.model.TipoHabito
+import com.example.koalm.repository.HabitoRepository
+import com.example.koalm.services.notifications.suenoNotificationService
 import com.example.koalm.services.timers.NotificationService
-import com.example.koalm.ui.components.TimePickerDialog
 import com.example.koalm.ui.components.BarraNavegacionInferior
+import com.example.koalm.ui.components.DiaCircle
+import com.example.koalm.ui.components.ExitoDialogoGuardadoAnimado
+import com.example.koalm.ui.components.HoraField
+import com.example.koalm.ui.components.TimePickerDialog
+import com.example.koalm.ui.components.ValidacionesDialogoAnimado
+import com.example.koalm.ui.screens.habitos.personalizados.DiasSeleccionadosResumen
+import com.example.koalm.ui.screens.habitos.personalizados.TooltipDialogAyuda
 import com.example.koalm.ui.theme.BorderColor
 import com.example.koalm.ui.theme.ContainerColor
+import com.example.koalm.ui.theme.TertiaryMediumColor
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
-import com.example.koalm.R
-import com.example.koalm.model.ClaseHabito
-import com.example.koalm.model.Habito
-import com.example.koalm.model.TipoHabito
-import com.example.koalm.model.MetricasHabito
-import com.example.koalm.repository.HabitoRepository
-import com.example.koalm.ui.components.ExitoDialogoGuardadoAnimado
-import com.example.koalm.ui.components.ValidacionesDialogoAnimado
-import com.example.koalm.ui.screens.habitos.personalizados.DiasSeleccionadosResumen
-import com.example.koalm.ui.screens.habitos.personalizados.TooltipDialogAyuda
-import com.example.koalm.ui.theme.TertiaryMediumColor
-import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.launch
-import java.time.LocalDate
-import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.tasks.await
-import com.example.koalm.services.notifications.suenoNotificationService
-import androidx.compose.foundation.isSystemInDarkTheme
-import com.example.koalm.ui.theme.TertiaryDarkColor // Importante para el fondo oscuro
 
 private const val TAG = "PantallaConfiguracionHabitoSueno"
 
@@ -86,10 +85,13 @@ fun PantallaConfiguracionHabitoSueno(
     val auth = FirebaseAuth.getInstance()
     val userEmail = FirebaseAuth.getInstance().currentUser?.email
     val esEdicion = habitoId != null
-    // 1. DETECTAR TEMA Y COLORES DE TARJETA
+
+    // 1. DETECTAR TEMA Y COLORES DE TARJETA (alineado con PantallaSaludFisica)
     val isDark = isSystemInDarkTheme()
-    val cardContainerColor = if (isDark) TertiaryDarkColor else ContainerColor
-    val cardBorderColor = if (isDark) Color.Gray else BorderColor
+    val colorScheme = MaterialTheme.colorScheme
+
+    val cardContainerColor = if (isDark) colorScheme.surface else ContainerColor
+    val cardBorderColor = if (isDark) colorScheme.outlineVariant else BorderColor
 
     var mensajeValidacion by remember { mutableStateOf<String?>(null) }
 
@@ -102,7 +104,7 @@ fun PantallaConfiguracionHabitoSueno(
         )
     }
 
-    var mostrarDialogoExito by remember{ mutableStateOf(false) }
+    var mostrarDialogoExito by remember { mutableStateOf(false) }
     if (mostrarDialogoExito) {
         ExitoDialogoGuardadoAnimado(
             mensaje = "¡Hábito configurado correctamente!",
@@ -126,7 +128,7 @@ fun PantallaConfiguracionHabitoSueno(
     var duracionHoras by remember { mutableStateOf(8) }
     val rangoHoras = 1..12
 
-   // Calcular hora de despertar teniendo en cuenta el cambio de día
+    // Calcular hora de despertar teniendo en cuenta el cambio de día
     val horaDespertarCalculada = remember(horaDormir, duracionHoras) {
         val duracionMinutos = duracionHoras * 60
         var horaFinal = horaDormir
@@ -145,11 +147,8 @@ fun PantallaConfiguracionHabitoSueno(
         horaFinal
     }
 
-
     val scope = rememberCoroutineScope()
     val habitosRepository = remember { HabitoRepository() }
-    //var duracionMin by remember { mutableStateOf(15f) }    // 1‑180 min
-
 
     // Lista dinámica de recordatorios
     val recordatorios = remember {
@@ -207,7 +206,7 @@ fun PantallaConfiguracionHabitoSueno(
                     } catch (e: Exception) {
                         LocalTime.now().plusMinutes(1).withSecond(0).withNano(0)
                     }
-                    duracionHoras= habito.objetivoHorasSueno
+                    duracionHoras = habito.objetivoHorasSueno
                 },
                 onFailure = {
                     Log.e(TAG, "No se pudo cargar el hábito con ID: $habitoId")
@@ -229,7 +228,6 @@ fun PantallaConfiguracionHabitoSueno(
             habitoExistente = snapshot.toObject(Habito::class.java)
         }
     }
-
 
     /* --------------------  Permission launcher (POST_NOTIFICATIONS)  -------------------- */
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -256,7 +254,8 @@ fun PantallaConfiguracionHabitoSueno(
                         duracionMinutos = duracionHoras * 60,
                         userId = currentUser.uid,
                         objetivoHorasSueno = duracionHoras,
-                        fechaCreacion = if (esEdicion) habitoExistente?.fechaCreacion else LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                        fechaCreacion = if (esEdicion) habitoExistente?.fechaCreacion else LocalDate.now()
+                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                         metricasEspecificas = MetricasHabito(),
                         rachaActual = if (!esEdicion) {
                             0
@@ -279,14 +278,19 @@ fun PantallaConfiguracionHabitoSueno(
                                 Log.d(TAG, "Tipo de hábito: ${habito.tipo}")
 
                                 val notificationService = suenoNotificationService()
-                                val notificationTime = LocalDateTime.of(LocalDateTime.now().toLocalDate(), horaDormir)
+                                val notificationTime =
+                                    LocalDateTime.of(LocalDateTime.now().toLocalDate(), horaDormir)
 
                                 notificationService.cancelNotifications(context)
                                 notificationService.scheduleNotification(
                                     context = context,
                                     diasSeleccionados = diasSeleccionados,
                                     hora = notificationTime,
-                                    descripcion = descripcion.ifEmpty { context.getString(R.string.sleeping_notification_default_text) },
+                                    descripcion = descripcion.ifEmpty {
+                                        context.getString(
+                                            R.string.sleeping_notification_default_text
+                                        )
+                                    },
                                     durationMinutes = 0,
                                     additionalData = mapOf(
                                         "habito_id" to habitoId,
@@ -311,10 +315,20 @@ fun PantallaConfiguracionHabitoSueno(
 
                                 val progresoRef = userHabitsRef?.document(habitoId)
                                     ?.collection("progreso")
-                                    ?.document(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                                    ?.document(
+                                        LocalDate.now()
+                                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                                    )
 
                                 progresoRef?.set(progreso.toMap())?.addOnSuccessListener {
-                                    Log.d(TAG, "Guardando progreso para hábito ID: $habitoId, fecha: ${LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))}")
+                                    Log.d(
+                                        TAG,
+                                        "Guardando progreso para hábito ID: $habitoId, fecha: ${
+                                            LocalDate.now().format(
+                                                DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                                            )
+                                        }"
+                                    )
                                 }?.addOnFailureListener { e ->
                                     Toast.makeText(
                                         context,
@@ -346,16 +360,26 @@ fun PantallaConfiguracionHabitoSueno(
                                 Log.d(TAG, "Tipo de hábito: ${habito.tipo}")
 
                                 val notificationService = suenoNotificationService()
-                                val notificationTime = LocalDateTime.of(LocalDateTime.now().toLocalDate(), horaDormir)
+                                val notificationTime =
+                                    LocalDateTime.of(LocalDateTime.now().toLocalDate(), horaDormir)
 
                                 Log.d(TAG, "Iniciando servicio de notificaciones")
-                                context.startService(Intent(context, suenoNotificationService::class.java))
+                                context.startService(
+                                    Intent(
+                                        context,
+                                        suenoNotificationService::class.java
+                                    )
+                                )
 
                                 notificationService.scheduleNotification(
                                     context = context,
                                     diasSeleccionados = diasSeleccionados,
                                     hora = notificationTime,
-                                    descripcion = descripcion.ifEmpty { context.getString(R.string.sleeping_notification_default_text) },
+                                    descripcion = descripcion.ifEmpty {
+                                        context.getString(
+                                            R.string.sleeping_notification_default_text
+                                        )
+                                    },
                                     durationMinutes = 0,
                                     additionalData = mapOf(
                                         "habito_id" to nuevoHabitoId,
@@ -380,10 +404,20 @@ fun PantallaConfiguracionHabitoSueno(
 
                                 val progresoRef = userHabitsRef?.document(nuevoHabitoId)
                                     ?.collection("progreso")
-                                    ?.document(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                                    ?.document(
+                                        LocalDate.now()
+                                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                                    )
 
                                 progresoRef?.set(progreso.toMap())?.addOnSuccessListener {
-                                    Log.d(TAG, "Guardando progreso para hábito ID: $nuevoHabitoId, fecha: ${LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))}")
+                                    Log.d(
+                                        TAG,
+                                        "Guardando progreso para hábito ID: $nuevoHabitoId, fecha: ${
+                                            LocalDate.now().format(
+                                                DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                                            )
+                                        }"
+                                    )
                                 }?.addOnFailureListener { e ->
                                     Toast.makeText(
                                         context,
@@ -444,9 +478,10 @@ fun PantallaConfiguracionHabitoSueno(
                 } ?: continue
 
                 val duracionExistente = (documento.getLong("duracionMinutos") ?: 0).toInt()
-                val diasHabitoExistente = (documento.get("diasSeleccionados") as? List<*>)?.map {
-                    it as? Boolean ?: false
-                } ?: List(7) { false }
+                val diasHabitoExistente =
+                    (documento.get("diasSeleccionados") as? List<*>)?.map {
+                        it as? Boolean ?: false
+                    } ?: List(7) { false }
 
                 // Verificar días solapados
                 val diasSolapados = diasSeleccionados.zip(diasHabitoExistente)
@@ -478,12 +513,24 @@ fun PantallaConfiguracionHabitoSueno(
 
                 if (hayConflicto) {
                     val diasConflicto = diasSolapados.map {
-                        listOf("Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo")[it]
+                        listOf(
+                            "Lunes",
+                            "Martes",
+                            "Miércoles",
+                            "Jueves",
+                            "Viernes",
+                            "Sábado",
+                            "Domingo"
+                        )[it]
                     }
 
                     Toast.makeText(
                         context,
-                        "Ya existe un hábito de sueño programado para los días: ${diasConflicto.joinToString(", ")}",
+                        "Ya existe un hábito de sueño programado para los días: ${
+                            diasConflicto.joinToString(
+                                ", "
+                            )
+                        }",
                         Toast.LENGTH_LONG
                     ).show()
 
@@ -496,9 +543,6 @@ fun PantallaConfiguracionHabitoSueno(
 
         return false
     }
-
-
-
 
     /*--------------------------------------------UI---------------------------------------------*/
     Scaffold(
@@ -538,7 +582,7 @@ fun PantallaConfiguracionHabitoSueno(
                     OutlinedTextField(
                         value = descripcion,
                         onValueChange = { descripcion = it },
-                        label = {Text("Escribe tu motivación") },
+                        label = { Text("Escribe tu motivación") },
                         placeholder = { Text("Dormir bien transforma tu energía, tu salud y tu bienestar mental.") },
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -546,7 +590,7 @@ fun PantallaConfiguracionHabitoSueno(
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                    ){
+                    ) {
                         Text(
                             text = stringResource(R.string.label_frecuencia),
                             style = MaterialTheme.typography.titleMedium,
@@ -582,7 +626,7 @@ fun PantallaConfiguracionHabitoSueno(
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                    ){
+                    ) {
                         Text(
                             text = "Elige a qué hora planeas dormir: *",
                             style = MaterialTheme.typography.titleMedium,
@@ -613,7 +657,7 @@ fun PantallaConfiguracionHabitoSueno(
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                    ){
+                    ) {
                         Text(
                             text = "Elige la calidad de sueño que deseas: *",
                             style = MaterialTheme.typography.titleMedium,
@@ -632,11 +676,13 @@ fun PantallaConfiguracionHabitoSueno(
                                 val color = if (isDark) Color(0xFF81C784) else Color(0xFF376A3E)
                                 color to color.copy(alpha = 0.3f)
                             }
+
                             duracionHoras >= 6f -> {
                                 // Dorado/Marrón:
                                 val color = if (isDark) Color(0xFFFFD54F) else Color(0xFF795A0C)
                                 color to if (isDark) color.copy(alpha = 0.3f) else Color(0xFFF2DDB8)
                             }
+
                             else -> {
                                 // Rojo:
                                 val color = if (isDark) Color(0xFFE57373) else Color(0xFF914B43)
@@ -689,14 +735,18 @@ fun PantallaConfiguracionHabitoSueno(
                                 horaDespertarCalculada
                             }
                             Text(
-                                text = "${horaDormir.format(DateTimeFormatter.ofPattern("HH:mm"))} - ${horaDespertarFormateada.format(DateTimeFormatter.ofPattern("HH:mm"))}",
+                                text = "${horaDormir.format(DateTimeFormatter.ofPattern("HH:mm"))} - ${
+                                    horaDespertarFormateada.format(
+                                        DateTimeFormatter.ofPattern("HH:mm")
+                                    )
+                                }",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = activeColor
                             )
                         }
-
                     }
-  /*
+
+                    /*
                     Text("Selecciona los recordatorios que deseas antes de dormir (opcional):")
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         recordatorios.forEachIndexed { index, texto ->
@@ -726,9 +776,8 @@ fun PantallaConfiguracionHabitoSueno(
             }
 
             Spacer(Modifier.height(24.dp))
-/*-----------------------Guardar-------------------------------*/
-            val scope = rememberCoroutineScope()
 
+            /*-----------------------Guardar-------------------------------*/
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
@@ -743,7 +792,8 @@ fun PantallaConfiguracionHabitoSueno(
                     Button(
                         onClick = {
                             if (!diasSeleccionados.any { it }) {
-                                mensajeValidacion = "Por favor, selecciona al menos un día de la semana."
+                                mensajeValidacion =
+                                    "Por favor, selecciona al menos un día de la semana."
                                 return@Button
                             }
 
@@ -764,7 +814,10 @@ fun PantallaConfiguracionHabitoSueno(
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
-                        Text(stringResource(R.string.boton_guardar), color = MaterialTheme.colorScheme.onPrimary)
+                        Text(
+                            stringResource(R.string.boton_guardar),
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
                     }
 
                     if (esEdicion) {
@@ -786,8 +839,6 @@ fun PantallaConfiguracionHabitoSueno(
                     }
                 }
             }
-
-
         }
     }
 
@@ -831,10 +882,13 @@ fun PantallaConfiguracionHabitoSueno(
         )
     }
 }
+
 @Composable
 fun HoraFieldCentrada(hora: LocalTime) {
     val isDark = isSystemInDarkTheme()
-    val borderColor = if (isDark) Color.Gray else MaterialTheme.colorScheme.outline
+    val colorScheme = MaterialTheme.colorScheme
+    val borderColor = if (isDark) colorScheme.outlineVariant else colorScheme.outline
+
     Surface(
         tonalElevation = 0.dp,
         shape = RoundedCornerShape(12.dp),

@@ -1,25 +1,54 @@
-/*  PantallaConfiguracionHabitoHidratacion.kt  */
 package com.example.koalm.ui.screens.habitos.saludFisica
 
+import android.Manifest
+import android.annotation.SuppressLint
+import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
-// import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-// import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-// import androidx.compose.ui.geometry.CornerRadius
-// import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-// import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-// import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -27,114 +56,67 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-// import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.koalm.R
-import com.example.koalm.ui.components.BarraNavegacionInferior
-import com.example.koalm.ui.theme.BorderColor
-import com.example.koalm.ui.theme.ContainerColor
-import java.time.LocalTime
-import android.annotation.SuppressLint
-import android.content.pm.PackageManager
-import android.widget.Toast
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.ui.text.input.KeyboardType
-//import com.example.koalm.ui.screens.habitos.saludMental.HoraField
-import androidx.compose.foundation.isSystemInDarkTheme
-import com.example.koalm.ui.theme.TertiaryDarkColor
-import com.example.koalm.ui.screens.habitos.saludMental.TimePickerDialog
-
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.core.content.ContextCompat
-
-
 import com.example.koalm.model.ClaseHabito
 import com.example.koalm.model.Habito
-import com.example.koalm.model.TipoHabito
-import com.example.koalm.services.timers.NotificationService
-import com.google.firebase.auth.FirebaseAuth
-
-import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.launch
-import java.time.format.DateTimeFormatter
-import kotlinx.coroutines.tasks.await
-import java.time.LocalDateTime
-import android.content.Intent
-import android.Manifest
-import android.util.Log
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.clickable
-import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.ui.unit.sp
-import com.example.koalm.data.HabitosRepository
 import com.example.koalm.model.MetricasHabito
 import com.example.koalm.model.ProgresoDiario
+import com.example.koalm.model.TipoHabito
 import com.example.koalm.repository.HabitoRepository
 import com.example.koalm.services.notifications.HydrationNotificationService
+import com.example.koalm.ui.components.BarraNavegacionInferior
 import com.example.koalm.ui.components.ExitoDialogoGuardadoAnimado
 import com.example.koalm.ui.components.FalloDialogoGuardadoAnimado
 import com.example.koalm.ui.components.ValidacionesDialogoAnimado
 import com.example.koalm.ui.screens.habitos.personalizados.TooltipDialogAyuda
+import com.example.koalm.ui.screens.habitos.saludMental.TimePickerDialog
+import com.example.koalm.ui.theme.BorderColor
+import com.example.koalm.ui.theme.ContainerColor
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 
-private const val TAG = "PantallaConfigHidratacion" // Unique tag for this file
+private const val TAG = "PantallaConfigHidratacion"
 
-//@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PantallaConfiguracionHabitoHidratacion (
+fun PantallaConfiguracionHabitoHidratacion(
     navController: NavHostController,
     habitoId: String? = null
 ) {
     val context = LocalContext.current
     val isDark = isSystemInDarkTheme()
-    val cardContainerColor = if (isDark) TertiaryDarkColor else ContainerColor
-    val cardBorderColor = if (isDark) Color.Gray else BorderColor
-    val textoColor = if (isDark) Color.White else Color.Black
-    // ---------------------------
+    val colorScheme = MaterialTheme.colorScheme
+    val cardContainerColor = if (isDark) colorScheme.surface else ContainerColor
+    val cardBorderColor = if (isDark) colorScheme.outlineVariant else BorderColor
+    val textoColor = colorScheme.onSurface
+
     val userEmail = FirebaseAuth.getInstance().currentUser?.email
 
-    //------------------------------ Estados --------------------------------
-    var descripcion       by remember { mutableStateOf("") }
-    var recordatorios  by remember { mutableStateOf(false) }
+    var descripcion by remember { mutableStateOf("") }
     val esEdicion = habitoId != null
 
-    /*  Barra  */
-    var cantLitros by remember { mutableStateOf(2) } // 2 litros por defecto, como entero
-    val rangoLitros = 0.5f..10f // medio litro a 10 litros
+    var cantLitros by remember { mutableStateOf(2) }
+    val rangoLitros = 0.5f..10f
 
-    /* Horas */
-    val horarios = remember { mutableStateListOf<LocalTime>()}
-    var horaIni         by remember { mutableStateOf(LocalTime.of(8,0)) }
-    var mostrarTimePickerIni    by remember { mutableStateOf(false) }
-    var horaFin         by remember { mutableStateOf(LocalTime.of(22,0)) }
-    var mostrarTimePickerFin    by remember { mutableStateOf(false) }
+    val horarios = remember { mutableStateListOf<LocalTime>() }
+    var horaIni by remember { mutableStateOf(LocalTime.of(8, 0)) }
+    var mostrarTimePickerIni by remember { mutableStateOf(false) }
+    var horaFin by remember { mutableStateOf(LocalTime.of(22, 0)) }
+    var mostrarTimePickerFin by remember { mutableStateOf(false) }
     var mostrarTimePicker by remember { mutableStateOf(false) }
     var horaAEditarIndex by remember { mutableStateOf<Int?>(null) }
 
-    /* Recordatorios */
-    var numeroRecordatorios by remember { mutableStateOf(10) }
-
-    /*Frecuencia de recodatorios*/
-    var minutosFrecuencia by remember { mutableStateOf(30) }
-    var frecuenciaActiva by remember { mutableStateOf(false) }
-
     val scope = rememberCoroutineScope()
     val auth = FirebaseAuth.getInstance()
-    val userId = auth.currentUser?.uid ?: "anonimo"  // Solo como fallback
-    val diasSeleccionados = List(7) { true }  // Todos los días activados por default
-    val formatter = DateTimeFormatter.ofPattern("HH:mm")
-    var isLoading by remember { mutableStateOf(false) }
     val habitosRepository = remember { HabitoRepository() }
-
 
     var mensajeValidacion by remember { mutableStateOf<String?>(null) }
 
@@ -147,7 +129,7 @@ fun PantallaConfiguracionHabitoHidratacion (
         )
     }
 
-    var mostrarDialogoExito by remember{ mutableStateOf(false) }
+    var mostrarDialogoExito by remember { mutableStateOf(false) }
     if (mostrarDialogoExito) {
         ExitoDialogoGuardadoAnimado(
             mensaje = "¡Hábito configurado correctamente!",
@@ -161,7 +143,7 @@ fun PantallaConfiguracionHabitoHidratacion (
         )
     }
 
-    var mostrarDialogoFalloHora by remember{ mutableStateOf(false) }
+    var mostrarDialogoFalloHora by remember { mutableStateOf(false) }
     if (mostrarDialogoFalloHora) {
         FalloDialogoGuardadoAnimado(
             mensaje = "Ya agregaste esta hora.",
@@ -189,7 +171,6 @@ fun PantallaConfiguracionHabitoHidratacion (
                     } catch (e: Exception) {
                         horarios.add(LocalTime.now().plusMinutes(1).withSecond(0).withNano(0))
                     }
-
                 },
                 onFailure = {
                     Log.e(TAG, "No se pudo cargar el hábito con ID: $habitoId")
@@ -212,7 +193,6 @@ fun PantallaConfiguracionHabitoHidratacion (
         }
     }
 
-    /* --------------------  Permission launcher (POST_NOTIFICATIONS)  -------------------- */
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -225,15 +205,14 @@ fun PantallaConfiguracionHabitoHidratacion (
 
             scope.launch {
                 try {
-                    // Crear el hábito en Firebase
                     val habito = Habito(
-                        id = habitoId ?: "",  // Para edición o creación nueva
+                        id = habitoId ?: "",
                         titulo = "Hidratación",
                         descripcion = descripcion.ifEmpty { context.getString(R.string.hidratacionn_notification_default_text) },
                         diasSeleccionados = List(7) { true },
                         clase = ClaseHabito.FISICO,
                         tipo = TipoHabito.HIDRATACION,
-                        horarios =  horarios.map {
+                        horarios = horarios.map {
                             it.format(
                                 DateTimeFormatter.ofPattern(
                                     "HH:mm"
@@ -242,7 +221,8 @@ fun PantallaConfiguracionHabitoHidratacion (
                         },
                         objetivoPaginas = cantLitros,
                         userId = currentUser.uid,
-                        fechaCreacion = if (esEdicion) habitoExistente?.fechaCreacion else LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                        fechaCreacion = if (esEdicion) habitoExistente?.fechaCreacion else LocalDate.now()
+                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                         metricasEspecificas = MetricasHabito(),
                         rachaActual = if (!esEdicion) {
                             0
@@ -258,7 +238,6 @@ fun PantallaConfiguracionHabitoHidratacion (
                     )
 
                     if (habitoId != null) {
-                        // EDICIÓN
                         habitosRepository.actualizarHabitoO(habitoId, habito).fold(
                             onSuccess = {
                                 Log.d(TAG, "Hábito actualizado exitosamente con ID: $habitoId")
@@ -279,8 +258,6 @@ fun PantallaConfiguracionHabitoHidratacion (
                                     )
                                 )
 
-
-                                // Referencias para guardar progreso
                                 val db = FirebaseFirestore.getInstance()
                                 val userHabitsRef = userEmail?.let {
                                     db.collection("habitos").document(it)
@@ -295,10 +272,20 @@ fun PantallaConfiguracionHabitoHidratacion (
 
                                 val progresoRef = userHabitsRef?.document(habitoId)
                                     ?.collection("progreso")
-                                    ?.document(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                                    ?.document(
+                                        LocalDate.now()
+                                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                                    )
 
                                 progresoRef?.set(progreso.toMap())?.addOnSuccessListener {
-                                    Log.d(TAG, "Guardando progreso para hábito ID: $habitoId, fecha: ${LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))}")
+                                    Log.d(
+                                        TAG,
+                                        "Guardando progreso para hábito ID: $habitoId, fecha: ${
+                                            LocalDate.now().format(
+                                                DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                                            )
+                                        }"
+                                    )
                                 }?.addOnFailureListener { e ->
                                     Toast.makeText(
                                         context,
@@ -323,7 +310,6 @@ fun PantallaConfiguracionHabitoHidratacion (
                             }
                         )
                     } else {
-                        // CREACIÓN
                         habitosRepository.crearHabito(habito).fold(
                             onSuccess = { nuevoHabitoId ->
                                 Log.d(TAG, "Hábito creado exitosamente con ID: $nuevoHabitoId")
@@ -344,8 +330,6 @@ fun PantallaConfiguracionHabitoHidratacion (
                                     )
                                 )
 
-
-                                // Referencias para guardar progreso
                                 val db = FirebaseFirestore.getInstance()
                                 val userHabitsRef = userEmail?.let {
                                     db.collection("habitos").document(it)
@@ -360,10 +344,20 @@ fun PantallaConfiguracionHabitoHidratacion (
 
                                 val progresoRef = userHabitsRef?.document(nuevoHabitoId)
                                     ?.collection("progreso")
-                                    ?.document(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                                    ?.document(
+                                        LocalDate.now()
+                                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                                    )
 
                                 progresoRef?.set(progreso.toMap())?.addOnSuccessListener {
-                                    Log.d(TAG, "Guardando progreso para hábito ID: $nuevoHabitoId, fecha: ${LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))}")
+                                    Log.d(
+                                        TAG,
+                                        "Guardando progreso para hábito ID: $nuevoHabitoId, fecha: ${
+                                            LocalDate.now().format(
+                                                DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                                            )
+                                        }"
+                                    )
                                 }?.addOnFailureListener { e ->
                                     Toast.makeText(
                                         context,
@@ -402,110 +396,10 @@ fun PantallaConfiguracionHabitoHidratacion (
         }
     }
 
-    /*
-    fun guardarHabitoHidratacion() {
-        Log.d("GuardarHabito", "Función iniciar guardado")
-        scope.launch {
-            try {
-                val userId = auth.currentUser?.uid
-                    ?: throw Exception("Usuario no autenticado")
-
-                isLoading = true
-
-                // Generar lista de horarios según inicio, fin y frecuencia
-                horarios.clear()
-                val start = horaIni.toSecondOfDay() / 60
-                val end = horaFin.toSecondOfDay() / 60
-                val intervalo = if (frecuenciaActiva) minutosFrecuencia else 60
-                var minuto = start
-                while (minuto <= end) {
-                    val h = minuto / 60
-                    val m = minuto % 60
-                    horarios.add(String.format("%02d:%02d", h, m))
-                    minuto += intervalo
-                }
-
-                // Crear objeto Habito con tipo HIDRATACION
-                val nuevoHabito = Habito(
-                    titulo = "Hidratación",
-                    descripcion = descripcion.ifEmpty { "Recordatorios para beber agua" },
-                    clase = ClaseHabito.FISICO,
-                    tipo = TipoHabito.HIDRATACION,
-                    diasSeleccionados = List(7) { true }, // Todos los días
-                    hora = horarios.firstOrNull() ?: "",
-                    horarios = horarios.toList(),
-                    duracionMinutos = 5,
-                    userId = userId,
-                    fechaCreacion = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME),
-                    fechaModificacion = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME),
-                    metricasEspecificas = MetricasHabito(mililitrosBebidos = (cantlitros * 1000).toInt()) // Opcional: info litros
-                )
-
-                // Guardar en Firebase
-                habitosRepository.crearHabito(nuevoHabito).onSuccess { habitoId ->
-                    // Programar notificaciones para cada horario
-                    val notificationService = NotificationService()
-                    context.startService(Intent(context, NotificationService::class.java))
-
-                    horarios.forEachIndexed { index, horaStr ->
-                        val hora = LocalTime.parse(horaStr, DateTimeFormatter.ofPattern("HH:mm"))
-                        val notificationTime = LocalDateTime.of(LocalDate.now(), hora)
-
-                        notificationService.scheduleNotification(
-                            context = context,
-                            habitoId = "$habitoId-$index", // ID único por notificación
-                            diasSeleccionados = nuevoHabito.diasSeleccionados,
-                            hora = notificationTime,
-                            descripcion = "Hora de hidratarse 💧",
-                            durationMinutes = 0,
-                            isAlimentation = false,
-                            isSleeping = false,
-                            isHidratation = true
-                        )
-                    }
-
-                    Toast.makeText(context, "Hábito de hidratación guardado con éxito", Toast.LENGTH_LONG).show()
-                    navController.navigateUp()
-
-                }.onFailure { e ->
-                    Toast.makeText(context, "Error al guardar hábito: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-
-            } catch (e: Exception) {
-                Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
-            } finally {
-                isLoading = false
-            }
-        }
-    }
-
-    */
-
-
-    val permissionLauncherHydratation = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            //guardarHabitoHidratacion()
-        } else {
-            Toast.makeText(
-                context,
-                "Permiso de notificaciones denegado",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-    }
-
-
-
-
-
-
-    //--------------------------- UI --------------------------------------
     Scaffold(
         topBar = {
             TopAppBar(
-            title = { Text(stringResource(R.string.titulo_config_hidratacion)) },
+                title = { Text(stringResource(R.string.titulo_config_hidratacion)) },
                 navigationIcon = {
                     IconButton(onClick = navController::navigateUp) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
@@ -514,10 +408,9 @@ fun PantallaConfiguracionHabitoHidratacion (
             )
         },
         bottomBar = {
-            BarraNavegacionInferior(navController,"configurar_habito")
+            BarraNavegacionInferior(navController, "configurar_habito")
         }
     ) { innerPadding ->
-
         Column(
             Modifier
                 .padding(innerPadding)
@@ -526,18 +419,16 @@ fun PantallaConfiguracionHabitoHidratacion (
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            //---------- Tarjeta Principal -----------
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape   = RoundedCornerShape(16.dp),
-                border  = BorderStroke(1.dp, cardBorderColor),
-                colors  = CardDefaults.cardColors(containerColor = cardContainerColor)
-            ){
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.dp, cardBorderColor),
+                colors = CardDefaults.cardColors(containerColor = cardContainerColor)
+            ) {
                 Column(
-                Modifier.padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
+                    Modifier.padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
-                    /*  Descripción  */
                     OutlinedTextField(
                         value = descripcion,
                         onValueChange = { descripcion = it },
@@ -546,7 +437,6 @@ fun PantallaConfiguracionHabitoHidratacion (
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    /*  Duración (Slider personalizado)  */
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
                             text = stringResource(R.string.label_cantidad_litros),
@@ -559,11 +449,11 @@ fun PantallaConfiguracionHabitoHidratacion (
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         DurationSliderHidra(
-                            value        = cantLitros,
+                            value = cantLitros,
                             onValueChange = { cantLitros = it },
-                            valueRange    = rangoLitros,
-                            tickEvery     = 1,           // marca cada litro
-                            modifier      = Modifier.fillMaxWidth()
+                            valueRange = rangoLitros,
+                            tickEvery = 1,
+                            modifier = Modifier.fillMaxWidth()
                         )
                         Text(
                             text = "Selecciona la cantidad de litros diarios a tomar",
@@ -572,11 +462,10 @@ fun PantallaConfiguracionHabitoHidratacion (
                         )
                     }
 
-                    //------- Horas de notificaciones ------------------
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                    ){
+                    ) {
                         Text(
                             text = "Horario de recordatorios: *",
                             style = MaterialTheme.typography.titleMedium,
@@ -588,8 +477,6 @@ fun PantallaConfiguracionHabitoHidratacion (
                         )
                     }
 
-
-                    // 🟢 Lista de horarios
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         horarios.forEachIndexed { index, hora ->
                             Row(
@@ -623,7 +510,7 @@ fun PantallaConfiguracionHabitoHidratacion (
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .clickable {
-                                horaAEditarIndex = null // <- Indica que es una nueva hora
+                                horaAEditarIndex = null
                                 mostrarTimePicker = true
                             }
                             .padding(top = 8.dp)
@@ -640,129 +527,11 @@ fun PantallaConfiguracionHabitoHidratacion (
                             color = textoColor
                         )
                     }
-
-                    /*
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = stringResource(R.string.label_hora_hidratacion),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Medium
-                        )
-
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            // Hora de inicio
-                            Box(modifier = Modifier.weight(1f)){
-                                HoraField(hora = horaIni) { mostrarTimePickerIni = true }
-                            }
-                            // Hora de fin
-                            Box(modifier = Modifier.weight(1f)) {
-                                HoraField(hora = horaFin) { mostrarTimePickerFin = true }
-                            }
-                        }
-                    }
-
-                    /* Recordatorio Hidratación */
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = stringResource(R.string.label_recordatorio_hidratación),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            OutlinedTextField(
-                                value = numeroRecordatorios.toString(),
-                                onValueChange = {
-                                    val valor = it.toIntOrNull()
-                                    if (valor != null) numeroRecordatorios = valor
-                                },
-                                modifier = Modifier.width(70.dp), // ancho reducido
-                                singleLine = true,
-                                label = { Text("Num.") },
-                                shape = RoundedCornerShape(8.dp),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                            )
-
-                            Text(stringResource(R.string.label_recordatorios_agua))
-
-                            Switch(
-                                checked = recordatorios,
-                                onCheckedChange = { recordatorios = it }
-                            )
-                        }
-                    }
-
-                    /* Frecuencua Recordatorios */
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = stringResource(R.string.label_recordatorio_hidratación_f),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Text(
-                            text = stringResource(R.string.label_recordatorio_hidratación_t),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
-                        )
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(text = "Cada")
-
-                                Spacer(modifier = Modifier.width(8.dp))
-
-                                OutlinedTextField(
-                                    value = minutosFrecuencia.toString(),
-                                    onValueChange = {
-                                        val valor = it.toIntOrNull()
-                                        if (valor != null) minutosFrecuencia = valor
-                                    },
-                                    modifier = Modifier.width(70.dp),
-                                    singleLine = true,
-                                    shape = RoundedCornerShape(8.dp),
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                    label = { Text("Min") }
-                                )
-
-                                Spacer(modifier = Modifier.width(8.dp))
-
-                                Text(text = "minutos.")
-                            }
-
-                            Switch(
-                                checked = frecuenciaActiva,
-                                onCheckedChange = { frecuenciaActiva = it }
-                            )
-                        }
-                    }
-                    */
                 }
             }
 
             Spacer(Modifier.weight(1f))
 
-            /*-------------------------Guardar------------------------------------*/
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
@@ -789,10 +558,12 @@ fun PantallaConfiguracionHabitoHidratacion (
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
-                        Text(stringResource(R.string.boton_guardar), color = MaterialTheme.colorScheme.onPrimary)
+                        Text(
+                            stringResource(R.string.boton_guardar),
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
                     }
                     if (esEdicion) {
-                        // Boton de Cancelar
                         Button(
                             onClick = {
                                 navController.navigateUp()
@@ -807,12 +578,12 @@ fun PantallaConfiguracionHabitoHidratacion (
                                 stringResource(R.string.boton_cancelar_modificaciones),
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
-
                         }
                     }
                 }
             }
         }
+
         if (mostrarTimePicker) {
             TimePickerDialog(
                 initialTime = LocalTime.now(),
@@ -820,10 +591,8 @@ fun PantallaConfiguracionHabitoHidratacion (
                     val horaSinSegundos = nuevaHora.withSecond(0).withNano(0)
 
                     if (horaAEditarIndex != null) {
-                        // Editando
                         horarios[horaAEditarIndex!!] = horaSinSegundos
                     } else {
-                        // Agregando
                         if (!horarios.contains(horaSinSegundos)) {
                             horarios.add(horaSinSegundos)
                         } else {
@@ -862,10 +631,6 @@ fun formatearLitros(cantidad: Double): String = when {
     else -> "%.1f litros".format(cantidad)
 }
 
-/*Ajustar y eliminar los dos private inferiores en caso de verse necesario y remplazarse por su equivalente
-del codigo PantallaConfiguracionHabitoEscritura.kt*/
-
-/*─────────────────────────────  SLIDER “PIXEL STYLE”  ───────────────────────*/
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun DurationSliderHidra(
@@ -888,7 +653,6 @@ fun DurationSliderHidra(
                 .fillMaxWidth()
                 .height(trackHeight + 24.dp)
         ) {
-            // Track
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -898,7 +662,6 @@ fun DurationSliderHidra(
                     .align(Alignment.Center)
             )
 
-            // Ticks
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -907,7 +670,8 @@ fun DurationSliderHidra(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                val tickCount = ((valueRange.endInclusive - valueRange.start) / tickEvery).toInt() + 1
+                val tickCount =
+                    ((valueRange.endInclusive - valueRange.start) / tickEvery).toInt() + 1
                 repeat(tickCount) {
                     Box(
                         modifier = Modifier
@@ -918,7 +682,6 @@ fun DurationSliderHidra(
                 }
             }
 
-            // Slider real — libre y con haptics
             Slider(
                 value = value.toFloat(),
                 onValueChange = {
@@ -927,7 +690,7 @@ fun DurationSliderHidra(
                     haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 },
                 valueRange = valueRange,
-                steps = (valueRange.endInclusive - valueRange.start).toInt() - 1, // solo enteros
+                steps = (valueRange.endInclusive - valueRange.start).toInt() - 1,
                 colors = SliderDefaults.colors(
                     activeTrackColor = Color.Transparent,
                     inactiveTrackColor = Color.Transparent,
@@ -938,15 +701,13 @@ fun DurationSliderHidra(
                 modifier = Modifier.fillMaxSize()
             )
 
-
-            // Thumb visual, atado a la posición actual
             val progress = (value - valueRange.start) / (valueRange.endInclusive - valueRange.start)
             val thumbOffset = with(density) { (progress * maxWidthPx).toDp() }
 
             Box(
                 modifier = Modifier
                     .width(thumbWidth)
-                    .height(trackHeight + 24.dp) // Aumentado a 24.dp para hacer el thumb más largo
+                    .height(trackHeight + 24.dp)
                     .align(Alignment.CenterStart)
                     .offset(x = thumbOffset)
                     .clip(RoundedCornerShape(thumbWidth))

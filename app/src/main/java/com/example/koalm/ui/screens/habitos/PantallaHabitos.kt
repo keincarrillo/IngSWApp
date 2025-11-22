@@ -5,6 +5,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -85,26 +87,23 @@ fun HabitoCategoriaCard(
     icono: ImageVector,
     onClick: () -> Unit = {}
 ) {
-    // 1. Detectamos el tema
     val isDark = isSystemInDarkTheme()
+    val colorScheme = MaterialTheme.colorScheme
 
-    // 2. Definimos el color de fondo de la tarjeta
-    // Si es oscuro, usamos TertiaryDarkColor (gris azulado oscuro de tu tema).
-    // Si es claro, usamos ContainerColor (el azul muy clarito original).
-    val containerColor = if (isDark) TertiaryDarkColor else ContainerColor
-
-    // 3. Definimos el color del texto de descripción
-    // Si es oscuro, usamos gris claro para que se lea sobre el fondo oscuro.
-    val descripcionColor = if (isDark) Color.LightGray else TertiaryMediumColor
+    // mismos criterios que en PantallaSaludFisica
+    val borderColor = if (isDark) colorScheme.outlineVariant else BorderColor
+    val cardColor = if (isDark) colorScheme.surface else ContainerColor
 
     Card(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, borderColor, RoundedCornerShape(16.dp)),
         colors = CardDefaults.cardColors(
-            containerColor = containerColor // <--- Aquí aplicamos el color dinámico
+            containerColor = cardColor
         ),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
+            defaultElevation = 0.dp
         )
     ) {
         Row(
@@ -138,15 +137,14 @@ fun HabitoCategoriaCard(
                     text = titulo,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    // En modo oscuro, el texto por defecto (onSurface) es blanco,
-                    // así que se verá bien sobre el fondo oscuro automáticamente.
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = descripcion,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = descripcionColor // <--- Aquí aplicamos el color de texto dinámico
+                    // igual que en las cards de Salud Física
+                    color = TertiaryMediumColor
                 )
             }
 

@@ -1,5 +1,6 @@
 package com.example.koalm.ui.screens.habitos.saludFisica
 
+import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.util.Log
@@ -8,16 +9,43 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,16 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
-import android.Manifest
-import androidx.compose.material.icons.filled.Schedule
 import com.example.koalm.R
-import com.example.koalm.ui.components.BarraNavegacionInferior
-import com.example.koalm.ui.theme.BorderColor
-import com.example.koalm.ui.theme.ContainerColor
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
-
-import com.google.firebase.auth.FirebaseAuth
 import com.example.koalm.model.ClaseHabito
 import com.example.koalm.model.Habito
 import com.example.koalm.model.MetricasHabito
@@ -45,22 +64,24 @@ import com.example.koalm.model.ProgresoDiario
 import com.example.koalm.model.TipoHabito
 import com.example.koalm.repository.HabitoRepository
 import com.example.koalm.services.notifications.AlimentationNotificationService
-import com.example.koalm.services.timers.NotificationService
+import com.example.koalm.ui.components.BarraNavegacionInferior
 import com.example.koalm.ui.components.ExitoDialogoGuardadoAnimado
 import com.example.koalm.ui.components.FalloDialogoGuardadoAnimado
 import com.example.koalm.ui.components.ValidacionesDialogoAnimado
 import com.example.koalm.ui.screens.habitos.personalizados.TooltipDialogAyuda
 import com.example.koalm.ui.screens.habitos.saludMental.TimePickerDialog
+import com.example.koalm.ui.theme.BorderColor
+import com.example.koalm.ui.theme.ContainerColor
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.time.LocalDate
 import java.time.LocalDateTime
-import androidx.compose.foundation.isSystemInDarkTheme
-import com.example.koalm.ui.theme.TertiaryDarkColor // Necesario para el fondo oscuro
-private const val TAG = "PantallaConfigAlimentacion" // Unique tag for this file
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
-
+private const val TAG = "PantallaConfigAlimentacion"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,16 +91,14 @@ fun PantallaConfiguracionHabitoAlimentacion(
 ) {
     val context = LocalContext.current
     val isDark = isSystemInDarkTheme()
-    // Fondo de la tarjeta: Gris oscuro en Dark Mode, Azul claro en Light Mode
-    val cardContainerColor = if (isDark) TertiaryDarkColor else ContainerColor
-    // Borde: Gris en Dark Mode, Azul borde en Light Mode
-    val cardBorderColor = if (isDark) Color.Gray else BorderColor
-    // Texto específico (ej. "Agregar hora"): Blanco en Dark, Negro en Light
-    val textoColor = if (isDark) Color.White else Color.Black
-    // ---------------------------
+    val colorScheme = MaterialTheme.colorScheme
+    val cardContainerColor = if (isDark) colorScheme.surface else ContainerColor
+    val cardBorderColor = if (isDark) colorScheme.outlineVariant else BorderColor
+    val textoColor = colorScheme.onSurface
+
     val userEmail = FirebaseAuth.getInstance().currentUser?.email
     val esEdicion = habitoId != null
-    val horarios = remember { mutableStateListOf<LocalTime>()}
+    val horarios = remember { mutableStateListOf<LocalTime>() }
     var descripcion by remember { mutableStateOf("") }
     var mostrarTimePicker by remember { mutableStateOf(false) }
     var horaSeleccionada by remember { mutableStateOf(LocalTime.of(12, 0)) }
@@ -102,7 +121,7 @@ fun PantallaConfiguracionHabitoAlimentacion(
         )
     }
 
-    var mostrarDialogoExito by remember{ mutableStateOf(false) }
+    var mostrarDialogoExito by remember { mutableStateOf(false) }
     if (mostrarDialogoExito) {
         ExitoDialogoGuardadoAnimado(
             mensaje = "¡Hábito configurado correctamente!",
@@ -116,7 +135,7 @@ fun PantallaConfiguracionHabitoAlimentacion(
         )
     }
 
-    var mostrarDialogoFalloHora by remember{ mutableStateOf(false) }
+    var mostrarDialogoFalloHora by remember { mutableStateOf(false) }
     if (mostrarDialogoFalloHora) {
         FalloDialogoGuardadoAnimado(
             mensaje = "Ya agregaste esta hora.",
@@ -126,8 +145,6 @@ fun PantallaConfiguracionHabitoAlimentacion(
         )
     }
 
-
-    // Firebase
     val auth = FirebaseAuth.getInstance()
     val habitosRepository = remember { HabitoRepository() }
     val scope = rememberCoroutineScope()
@@ -150,7 +167,6 @@ fun PantallaConfiguracionHabitoAlimentacion(
                     } catch (e: Exception) {
                         horarios.add(LocalTime.now().plusMinutes(1).withSecond(0).withNano(0))
                     }
-
                 },
                 onFailure = {
                     Log.e(TAG, "No se pudo cargar el hábito con ID: $habitoId")
@@ -173,7 +189,6 @@ fun PantallaConfiguracionHabitoAlimentacion(
         }
     }
 
-    /* --------------------  Permission launcher (POST_NOTIFICATIONS)  -------------------- */
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -186,15 +201,14 @@ fun PantallaConfiguracionHabitoAlimentacion(
 
             scope.launch {
                 try {
-                    // Crear el hábito en Firebase
                     val habito = Habito(
-                        id = habitoId ?: "",  // Para edición o creación nueva
+                        id = habitoId ?: "",
                         titulo = "Alimentación",
                         descripcion = descripcion.ifEmpty { context.getString(R.string.alimentationn_notification_default_text) },
                         diasSeleccionados = List(7) { true },
                         clase = ClaseHabito.FISICO,
                         tipo = TipoHabito.ALIMENTACION,
-                        horarios =  horarios.map {
+                        horarios = horarios.map {
                             it.format(
                                 DateTimeFormatter.ofPattern(
                                     "HH:mm"
@@ -203,7 +217,8 @@ fun PantallaConfiguracionHabitoAlimentacion(
                         },
                         objetivoPaginas = horarios.size,
                         userId = currentUser.uid,
-                        fechaCreacion = if (esEdicion) habitoExistente?.fechaCreacion else LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                        fechaCreacion = if (esEdicion) habitoExistente?.fechaCreacion else LocalDate.now()
+                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                         metricasEspecificas = MetricasHabito(),
                         rachaActual = if (!esEdicion) {
                             0
@@ -219,7 +234,6 @@ fun PantallaConfiguracionHabitoAlimentacion(
                     )
 
                     if (habitoId != null) {
-                        // EDICIÓN
                         habitosRepository.actualizarHabitoO(habitoId, habito).fold(
                             onSuccess = {
                                 Log.d(TAG, "Hábito actualizado exitosamente con ID: $habitoId")
@@ -231,7 +245,11 @@ fun PantallaConfiguracionHabitoAlimentacion(
 
                                 notificationService.scheduleNotification(
                                     context = context,
-                                    horarios = horarios.map { it.format(DateTimeFormatter.ofPattern("HH:mm")) },
+                                    horarios = horarios.map {
+                                        it.format(
+                                            DateTimeFormatter.ofPattern("HH:mm")
+                                        )
+                                    },
                                     descripcion = descripcion,
                                     durationMinutes = 0,
                                     additionalData = mapOf(
@@ -240,8 +258,6 @@ fun PantallaConfiguracionHabitoAlimentacion(
                                     )
                                 )
 
-
-                                // Referencias para guardar progreso
                                 val db = FirebaseFirestore.getInstance()
                                 val userHabitsRef = userEmail?.let {
                                     db.collection("habitos").document(it)
@@ -257,10 +273,20 @@ fun PantallaConfiguracionHabitoAlimentacion(
 
                                 val progresoRef = userHabitsRef?.document(habitoId)
                                     ?.collection("progreso")
-                                    ?.document(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                                    ?.document(
+                                        LocalDate.now()
+                                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                                    )
 
                                 progresoRef?.set(progreso.toMap())?.addOnSuccessListener {
-                                    Log.d(TAG, "Guardando progreso para hábito ID: $habitoId, fecha: ${LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))}")
+                                    Log.d(
+                                        TAG,
+                                        "Guardando progreso para hábito ID: $habitoId, fecha: ${
+                                            LocalDate.now().format(
+                                                DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                                            )
+                                        }"
+                                    )
                                 }?.addOnFailureListener { e ->
                                     Toast.makeText(
                                         context,
@@ -285,7 +311,6 @@ fun PantallaConfiguracionHabitoAlimentacion(
                             }
                         )
                     } else {
-                        // CREACIÓN
                         habitosRepository.crearHabito(habito).fold(
                             onSuccess = { nuevoHabitoId ->
                                 Log.d(TAG, "Hábito creado exitosamente con ID: $nuevoHabitoId")
@@ -297,7 +322,11 @@ fun PantallaConfiguracionHabitoAlimentacion(
 
                                 notificationService.scheduleNotification(
                                     context = context,
-                                    horarios = horarios.map { it.format(DateTimeFormatter.ofPattern("HH:mm")) },
+                                    horarios = horarios.map {
+                                        it.format(
+                                            DateTimeFormatter.ofPattern("HH:mm")
+                                        )
+                                    },
                                     descripcion = descripcion,
                                     durationMinutes = 0,
                                     additionalData = mapOf(
@@ -306,8 +335,6 @@ fun PantallaConfiguracionHabitoAlimentacion(
                                     )
                                 )
 
-
-                                // Referencias para guardar progreso
                                 val db = FirebaseFirestore.getInstance()
                                 val userHabitsRef = userEmail?.let {
                                     db.collection("habitos").document(it)
@@ -324,10 +351,20 @@ fun PantallaConfiguracionHabitoAlimentacion(
 
                                 val progresoRef = userHabitsRef?.document(nuevoHabitoId)
                                     ?.collection("progreso")
-                                    ?.document(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                                    ?.document(
+                                        LocalDate.now()
+                                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                                    )
 
                                 progresoRef?.set(progreso.toMap())?.addOnSuccessListener {
-                                    Log.d(TAG, "Guardando progreso para hábito ID: $nuevoHabitoId, fecha: ${LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))}")
+                                    Log.d(
+                                        TAG,
+                                        "Guardando progreso para hábito ID: $nuevoHabitoId, fecha: ${
+                                            LocalDate.now().format(
+                                                DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                                            )
+                                        }"
+                                    )
                                 }?.addOnFailureListener { e ->
                                     Toast.makeText(
                                         context,
@@ -366,83 +403,6 @@ fun PantallaConfiguracionHabitoAlimentacion(
         }
     }
 
-
-    /*
-    fun guardarHabitoAlimentacion() {
-        if (horarios.isEmpty()) {
-            Toast.makeText(context, "Debes agregar al menos un horario", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        isLoading = true
-        scope.launch {
-            try {
-                val userId = auth.currentUser?.uid
-                    ?: throw Exception("Usuario no autenticado")
-
-                val nuevoHabito = Habito(
-                    titulo = "Alimentación",
-                    descripcion = descripcion.ifEmpty { "Recordatorios de comidas" },
-                    clase = ClaseHabito.FISICO,
-                    tipo = TipoHabito.ALIMENTACION,
-                    diasSeleccionados = List(7) { true }, // Todos los días por defecto
-                    hora = horarios.first(), // Hora principal
-                    horarios = horarios.toList(), // Lista completa de horarios
-                    duracionMinutos = 30, // Duración estimada por comida
-                    userId = userId
-                )
-
-                // Guardar en Firebase
-                habitosRepository.crearHabito(nuevoHabito).onSuccess { habitoId ->
-                    // Programar notificaciones para cada horario
-                    val notificationService = NotificationService()
-                    context.startService(Intent(context, NotificationService::class.java))
-
-                    horarios.forEachIndexed { index, horaStr ->
-                        val hora = LocalTime.parse(horaStr, DateTimeFormatter.ofPattern("hh:mm a"))
-                        val notificationTime = LocalDateTime.of(LocalDate.now(), hora)
-
-                        notificationService.scheduleNotification(
-                            context = context,
-                            habitoId = "$habitoId-$index", // ID único para cada notificación
-                            diasSeleccionados = nuevoHabito.diasSeleccionados,
-                            hora = notificationTime,
-                            descripcion = "Es hora de tu comida",
-                            durationMinutes = 0,
-                            isAlimentation = true,
-                            isSleeping = false,
-                            isHidratation = false
-                        )
-                    }
-
-                    Toast.makeText(
-                        context,
-                        "Hábito de alimentación guardado con ${horarios.size} recordatorios",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    navController.popBackStack()
-                }.onFailure { e ->
-                    Toast.makeText(
-                        context,
-                        "Error al guardar: ${e.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            } catch (e: Exception) {
-                Toast.makeText(
-                    context,
-                    "Error: ${e.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
-            } finally {
-                isLoading = false
-            }
-        }
-    }
-
-    */
-
-    /*----------------------------------UI-----------------------------------------------*/
     Scaffold(
         topBar = {
             TopAppBar(
@@ -473,8 +433,6 @@ fun PantallaConfiguracionHabitoAlimentacion(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-
-                    // Caja de descripción editable
                     OutlinedTextField(
                         value = descripcion,
                         onValueChange = { descripcion = it },
@@ -486,7 +444,7 @@ fun PantallaConfiguracionHabitoAlimentacion(
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                    ){
+                    ) {
                         Text(
                             text = "Horario de comidas: *",
                             style = MaterialTheme.typography.titleMedium,
@@ -498,8 +456,6 @@ fun PantallaConfiguracionHabitoAlimentacion(
                         )
                     }
 
-
-                    // Lista de horarios
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         horarios.forEachIndexed { index, hora ->
                             Row(
@@ -533,7 +489,7 @@ fun PantallaConfiguracionHabitoAlimentacion(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .clickable {
-                                horaAEditarIndex = null // <- Indica que es una nueva hora
+                                horaAEditarIndex = null
                                 mostrarTimePicker = true
                             }
                             .padding(top = 8.dp)
@@ -555,7 +511,6 @@ fun PantallaConfiguracionHabitoAlimentacion(
 
             Spacer(Modifier.weight(1f))
 
-            // Botón Guardar
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
@@ -582,10 +537,12 @@ fun PantallaConfiguracionHabitoAlimentacion(
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
-                        Text(stringResource(R.string.boton_guardar), color = MaterialTheme.colorScheme.onPrimary)
+                        Text(
+                            stringResource(R.string.boton_guardar),
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
                     }
                     if (esEdicion) {
-                        // Boton de Cancelar
                         Button(
                             onClick = {
                                 navController.navigateUp()
@@ -600,7 +557,6 @@ fun PantallaConfiguracionHabitoAlimentacion(
                                 stringResource(R.string.boton_cancelar_modificaciones),
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
-
                         }
                     }
                 }
@@ -614,10 +570,8 @@ fun PantallaConfiguracionHabitoAlimentacion(
                     val horaSinSegundos = nuevaHora.withSecond(0).withNano(0)
 
                     if (horaAEditarIndex != null) {
-                        // Editando
                         horarios[horaAEditarIndex!!] = horaSinSegundos
                     } else {
-                        // Agregando
                         if (!horarios.contains(horaSinSegundos)) {
                             horarios.add(horaSinSegundos)
                         } else {
@@ -630,23 +584,21 @@ fun PantallaConfiguracionHabitoAlimentacion(
                 onDismiss = { mostrarTimePicker = false }
             )
         }
-
     }
-
-
 }
 
-
-/*───────────────────────────── COMPONENTES ───────────────────────────────*/
-// 🟢 Item de horario individual (alineado y tamaño igual a sueño)
 @Composable
 fun HorarioComidaItem(hora: String, onEditar: () -> Unit) {
+    val isDark = isSystemInDarkTheme()
+    val colorScheme = MaterialTheme.colorScheme
+    val borderColor = if (isDark) colorScheme.outlineVariant else colorScheme.outline
+    val containerColor = if (isDark) Color.Transparent else colorScheme.surface
+
     Surface(
         tonalElevation = 0.dp,
         shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, Color(0xFF9E9E9E)),
-
-        color = Color.White,
+        border = BorderStroke(1.dp, borderColor),
+        color = containerColor,
         modifier = Modifier
             .widthIn(max = 180.dp)
             .height(48.dp)
@@ -660,7 +612,7 @@ fun HorarioComidaItem(hora: String, onEditar: () -> Unit) {
             Icon(
                 imageVector = Icons.Default.Edit,
                 contentDescription = "Editar",
-                tint = Color(0xFF478D4F),
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
                     .size(20.dp)
                     .clickable(onClick = onEditar)
@@ -671,13 +623,14 @@ fun HorarioComidaItem(hora: String, onEditar: () -> Unit) {
             Text(
                 text = hora,
                 style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Icon(
                 imageVector = Icons.Default.AccessTime,
                 contentDescription = "Hora",
-                tint = Color(0xFF000000),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -716,17 +669,17 @@ fun TimePickerDialogAlimentacion(
     )
 }
 
-
 @Composable
 fun HoraField(hora: LocalTime, onClick: () -> Unit) {
-    // Detectar tema localmente para este componente
     val isDark = isSystemInDarkTheme()
-    val borderColor = if (isDark) Color.Gray else MaterialTheme.colorScheme.outline
+    val colorScheme = MaterialTheme.colorScheme
+    val borderColor = if (isDark) colorScheme.outlineVariant else colorScheme.outline
+
     Surface(
         tonalElevation = 0.dp,
         shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, borderColor), // Borde dinámico
-        color = Color.Transparent, // IMPORTANTE: Transparente para heredar el color de la tarjeta
+        border = BorderStroke(1.dp, borderColor),
+        color = Color.Transparent,
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
@@ -738,17 +691,23 @@ fun HoraField(hora: LocalTime, onClick: () -> Unit) {
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Default.Edit, contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary)
+            Icon(
+                Icons.Default.Edit,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
             Spacer(Modifier.width(8.dp))
             Text(
-                text  = hora.format(DateTimeFormatter.ofPattern("hh:mm a")),
+                text = hora.format(DateTimeFormatter.ofPattern("hh:mm a")),
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface // Asegura contraste de texto
+                color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(Modifier.weight(1f))
-            Icon(Icons.Default.Schedule, contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Icon(
+                Icons.Default.Schedule,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
