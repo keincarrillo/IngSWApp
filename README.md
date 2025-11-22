@@ -80,7 +80,6 @@ cd PinguBalance
 
 ## 🛠️ Estructura del Proyecto
 
-```
 app/
 ├── src/
 │   ├── main/
