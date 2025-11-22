@@ -1,485 +1,1001 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
+  <head>
     <meta charset="UTF-8" />
-    <title>KOALM – Validación</title>
+    <title>Pingu – Validación de cuenta</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #ffffff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 24px;
-            color: #111;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-        img {
-            width: 160px;
-            margin-bottom: 32px;
+      :root {
+        --primary: #2962ff;
+        --secondary: #1e88e5;
+        --primary-light: #bbdefb;
+        --container: #f5f8ff;
+        --border: #c5d3f2;
+        --tertiary: #eceff1;
+        --tertiary-medium: #90a4ae;
+        --tertiary-card: #f9fafb;
+        --tertiary-dark: #37474f;
+        --white: #ffffff;
+        --black: #000000;
+        --info: #42a5f5;
+        --success: #26a69a;
+        --warning: #ffca28;
+        --alert: #fb8c00;
+        --critical: #e53935;
+        --brand: #1c1f26;
+        --light-error: #ff8a80;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --background: #121c26;
+          --surface: #192532;
+          --on-surface: #ffffff;
+          --on-background: #ffffff;
+          --card-bg: #192532;
+          --input-bg: #1c2935;
+          --input-border: #2c3e50;
+        }
+      }
+
+      @media (prefers-color-scheme: light) {
+        :root {
+          --background: #ffffff;
+          --surface: #ffffff;
+          --on-surface: #000000;
+          --on-background: #000000;
+          --card-bg: #ffffff;
+          --input-bg: #f5f8ff;
+          --input-border: #c5d3f2;
+        }
+      }
+      body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+          Roboto, sans-serif;
+        background: linear-gradient(
+          135deg,
+          var(--primary) 0%,
+          var(--secondary) 50%,
+          var(--primary-light) 100%
+        );
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 24px;
+        color: var(--on-background);
+        position: relative;
+        overflow-x: hidden;
+      }
+
+      body::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(
+          circle at center,
+          rgba(255, 255, 255, 0.15) 0%,
+          transparent 70%
+        );
+        animation: pulse 15s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1) rotate(0deg);
+        }
+        50% {
+          transform: scale(1.1) rotate(5deg);
+        }
+      }
+
+      .container {
+        position: relative;
+        z-index: 1;
+        max-width: 480px;
+        width: 100%;
+      }
+
+      .card {
+        background: var(--card-bg);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        padding: 48px 40px;
+        box-shadow: 0 20px 60px rgba(18, 28, 38, 0.3);
+        animation: slideUp 0.6s ease-out;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .logo-container {
+        text-align: center;
+        margin-bottom: 32px;
+      }
+
+      .logo {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(
+          135deg,
+          var(--primary) 0%,
+          var(--secondary) 100%
+        );
+        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 24px rgba(41, 98, 255, 0.3);
+        margin-bottom: 16px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .logo::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(
+          45deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        );
+        animation: shine 3s ease-in-out infinite;
+      }
+
+      @keyframes shine {
+        0% {
+          transform: translateX(-100%) translateY(-100%) rotate(45deg);
+        }
+        100% {
+          transform: translateX(100%) translateY(100%) rotate(45deg);
+        }
+      }
+
+      .logo img {
+        width: 50px;
+        height: 50px;
+        object-fit: contain;
+        position: relative;
+        z-index: 1;
+      }
+
+      h1 {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        text-align: center;
+        color: var(--on-surface);
+      }
+
+      .subtitle {
+        text-align: center;
+        color: var(--tertiary-medium);
+        font-size: 14px;
+        margin-bottom: 32px;
+        line-height: 1.5;
+      }
+
+      .form {
+        width: 100%;
+      }
+
+      .input-container {
+        margin-bottom: 24px;
+        position: relative;
+      }
+
+      .input-wrapper {
+        position: relative;
+      }
+      .input-field {
+        width: 100%;
+        padding: 16px 16px 16px 48px;
+        border-radius: 12px;
+        font-size: 15px;
+        border: 2px solid var(--input-border);
+        transition: all 0.3s ease;
+        background: var(--input-bg);
+        font-family: inherit;
+        color: var(--on-surface);
+      }
+
+      .input-field:focus {
+        outline: none;
+        border-color: var(--primary);
+        background: var(--card-bg);
+        box-shadow: 0 0 0 4px rgba(41, 98, 255, 0.1);
+      }
+
+      .input-field.error {
+        border-color: var(--critical);
+        background: rgba(229, 57, 53, 0.05);
+      }
+
+      .input-field.success {
+        border-color: var(--success);
+        background: rgba(38, 166, 154, 0.05);
+      }
+
+      .input-field.neutral {
+        border-color: var(--input-border);
+      }
+
+      .input-icon {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--tertiary-medium);
+        transition: color 0.3s ease;
+        pointer-events: none;
+      }
+
+      .input-field:focus ~ .input-icon {
+        color: var(--primary);
+      }
+
+      .input-field.error ~ .input-icon {
+        color: var(--critical);
+      }
+
+      .input-field.success ~ .input-icon {
+        color: var(--success);
+      }
+
+      .input-field-label {
+        position: absolute;
+        top: 50%;
+        left: 48px;
+        font-size: 15px;
+        color: var(--tertiary-medium);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        pointer-events: none;
+        transform: translateY(-50%);
+        background: transparent;
+        padding: 0 4px;
+      }
+
+      .input-field:focus ~ .input-field-label,
+      .input-field:not(:placeholder-shown) ~ .input-field-label {
+        top: -10px;
+        left: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        background: var(--card-bg);
+      }
+
+      .input-field:focus ~ .input-field-label {
+        color: var(--primary);
+      }
+
+      .input-field.error ~ .input-field-label {
+        color: var(--critical);
+      }
+
+      .input-field.success ~ .input-field-label {
+        color: var(--success);
+      }
+
+      .toggle-password {
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 6px;
+        transition: background 0.2s ease;
+        z-index: 2;
+      }
+
+      .toggle-password:hover {
+        background: rgba(41, 98, 255, 0.1);
+      }
+
+      .eye-icon {
+        width: 20px;
+        height: 20px;
+        display: block;
+      }
+
+      .validation-message {
+        font-size: 13px;
+        margin-top: 8px;
+        margin-left: 4px;
+        display: flex;
+        align-items: flex-start;
+        gap: 6px;
+        line-height: 1.4;
+      }
+
+      .validation-message::before {
+        content: '';
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        margin-top: 7px;
+      }
+
+      .validation-message.error {
+        color: var(--critical);
+      }
+
+      .validation-message.error::before {
+        background: var(--critical);
+      }
+
+      .validation-message.success {
+        color: var(--success);
+      }
+
+      .validation-message.success::before {
+        background: var(--success);
+      }
+
+      .validation-message.neutral {
+        color: var(--tertiary-medium);
+      }
+
+      .validation-message.neutral::before {
+        background: var(--tertiary-medium);
+      }
+      button {
+        width: 100%;
+        padding: 16px;
+        background: linear-gradient(
+          135deg,
+          var(--primary) 0%,
+          var(--secondary) 100%
+        );
+        color: white;
+        font-weight: 600;
+        font-family: inherit;
+        font-size: 16px;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        margin-top: 8px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 14px rgba(41, 98, 255, 0.4);
+        position: relative;
+        overflow: hidden;
+      }
+
+      button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        );
+        transition: left 0.5s ease;
+      }
+
+      button:hover:not(:disabled)::before {
+        left: 100%;
+      }
+
+      button:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(41, 98, 255, 0.5);
+      }
+
+      button:active:not(:disabled) {
+        transform: translateY(0);
+      }
+
+      button:disabled {
+        background: var(--tertiary-medium);
+        cursor: not-allowed;
+        box-shadow: none;
+        opacity: 0.6;
+      }
+
+      .message {
+        margin-top: 16px;
+        padding: 12px 16px;
+        border-radius: 10px;
+        font-size: 14px;
+        line-height: 1.5;
+        display: none;
+      }
+
+      .message.success {
+        background: rgba(38, 166, 154, 0.1);
+        color: var(--success);
+        border: 1px solid var(--success);
+        display: block;
+      }
+
+      .message.error {
+        background: rgba(229, 57, 53, 0.1);
+        color: var(--critical);
+        border: 1px solid var(--critical);
+        display: block;
+      }
+
+      #expiredMessage {
+        text-align: center;
+        padding: 32px;
+        background: var(--card-bg);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        box-shadow: 0 20px 60px rgba(18, 28, 38, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      #expiredMessage h2 {
+        color: var(--critical);
+        font-size: 20px;
+        line-height: 1.6;
+        font-weight: 600;
+      }
+
+      #verifySection {
+        text-align: center;
+        padding: 48px 40px;
+        background: var(--card-bg);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        box-shadow: 0 20px 60px rgba(18, 28, 38, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      #verifySection h1 {
+        margin-bottom: 24px;
+      }
+
+      #verifySection .message {
+        display: block;
+        margin-top: 0;
+      }
+
+      .loading-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(41, 98, 255, 0.3);
+        border-top-color: var(--primary);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-right: 8px;
+        vertical-align: middle;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @media (max-width: 600px) {
+        .card {
+          padding: 32px 24px;
         }
 
         h1 {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            text-align: center;
-        }
-
-        .form {
-            width: 100%;
-            max-width: 400px; /* Aumentado para mayor espacio en pantallas grandes */
-            position: relative;
-        }
-
-        .input-container {
-            margin-bottom: 24px;
-            position: relative;
+          font-size: 24px;
         }
 
         .input-field {
-            width: 100%;
-            padding: 14px 12px;
-            margin: 0;
-            border-radius: 6px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            transition: border-color 0.3s ease;
-            box-sizing: border-box; /* Asegura que el padding no cause que los elementos se desborden */
-        }
-
-        .input-field.error {
-            border-color: red;
-        }
-
-        .input-field.success {
-            border-color: #4CAF50;
-        }
-
-        .input-field:focus {
-            outline: none;
-        }
-
-        .input-field-label {
-            position: absolute;
-            top: 14px;
-            left: 14px;
-            font-size: 16px;
-            color: #777;
-            transition: all 0.3s ease;
-        }
-
-        .input-field-label.error {
-            top: -14px;
-            font-size: 12px;
-            color: red;
-        }
-
-        .input-field-label.success {
-            top: -14px;
-            font-size: 12px;
-            color: #4CAF50;
-        }
-
-        .input-field-label.neutral {
-            top: -14px;
-            font-size: 12px;
-            color: #777;
-        }
-
-        .validation-message {
-            font-size: 12px;
-            margin-top: 6px;
-        }
-
-        .validation-message.error {
-            color: red;
-        }
-
-        .validation-message.success {
-            color: #888; /* Gris */
-        }
-
-        .validation-message.neutral {
-            color: #888;
+          padding: 14px 14px 14px 44px;
         }
 
         button {
-            width: 100%;
-            max-width: 200px;
-            padding: 14px;
-            background-color: #478D4F;
-            color: white;
-            font-weight: normal;
-            font-family: default;
-            font-size: 16px;
-            border: none;
-            border-radius: 999px;
-            cursor: pointer;
-            margin: 16px auto 0;
-            display: block;
+          padding: 14px;
+        }
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .card {
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
         }
 
-        .restrictions {
-            margin-top: 16px;
-            font-size: 12px;
-            color: #888;
-            line-height: 1.6;
+        #expiredMessage,
+        #verifySection {
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
         }
-
-        button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
-
-        .restrictions ul {
-            list-style-type: none;
-            padding: 0;
-        }
-
-        .restrictions li {
-            margin-bottom: 8px;
-        }
-
-        .input-field.neutral {
-            border-color: #ccc;
-        }
-
-        /* Estilos para dispositivos pequeños */
-        @media (max-width: 600px) {
-            .form {
-                max-width: 100%; /* Aseguramos que la forma ocupe todo el ancho disponible */
-                padding: 15px;
-            }
-
-            .input-field {
-                font-size: 14px;
-            }
-
-            button {
-                width: 100%;
-                max-width: 100%; /* Aseguramos que el botón ocupe todo el ancho disponible */
-            }
-        }
-
-        /* Estilos para tablets */
-        @media (max-width: 768px) {
-            .form {
-                max-width: 100%; /* Ajustamos la forma al ancho de la pantalla */
-                padding: 20px;
-            }
-
-            button {
-                width: 100%;
-                max-width: 100%; /* Aseguramos que el botón ocupe todo el ancho disponible */
-            }
-        }
-
-    .input-wrapper {
-      position: relative;
-    }
-
-    .toggle-password {
-      position: absolute;
-      top: 50%;
-      right: 10px;
-      transform: translateY(-50%);
-      cursor: pointer;
-    }
-
-    .eye-icon {
-      width: 24px;
-      height: 24px;
-    }
-
-    .validacion {
-      margin-left: 14px;
-    }
-
-
+      }
     </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Mensaje para cuando el código ha expirado -->
+      <div id="expiredMessage" style="display: none">
+        <div class="logo-container">
+          <div class="logo">
+            <img
+              src="icon.png"
+              alt="Logo de Pingu"
+              style="border-radius: 80%"
+            />
+          </div>
+        </div>
+        <h2>
+          ¡Ups! La solicitud para restablecer la contraseña de tu cuenta Pingu
+          ha expirado. Por favor, solicita un nuevo enlace desde la app.
+        </h2>
+      </div>
 
-</head>
-<body>
+      <!-- Form con el código válido -->
+      <div id="resetSection" class="card" style="display: none">
+        <div class="logo-container">
+          <div class="logo">
+            <img src="icon.png" alt="Logo de Pingu" />
+          </div>
+          <h1>Restablecer contraseña</h1>
+          <p class="subtitle">
+            Crea una nueva contraseña segura para tu cuenta de Pingu
+          </p>
+        </div>
 
-<img src="koala.png" alt="Koala KOALM" />
-<!-- Mensaje para cuando el código ha expirado -->
-<div id="expiredMessage" style="display: none;">
-    <h2>¡Ups! La solicitud para restablecer tu contraseña ha expirado. Por favor, solicita un nuevo enlace.</h2>
-</div>
-<!-- Form con el código válido -->
-<div id="resetSection" class="form" style="display: none;">
-    <h1>Restablecer Contraseña</h1>
+        <div class="form">
+          <div class="input-container">
+            <div class="input-wrapper">
+              <input
+                type="password"
+                id="newPassword"
+                class="input-field neutral"
+                placeholder=" "
+              />
+              <label for="newPassword" class="input-field-label"
+                >Contraseña nueva</label
+              >
+              <svg
+                class="input-icon"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <path
+                  d="M12 2C9.243 2 7 4.243 7 7v3H6c-1.103 0-2 .897-2 2v8c0 1.103.897 2 2 2h12c1.103 0 2-.897 2-2v-8c0-1.103-.897-2-2-2h-1V7c0-2.757-2.243-5-5-5zm6 10l.002 8H6v-8h12zm-9-2V7c0-1.654 1.346-3 3-3s3 1.346 3 3v3H9z"
+                  fill="currentColor"
+                />
+              </svg>
 
-    <div class="input-container">
-        <div class="input-wrapper">
-            <input type="password" id="newPassword" class="input-field" placeholder=" " />
-            <label for="newPassword" class="input-field-label">Contraseña</label>
-
-            <div class="toggle-password" onclick="togglePassword('newPassword', this)">
-                <!-- Ojo tachado (visible al inicio) -->
-                <svg class="eye-icon hide" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="display: block;">
-                    <path fill="#000000" d="M12,4.5C7,4.5 2.73,7.61 1,12c1.73,4.39 6,7.5 11,7.5s9.27,-3.11 11,-7.5c-1.73,-4.39 -6,-7.5 -11,-7.5zM12,17c-2.76,0 -5,-2.24 -5,-5s2.24,-5 5,-5 5,2.24 5,5 -2.24,5 -5,5zM12,9c-1.66,0 -3,1.34 -3,3s1.34,3 3,3 3,-1.34 3,-3 -1.34,-3 -3,-3z"/>
-                    <line x1="3" y1="3" x2="21" y2="21" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <div
+                class="toggle-password"
+                onclick="togglePassword('newPassword', this)"
+              >
+                <svg
+                  class="eye-icon hide"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  style="display: block"
+                >
+                  <path
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"
+                  />
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="3"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    fill="none"
+                  />
+                  <line
+                    x1="4"
+                    y1="4"
+                    x2="20"
+                    y2="20"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  />
                 </svg>
-                <!-- Ojo abierto (oculto al inicio) -->
-                <svg class="eye-icon show" xmlns="http://www.w3.org/2000/svg" width="24" height="30" viewBox="0 0 24 24" style="display: none;">
-                    <path fill="#FFFFFFF" d="M12,4.5C7,4.5 2.73,7.61 1,12c1.73,4.39 6,7.5 11,7.5s9.27,-3.11 11,-7.5c-1.73,-4.39 -6,-7.5 -11,-7.5zM12,17c-2.76,0 -5,-2.24 -5,-5s2.24,-5 5,-5 5,2.24 5,5 -2.24,5 -5,5zM12,9c-1.66,0 -3,1.34 -3,3s1.34,3 3,3 3,-1.34 3,-3 -1.34,-3 -3,-3z"/>
+                <svg
+                  class="eye-icon show"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  style="display: none"
+                >
+                  <path
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"
+                  />
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="3"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    fill="none"
+                  />
                 </svg>
+              </div>
             </div>
-        </div>
 
-        <div id="passwordValidationMessage" class="validation-message neutral" style="margin-left: 14px;" >
-            La contraseña debe tener al menos 8 caracteres, una letra minúscula, una mayúscula, un número y un carácter especial.
+            <div
+              id="passwordValidationMessage"
+              class="validation-message neutral"
+            >
+              La contraseña debe tener al menos 8 caracteres, una letra
+              minúscula, una mayúscula, un número y un carácter especial.
+            </div>
+          </div>
+          <div class="input-container">
+            <div class="input-wrapper">
+              <input
+                type="password"
+                id="confirmPassword"
+                class="input-field neutral"
+                placeholder=" "
+              />
+              <label for="confirmPassword" class="input-field-label"
+                >Confirmar contraseña</label
+              >
+              <svg
+                class="input-icon"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <path
+                  d="M12 2C9.243 2 7 4.243 7 7v3H6c-1.103 0-2 .897-2 2v8c0 1.103.897 2 2 2h12c1.103 0 2-.897 2-2v-8c0-1.103-.897-2-2-2h-1V7c0-2.757-2.243-5-5-5zm6 10l.002 8H6v-8h12zm-9-2V7c0-1.654 1.346-3 3-3s3 1.346 3 3v3H9z"
+                  fill="currentColor"
+                />
+              </svg>
+
+              <div
+                class="toggle-password"
+                onclick="togglePassword('confirmPassword', this)"
+              >
+                <svg
+                  class="eye-icon hide"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  style="display: block"
+                >
+                  <path
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"
+                  />
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="3"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    fill="none"
+                  />
+                  <line
+                    x1="4"
+                    y1="4"
+                    x2="20"
+                    y2="20"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  />
+                </svg>
+                <svg
+                  class="eye-icon show"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  style="display: none"
+                >
+                  <path
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"
+                  />
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="3"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    fill="none"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <div
+              id="confirmValidationMessage"
+              class="validation-message neutral"
+            >
+              Las contraseñas deben coincidir.
+            </div>
+          </div>
+
+          <div class="message" id="resetMessage"></div>
+          <button id="btnReset" disabled>Guardar nueva contraseña</button>
         </div>
+      </div>
+
+      <div id="verifySection" style="display: none">
+        <div class="logo-container">
+          <div class="logo">
+            <img src="icon.png" alt="Logo de Pingu" />
+          </div>
+          <h1>Verificación de correo</h1>
+        </div>
+        <div class="message success" id="verifyMessage">
+          <span class="loading-spinner"></span>
+          Verificando tu correo, espera un momento…
+        </div>
+      </div>
     </div>
 
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
 
-    <div class="input-container">
-        <div class="input-wrapper">
-            <input type="password" id="confirmPassword" class="input-field" placeholder=" " />
-            <label for="confirmPassword" class="input-field-label">Confirmar contraseña</label>
+    <script>
+      const firebaseConfig = {
+        apiKey: 'AIzaSyC2wssygyez7OIb4pRCDwi-hokvjjDcSAU',
+        authDomain: 'koalm-94491.firebaseapp.com',
+        projectId: 'koalm-94491',
+      }
+      firebase.initializeApp(firebaseConfig)
+      window.addEventListener('load', () => {
+        const url = new URL(window.location.href)
+        const mode = url.searchParams.get('mode')
+        const oobCode = url.searchParams.get('oobCode')
 
-            <div class="toggle-password" onclick="togglePassword('confirmPassword', this)">
-                <!-- Ojo tachado (visible al inicio) -->
-                <svg class="eye-icon hide" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="display: block;">
-                    <path fill="#000000" d="M12,4.5C7,4.5 2.73,7.61 1,12c1.73,4.39 6,7.5 11,7.5s9.27,-3.11 11,-7.5c-1.73,-4.39 -6,-7.5 -11,-7.5zM12,17c-2.76,0 -5,-2.24 -5,-5s2.24,-5 5,-5 5,2.24 5,5 -2.24,5 -5,5zM12,9c-1.66,0 -3,1.34 -3,3s1.34,3 3,3 3,-1.34 3,-3 -1.34,-3 -3,-3z"/>
-                    <line x1="3" y1="3" x2="21" y2="21" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <!-- Ojo abierto (oculto al inicio) -->
-                <svg class="eye-icon show" xmlns="http://www.w3.org/2000/svg" width="24" height="30" viewBox="0 0 24 24" style="display: none;">
-                    <path fill="#FFFFFFF" d="M12,4.5C7,4.5 2.73,7.61 1,12c1.73,4.39 6,7.5 11,7.5s9.27,-3.11 11,-7.5c-1.73,-4.39 -6,-7.5 -11,-7.5zM12,17c-2.76,0 -5,-2.24 -5,-5s2.24,-5 5,-5 5,2.24 5,5 -2.24,5 -5,5zM12,9c-1.66,0 -3,1.34 -3,3s1.34,3 3,3 3,-1.34 3,-3 -1.34,-3 -3,-3z"/>
-                </svg>
-            </div>
-        </div>
+        const expiredMessage = document.getElementById('expiredMessage')
+        const resetSection = document.getElementById('resetSection')
 
-        <div id="confirmValidationMessage" class="validation-message neutral" style="margin-left: 14px;" >
-            La contraseñas deben coincidir.
-        </div>
-    </div>
-    <div class="message" id="resetMessage"></div>
-    <button id="btnReset" disabled>Guardar nueva contraseña</button>
-</div>
+        if (mode === 'resetPassword') {
+          firebase
+            .auth()
+            .verifyPasswordResetCode(oobCode)
+            .then(() => {
+              resetSection.style.display = 'block'
+            })
+            .catch(error => {
+              expiredMessage.style.display = 'block'
+              resetSection.style.display = 'none'
+              console.error('Código expirado o inválido:', error.message)
+            })
 
-<div id="verifySection" style="display: none;">
-    <h1>Verificación de correo</h1>
-    <div class="message success" id="verifyMessage">⏳ Verificando correo...</div>
-</div>
+          document.getElementById('btnReset').addEventListener('click', () => {
+            const newPassword = document.getElementById('newPassword').value
+            const confirmPassword =
+              document.getElementById('confirmPassword').value
+            const msg = document.getElementById('resetMessage')
 
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
-
-<script>
-    // Inicializar Firebase
-    const firebaseConfig = {
-        apiKey: "AIzaSyC2wssygyez7OIb4pRCDwi-hokvjjDcSAU",
-        authDomain: "koalm-94491.firebaseapp.com",
-        projectId: "koalm-94491"
-    };
-    firebase.initializeApp(firebaseConfig);
-
-    // Cuando la página se carga
-    window.addEventListener("load", () => {
-        const url = new URL(window.location.href);
-        const mode = url.searchParams.get("mode");
-        const oobCode = url.searchParams.get("oobCode");
-
-    // Obtener referencia al mensaje de expiración
-        const expiredMessage = document.getElementById("expiredMessage");
-        const resetSection = document.getElementById("resetSection");
-
-
-        // Mostrar solo la sección relevante
-        if (mode === "resetPassword") {
-         // Verificar si el código ha expirado
-            firebase.auth().verifyPasswordResetCode(oobCode)
-                .then(() => {
-                    // Si el código es válido, mostramos la sección de restablecimiento
-                    resetSection.style.display = "block";
-                })
-                .catch((error) => {
-                    // Si el código ha expirado o es inválido, mostrar mensaje de expiración
-                    expiredMessage.style.display = "block";
-                    resetSection.style.display = "none";  // Ocultamos el formulario
-                    console.error("Código expirado o inválido:", error.message);
-                })
-
-            document.getElementById("resetSection").style.display = "block";
-            document.getElementById("btnReset").addEventListener("click", () => {
-                const newPassword = document.getElementById("newPassword").value;
-                const confirmPassword = document.getElementById("confirmPassword").value;
-                const msg = document.getElementById("resetMessage");
-
-                // Verificación de oobCode
-                if (!oobCode) {
-                    msg.textContent = "❌ El código de acción no es válido.";
-                    msg.className = "message error";
-                    return;
-                }
-
-                // Validación de las contraseñas
-                const passwordMessage = passwordValidation(newPassword);
-                if (passwordMessage !== "Contraseña válida.") {
-                    msg.textContent = "❌ " + passwordMessage;
-                    msg.className = "message error";
-                    return;
-                }
-
-                if (newPassword !== confirmPassword) {
-                    msg.textContent = "❌ Las contraseñas no coinciden.";
-                    msg.className = "message error";
-                    return;
-                }
-
-                // Realizar el restablecimiento de la contraseña
-                firebase.auth().confirmPasswordReset(oobCode, newPassword)
-                    .then(() => {
-                        msg.textContent = "✅ Contraseña actualizada.";
-                        msg.className = "message success";
-                    })
-                    .catch((error) => {
-                        msg.textContent = "❌ Error: " + error.message;
-                        msg.className = "message error";
-                    });
-            });
-        }
-
-        // Validación de correo para el modo verifyEmail
-        if (mode === "verifyEmail") {
-            document.getElementById("verifySection").style.display = "block";
-            const msg = document.getElementById("verifyMessage");
-
-            // Verificación de oobCode
             if (!oobCode) {
-                msg.textContent = "❌ El código de acción no es válido.";
-                msg.className = "message error";
-                return;
+              msg.textContent = '❌ El código de acción no es válido.'
+              msg.className = 'message error'
+              return
             }
 
-            firebase.auth().applyActionCode(oobCode)
-                .then(() => {
-                    msg.textContent = "✅ Tu correo ha sido verificado con éxito.";
-                    msg.className = "message success";
-                })
-                .catch((error) => {
-                    msg.textContent = "❌ Error al verificar el correo: " + error.message;
-                    msg.className = "message error";
-                });
-        }
-    });
-
-    // Funciones de validación de contraseñas
-     function togglePassword(inputId, toggleElement) {
-            const input = document.getElementById(inputId);
-            const icons = toggleElement.querySelectorAll(".eye-icon");
-            if (input.type === "password") {
-              input.type = "text";
-              icons[0].style.display = "none"; // hide eye closed
-              icons[1].style.display = "block"; // show eye open
-            } else {
-              input.type = "password";
-              icons[0].style.display = "block"; // show eye closed
-              icons[1].style.display = "none";  // hide eye open
+            const passwordMessage = passwordValidation(newPassword)
+            if (passwordMessage !== 'Contraseña válida.') {
+              msg.textContent = '❌ ' + passwordMessage
+              msg.className = 'message error'
+              return
             }
-     }
 
-    const passwordValidation = (password) => {
-        if (!password.trim()) return "La contraseña debe tener al menos 8 caracteres, una letra minúscula, una mayúscula, un número y un carácter especial.";
-        if (password.length < 8) return "La contraseña debe tener al menos 8 caracteres.";
-        if (!/[a-z]/.test(password)) return "Debe contener al menos una letra minúscula.";
-        if (!/[A-Z]/.test(password)) return "Debe contener al menos una letra mayúscula.";
-        if (!/[0-9]/.test(password)) return "Debe contener al menos un número.";
-        if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) return "Debe contener al menos un carácter especial.";
-        return "Contraseña válida.";
-    };
+            if (newPassword !== confirmPassword) {
+              msg.textContent = '❌ Las contraseñas no coinciden.'
+              msg.className = 'message error'
+              return
+            }
 
-    const passwordConfirm = (newPassword, confirmPassword) => {
-        if (!confirmPassword.trim()) return "Las contraseñas deben coincidir.";
-        if (newPassword !== confirmPassword) return "Las contraseñas no coinciden.";
-        return "Las contraseñas coinciden.";
-    };
-
-    const setValidationMessage = (message, type, elementId) => {
-        const div = document.getElementById(elementId);
-        div.textContent = message;
-        div.classList.remove("neutral", "success", "error");
-        div.classList.add(type); // 'neutral', 'success', o 'error'
-        div.classList.add("validacion");
-    };
-
-    const updateInputStyle = (input, type) => {
-        input.classList.remove("error", "success", "neutral");
-        input.classList.add(type);
-
-        const label = input.nextElementSibling;
-        if (label && label.classList.contains("input-field-label")) {
-            label.classList.remove("error", "success", "neutral");
-            label.classList.add(type);
+            firebase
+              .auth()
+              .confirmPasswordReset(oobCode, newPassword)
+              .then(() => {
+                msg.textContent =
+                  '✅ Contraseña actualizada. Ahora puedes volver a la app de Pingu e iniciar sesión.'
+                msg.className = 'message success'
+              })
+              .catch(error => {
+                msg.textContent = '❌ Error: ' + error.message
+                msg.className = 'message error'
+              })
+          })
         }
-    };
 
-    const validatePassword = () => {
-        const newPasswordInput = document.getElementById('newPassword');
-        const password = newPasswordInput.value;
-        const message = passwordValidation(password);
-        const isNeutral = !password.trim();
-        const isValid = message === "Contraseña válida.";
+        if (mode === 'verifyEmail') {
+          document.getElementById('verifySection').style.display = 'block'
+          const msg = document.getElementById('verifyMessage')
 
-        setValidationMessage(message, isNeutral ? "neutral" : (isValid ? "success" : "error"), "passwordValidationMessage");
-        updateInputStyle(newPasswordInput, isNeutral ? "neutral" : (isValid ? "success" : "error"));
-        return isNeutral ? false : isValid;
-    };
+          if (!oobCode) {
+            msg.innerHTML = '❌ El código de acción no es válido.'
+            msg.className = 'message error'
+            return
+          }
 
-    const validateConfirmPassword = () => {
-        const newPassword = document.getElementById('newPassword').value;
-        const confirmPasswordInput = document.getElementById('confirmPassword');
-        const confirmPassword = confirmPasswordInput.value;
+          firebase
+            .auth()
+            .applyActionCode(oobCode)
+            .then(() => {
+              msg.innerHTML =
+                '✅ Tu correo ha sido verificado con éxito. Ya puedes usar Pingu sin problemas.'
+              msg.className = 'message success'
+            })
+            .catch(error => {
+              msg.innerHTML =
+                '❌ Error al verificar el correo: ' + error.message
+              msg.className = 'message error'
+            })
+        }
+      })
 
-        const message = passwordConfirm(newPassword, confirmPassword);
-        const isNeutral = !confirmPassword.trim();
-        const isValid = message === "Las contraseñas coinciden.";
+      function togglePassword(inputId, toggleElement) {
+        const input = document.getElementById(inputId)
+        const icons = toggleElement.querySelectorAll('.eye-icon')
+        if (input.type === 'password') {
+          input.type = 'text'
+          icons[0].style.display = 'none'
+          icons[1].style.display = 'block'
+        } else {
+          input.type = 'password'
+          icons[0].style.display = 'block'
+          icons[1].style.display = 'none'
+        }
+      }
+      const passwordValidation = password => {
+        if (!password.trim())
+          return 'La contraseña debe tener al menos 8 caracteres, una letra minúscula, una mayúscula, un número y un carácter especial.'
+        if (password.length < 8)
+          return 'La contraseña debe tener al menos 8 caracteres.'
+        if (!/[a-z]/.test(password))
+          return 'Debe contener al menos una letra minúscula.'
+        if (!/[A-Z]/.test(password))
+          return 'Debe contener al menos una letra mayúscula.'
+        if (!/[0-9]/.test(password)) return 'Debe contener al menos un número.'
+        if (!/[!@#$%^&*(),.?\":{}|<>]/.test(password))
+          return 'Debe contener al menos un carácter especial.'
+        return 'Contraseña válida.'
+      }
 
-        setValidationMessage(message, isNeutral ? "neutral" : (isValid ? "success" : "error"), "confirmValidationMessage");
-        updateInputStyle(confirmPasswordInput, isNeutral ? "neutral" : (isValid ? "success" : "error"));
-        return isNeutral ? false : isValid;
-    };
+      const passwordConfirm = (newPassword, confirmPassword) => {
+        if (!confirmPassword.trim()) return 'Las contraseñas deben coincidir.'
+        if (newPassword !== confirmPassword)
+          return 'Las contraseñas no coinciden.'
+        return 'Las contraseñas coinciden.'
+      }
 
-    // Habilitar/deshabilitar el botón de enviar
-    const toggleSubmitButton = () => {
-        const submitButton = document.getElementById('btnReset');
-        const isValidPassword = validatePassword();
-        const isValidConfirmPassword = validateConfirmPassword();
+      const setValidationMessage = (message, type, elementId) => {
+        const div = document.getElementById(elementId)
+        div.textContent = message
+        div.classList.remove('neutral', 'success', 'error')
+        div.classList.add(type)
+      }
+
+      const updateInputStyle = (input, type) => {
+        input.classList.remove('error', 'success', 'neutral')
+        input.classList.add(type)
+
+        const label = input.nextElementSibling
+        if (label && label.classList.contains('input-field-label')) {
+          label.classList.remove('error', 'success', 'neutral')
+          label.classList.add(type)
+        }
+      }
+
+      const validatePassword = () => {
+        const newPasswordInput = document.getElementById('newPassword')
+        const password = newPasswordInput.value
+        const message = passwordValidation(password)
+        const isNeutral = !password.trim()
+        const isValid = message === 'Contraseña válida.'
+
+        setValidationMessage(
+          message,
+          isNeutral ? 'neutral' : isValid ? 'success' : 'error',
+          'passwordValidationMessage'
+        )
+        updateInputStyle(
+          newPasswordInput,
+          isNeutral ? 'neutral' : isValid ? 'success' : 'error'
+        )
+        return isNeutral ? false : isValid
+      }
+
+      const validateConfirmPassword = () => {
+        const newPassword = document.getElementById('newPassword').value
+        const confirmPasswordInput = document.getElementById('confirmPassword')
+        const confirmPassword = confirmPasswordInput.value
+
+        const message = passwordConfirm(newPassword, confirmPassword)
+        const isNeutral = !confirmPassword.trim()
+        const isValid = message === 'Las contraseñas coinciden.'
+
+        setValidationMessage(
+          message,
+          isNeutral ? 'neutral' : isValid ? 'success' : 'error',
+          'confirmValidationMessage'
+        )
+        updateInputStyle(
+          confirmPasswordInput,
+          isNeutral ? 'neutral' : isValid ? 'success' : 'error'
+        )
+        return isNeutral ? false : isValid
+      }
+
+      const toggleSubmitButton = () => {
+        const submitButton = document.getElementById('btnReset')
+        const isValidPassword = validatePassword()
+        const isValidConfirmPassword = validateConfirmPassword()
 
         if (isValidPassword && isValidConfirmPassword) {
-            submitButton.disabled = false; // Habilitar botón
+          submitButton.disabled = false
         } else {
-            submitButton.disabled = true; // Deshabilitar botón
+          submitButton.disabled = true
         }
-    };
+      }
 
-    // Validar en tiempo real
-    document.getElementById('newPassword').addEventListener('input', () => {
-        validatePassword();
-        toggleSubmitButton();
+      document.getElementById('newPassword').addEventListener('input', () => {
+        validatePassword()
+        toggleSubmitButton()
 
-        // Solo validar confirmación si el campo de confirmación no está vacío
-        const confirmPasswordInput = document.getElementById('confirmPassword');
+        const confirmPasswordInput = document.getElementById('confirmPassword')
         if (confirmPasswordInput.value) {
-            validateConfirmPassword(); // Revalidar coincidencia si el campo de confirmación tiene algo
+          validateConfirmPassword()
         }
-    });
+      })
 
-    // Validar en tiempo real el campo de confirmación de la contraseña también
-    document.getElementById('confirmPassword').addEventListener('input', () => {
-        validateConfirmPassword();
-        toggleSubmitButton();
-    });
-</script>
-</body>
+      document
+        .getElementById('confirmPassword')
+        .addEventListener('input', () => {
+          validateConfirmPassword()
+          toggleSubmitButton()
+        })
+    </script>
+  </body>
 </html>
