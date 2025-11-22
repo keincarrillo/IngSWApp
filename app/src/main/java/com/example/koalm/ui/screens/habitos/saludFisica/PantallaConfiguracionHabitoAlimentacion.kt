@@ -56,6 +56,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.time.LocalDate
 import java.time.LocalDateTime
+import androidx.compose.foundation.isSystemInDarkTheme
+import com.example.koalm.ui.theme.TertiaryDarkColor // Necesario para el fondo oscuro
 private const val TAG = "PantallaConfigAlimentacion" // Unique tag for this file
 
 
@@ -67,6 +69,14 @@ fun PantallaConfiguracionHabitoAlimentacion(
     habitoId: String? = null
 ) {
     val context = LocalContext.current
+    val isDark = isSystemInDarkTheme()
+    // Fondo de la tarjeta: Gris oscuro en Dark Mode, Azul claro en Light Mode
+    val cardContainerColor = if (isDark) TertiaryDarkColor else ContainerColor
+    // Borde: Gris en Dark Mode, Azul borde en Light Mode
+    val cardBorderColor = if (isDark) Color.Gray else BorderColor
+    // Texto específico (ej. "Agregar hora"): Blanco en Dark, Negro en Light
+    val textoColor = if (isDark) Color.White else Color.Black
+    // ---------------------------
     val userEmail = FirebaseAuth.getInstance().currentUser?.email
     val esEdicion = habitoId != null
     val horarios = remember { mutableStateListOf<LocalTime>()}
@@ -456,8 +466,8 @@ fun PantallaConfiguracionHabitoAlimentacion(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, BorderColor),
-                colors = CardDefaults.cardColors(containerColor = ContainerColor)
+                border = BorderStroke(1.dp, cardBorderColor),
+                colors = CardDefaults.cardColors(containerColor = cardContainerColor)
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -537,7 +547,7 @@ fun PantallaConfiguracionHabitoAlimentacion(
                         Text(
                             text = "Agregar hora.",
                             fontSize = 14.sp,
-                            color = Color.Black
+                            color = textoColor
                         )
                     }
                 }
@@ -709,10 +719,14 @@ fun TimePickerDialogAlimentacion(
 
 @Composable
 fun HoraField(hora: LocalTime, onClick: () -> Unit) {
+    // Detectar tema localmente para este componente
+    val isDark = isSystemInDarkTheme()
+    val borderColor = if (isDark) Color.Gray else MaterialTheme.colorScheme.outline
     Surface(
         tonalElevation = 0.dp,
         shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        border = BorderStroke(1.dp, borderColor), // Borde dinámico
+        color = Color.Transparent, // IMPORTANTE: Transparente para heredar el color de la tarjeta
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
@@ -729,7 +743,8 @@ fun HoraField(hora: LocalTime, onClick: () -> Unit) {
             Spacer(Modifier.width(8.dp))
             Text(
                 text  = hora.format(DateTimeFormatter.ofPattern("hh:mm a")),
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface // Asegura contraste de texto
             )
             Spacer(Modifier.weight(1f))
             Icon(Icons.Default.Schedule, contentDescription = null,

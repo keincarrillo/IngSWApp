@@ -71,6 +71,8 @@ import java.time.LocalDate
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import com.example.koalm.services.notifications.suenoNotificationService
+import androidx.compose.foundation.isSystemInDarkTheme
+import com.example.koalm.ui.theme.TertiaryDarkColor // Importante para el fondo oscuro
 
 private const val TAG = "PantallaConfiguracionHabitoSueno"
 
@@ -84,6 +86,10 @@ fun PantallaConfiguracionHabitoSueno(
     val auth = FirebaseAuth.getInstance()
     val userEmail = FirebaseAuth.getInstance().currentUser?.email
     val esEdicion = habitoId != null
+    // 1. DETECTAR TEMA Y COLORES DE TARJETA
+    val isDark = isSystemInDarkTheme()
+    val cardContainerColor = if (isDark) TertiaryDarkColor else ContainerColor
+    val cardBorderColor = if (isDark) Color.Gray else BorderColor
 
     var mensajeValidacion by remember { mutableStateOf<String?>(null) }
 
@@ -521,8 +527,8 @@ fun PantallaConfiguracionHabitoSueno(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, BorderColor),
-                colors = CardDefaults.cardColors(containerColor = ContainerColor)
+                border = BorderStroke(1.dp, cardBorderColor),
+                colors = CardDefaults.cardColors(containerColor = cardContainerColor)
             ) {
                 Column(
                     modifier = Modifier.padding(24.dp),
@@ -619,10 +625,23 @@ fun PantallaConfiguracionHabitoSueno(
                         )
                     }
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        // Lógica de colores adaptada al Modo Oscuro
                         val (activeColor, inactiveColor) = when {
-                            duracionHoras >= 8f -> Color(0xFF376A3E) to Color(0xFF376A3E).copy(alpha = 0.3f)
-                            duracionHoras >= 6f -> Color(0xFF795A0C) to Color(0xFFF2DDB8)
-                            else -> Color(0xFF914B43) to Color(0xFFFFD3CD)
+                            duracionHoras >= 8f -> {
+                                // Verde: Oscuro para día, Claro brillante para noche
+                                val color = if (isDark) Color(0xFF81C784) else Color(0xFF376A3E)
+                                color to color.copy(alpha = 0.3f)
+                            }
+                            duracionHoras >= 6f -> {
+                                // Dorado/Marrón:
+                                val color = if (isDark) Color(0xFFFFD54F) else Color(0xFF795A0C)
+                                color to if (isDark) color.copy(alpha = 0.3f) else Color(0xFFF2DDB8)
+                            }
+                            else -> {
+                                // Rojo:
+                                val color = if (isDark) Color(0xFFE57373) else Color(0xFF914B43)
+                                color to if (isDark) color.copy(alpha = 0.3f) else Color(0xFFFFD3CD)
+                            }
                         }
 
                         val mensajeSueño = when {
@@ -814,10 +833,13 @@ fun PantallaConfiguracionHabitoSueno(
 }
 @Composable
 fun HoraFieldCentrada(hora: LocalTime) {
+    val isDark = isSystemInDarkTheme()
+    val borderColor = if (isDark) Color.Gray else MaterialTheme.colorScheme.outline
     Surface(
         tonalElevation = 0.dp,
         shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        border = BorderStroke(1.dp, borderColor), // Borde ajustado
+        color = Color.Transparent, // Importante para que tome el color de la tarjeta contenedora
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)

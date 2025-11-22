@@ -42,7 +42,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.ui.text.input.KeyboardType
-import com.example.koalm.ui.screens.habitos.saludMental.HoraField
+//import com.example.koalm.ui.screens.habitos.saludMental.HoraField
+import androidx.compose.foundation.isSystemInDarkTheme
+import com.example.koalm.ui.theme.TertiaryDarkColor
 import com.example.koalm.ui.screens.habitos.saludMental.TimePickerDialog
 
 import androidx.compose.runtime.rememberCoroutineScope
@@ -68,6 +70,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.ui.unit.sp
 import com.example.koalm.data.HabitosRepository
 import com.example.koalm.model.MetricasHabito
@@ -91,6 +95,11 @@ fun PantallaConfiguracionHabitoHidratacion (
     habitoId: String? = null
 ) {
     val context = LocalContext.current
+    val isDark = isSystemInDarkTheme()
+    val cardContainerColor = if (isDark) TertiaryDarkColor else ContainerColor
+    val cardBorderColor = if (isDark) Color.Gray else BorderColor
+    val textoColor = if (isDark) Color.White else Color.Black
+    // ---------------------------
     val userEmail = FirebaseAuth.getInstance().currentUser?.email
 
     //------------------------------ Estados --------------------------------
@@ -521,8 +530,8 @@ fun PantallaConfiguracionHabitoHidratacion (
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape   = RoundedCornerShape(16.dp),
-                border  = BorderStroke(1.dp, BorderColor),
-                colors  = CardDefaults.cardColors(containerColor = ContainerColor)
+                border  = BorderStroke(1.dp, cardBorderColor),
+                colors  = CardDefaults.cardColors(containerColor = cardContainerColor)
             ){
                 Column(
                 Modifier.padding(24.dp),
@@ -628,7 +637,7 @@ fun PantallaConfiguracionHabitoHidratacion (
                         Text(
                             text = "Agregar hora.",
                             fontSize = 14.sp,
-                            color = Color.Black
+                            color = textoColor
                         )
                     }
 
