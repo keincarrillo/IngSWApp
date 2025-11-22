@@ -1,16 +1,9 @@
-/*  PantallaConfiguracionHabitoEscritura.kt
- *  Pantalla para configurar el hábito de escritura diaria.
- *  Programa notificaciones recurrentes según los días, la hora y la duración especificados.
- */
 package com.example.koalm.ui.screens.habitos.saludMental
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.Intent
-import android.content.SharedPreferences
-import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
 import android.widget.Toast
@@ -21,15 +14,15 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
@@ -47,17 +40,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import com.example.koalm.R
 import com.example.koalm.model.ClaseHabito
 import com.example.koalm.model.Habito
-import com.example.koalm.model.HabitoPersonalizado
 import com.example.koalm.model.MetricasHabito
 import com.example.koalm.model.ProgresoDiario
 import com.example.koalm.model.TipoHabito
 import com.example.koalm.repository.HabitoRepository
-import com.example.koalm.services.notifications.ReadingNotificationService
 import com.example.koalm.services.notifications.WritingNotificationService
 import com.example.koalm.services.timers.NotificationService
 import com.example.koalm.ui.components.BarraNavegacionInferior
@@ -65,16 +55,17 @@ import com.example.koalm.ui.components.ExitoDialogoGuardadoAnimado
 import com.example.koalm.ui.components.ValidacionesDialogoAnimado
 import com.example.koalm.ui.screens.habitos.personalizados.DiasSeleccionadosResumen
 import com.example.koalm.ui.screens.habitos.personalizados.TooltipDialogAyuda
-import com.example.koalm.ui.theme.*
+import com.example.koalm.ui.theme.BorderColor
+import com.example.koalm.ui.theme.ContainerColor
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
-import kotlinx.coroutines.launch
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.tasks.await
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -90,19 +81,23 @@ fun PantallaConfiguracionHabitoEscritura(
     val auth = FirebaseAuth.getInstance()
     val userEmail = FirebaseAuth.getInstance().currentUser?.email
     val esEdicion = habitoId != null
+    val currentUser = auth.currentUser
+
+    val isDark = isSystemInDarkTheme()
+    val colorScheme = MaterialTheme.colorScheme
+    val cardContainerColor = if (isDark) colorScheme.surface else ContainerColor
+    val cardBorderColor = if (isDark) colorScheme.outlineVariant else BorderColor
 
     var mensajeValidacion by remember { mutableStateOf<String?>(null) }
 
     if (mensajeValidacion != null) {
         ValidacionesDialogoAnimado(
             mensaje = mensajeValidacion!!,
-            onDismiss = {
-                mensajeValidacion = null
-            }
+            onDismiss = { mensajeValidacion = null }
         )
     }
 
-    var mostrarDialogoExito by remember{ mutableStateOf(false) }
+    var mostrarDialogoExito by remember { mutableStateOf(false) }
     if (mostrarDialogoExito) {
         ExitoDialogoGuardadoAnimado(
             mensaje = "¡Hábito configurado correctamente!",
@@ -116,40 +111,36 @@ fun PantallaConfiguracionHabitoEscritura(
         )
     }
 
-    /* -----------------------------  State  ------------------------------ */
+    // -----------------------------  State  ------------------------------
     var descripcion by remember { mutableStateOf("") }
     var notasHabilitadas by remember { mutableStateOf(false) }
-    val currentUser = auth.currentUser
 
-    //  Días de la semana (L-Do). Duplicamos "M" para Martes y Miércoles.
-    val diasSemana = listOf("L","M","X","J","V","S","D")
+    val diasSemana = listOf("L", "M", "X", "J", "V", "S", "D")
     var diasSeleccionados by remember { mutableStateOf(List(7) { false }) }
 
-    //  Duración
     var duracionMin by remember { mutableStateOf(15f) }      // 1-180 min
     val rangoDuracion = 1f..180f
 
-    // Objetivo de páginas
     var objetivoPaginas by remember { mutableStateOf(1) }
 
-    // Cargar la duración guardada del temporizador
     val sharedPreferences = context.getSharedPreferences("AppPreferences", MODE_PRIVATE)
     LaunchedEffect(Unit) {
         val defaultDuration = 15L * 60 * 1000 // 15 minutos en milisegundos
-        duracionMin = (sharedPreferences.getLong("writing_timer_duration", defaultDuration) / (60 * 1000)).toFloat()
+        duracionMin = (sharedPreferences.getLong(
+            "writing_timer_duration",
+            defaultDuration
+        ) / (60 * 1000)).toFloat()
     }
 
-    //  Hora de notificación
-    var hora by remember { 
+    var hora by remember {
         mutableStateOf(
             LocalTime.now().plusMinutes(1).withSecond(0).withNano(0)
-        ) 
+        )
     }
     var mostrarTimePicker by remember { mutableStateOf(false) }
 
     val habitoEditando = remember { mutableStateOf<Habito?>(null) }
     var habitoExistente by remember { mutableStateOf<Habito?>(null) }
-
 
     LaunchedEffect(habitoId) {
         if (habitoId != null) {
@@ -166,10 +157,9 @@ fun PantallaConfiguracionHabitoEscritura(
                     }
                     duracionMin = habito.duracionMinutos.toFloat()
                     objetivoPaginas = habito.objetivoPaginas ?: 1
-                    // Si queremos recuperar más datos de metricasEspecificas, aki
                 },
                 onFailure = {
-                    Log.e("PantallaConfig", "No se pudo cargar el hábito con ID: $habitoId")
+                    Log.e(TAG, "No se pudo cargar el hábito con ID: $habitoId")
                 }
             )
         }
@@ -189,43 +179,19 @@ fun PantallaConfiguracionHabitoEscritura(
         }
     }
 
-
-    /* --------------------  Permission launcher (POST_NOTIFICATIONS)  -------------------- */
+    // Permission launcher
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
             scope.launch {
                 try {
-
-                    /*
-                    // Obtener la referencia al usuario actual en Firebase Authentication
-                    val userEmail = FirebaseAuth.getInstance().currentUser?.email
-                    val db = FirebaseFirestore.getInstance()
-
-                        // Referencia a la colección de hábitos del usuario
-                        val userHabitsRef = db.collection("habitos").document(userEmail)
-                            .collection("personalizados")
-
-                        //Control de racha
-                        if (esEdicion && modificoObjetivo && progresoHabitoOriginal.value?.completado != false) {
-                            habitoOriginal.value = habitoOriginal.value?.copy(
-                                rachaActual = maxOf(0, (habitoOriginal.value?.rachaActual ?: 1) - 1)
-                            )
-                        }
-
-                        if (esEdicion && modificoObjetivo && progresoHabitoOriginal.value?.completado != false) {
-                            habitoOriginal.value = habitoOriginal.value?.copy(
-                                rachaMaxima = maxOf(0, (habitoOriginal.value?.rachaMaxima ?: 1) - 1)
-                            )
-                        }
-
-                     */
-
                     val habito = Habito(
-                        id = habitoId ?: "", // Si hay habitoId, es edición
+                        id = habitoId ?: "",
                         titulo = "Escritura",
-                        descripcion = descripcion.ifEmpty { context.getString(R.string.notification_default_text) },
+                        descripcion = descripcion.ifEmpty {
+                            context.getString(R.string.notification_default_text)
+                        },
                         clase = ClaseHabito.MENTAL,
                         tipo = TipoHabito.ESCRITURA,
                         diasSeleccionados = diasSeleccionados,
@@ -234,7 +200,12 @@ fun PantallaConfiguracionHabitoEscritura(
                         userId = currentUser?.uid,
                         objetivoPaginas = objetivoPaginas,
                         metricasEspecificas = MetricasHabito(),
-                        fechaCreacion = if (esEdicion) habitoExistente?.fechaCreacion else LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                        fechaCreacion = if (esEdicion) {
+                            habitoExistente?.fechaCreacion
+                        } else {
+                            LocalDate.now()
+                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                        },
                         rachaActual = if (!esEdicion) {
                             0
                         } else {
@@ -245,7 +216,11 @@ fun PantallaConfiguracionHabitoEscritura(
                         } else {
                             habitoExistente?.rachaMaxima ?: 0
                         },
-                        ultimoDiaCompletado = if (esEdicion) habitoExistente?.ultimoDiaCompletado else null
+                        ultimoDiaCompletado = if (esEdicion) {
+                            habitoExistente?.ultimoDiaCompletado
+                        } else {
+                            null
+                        }
                     )
 
                     if (habitoId != null) {
@@ -256,14 +231,20 @@ fun PantallaConfiguracionHabitoEscritura(
                                 Log.d(TAG, "Tipo de hábito: ${habito.tipo}")
 
                                 val notificationService = WritingNotificationService()
-                                val notificationTime = LocalDateTime.of(LocalDateTime.now().toLocalDate(), hora)
+                                val notificationTime =
+                                    LocalDateTime.of(
+                                        LocalDateTime.now().toLocalDate(),
+                                        hora
+                                    )
 
                                 notificationService.cancelNotifications(context)
                                 notificationService.scheduleNotification(
                                     context = context,
                                     diasSeleccionados = diasSeleccionados,
                                     hora = notificationTime,
-                                    descripcion = descripcion.ifEmpty { context.getString(R.string.reading_notification_default_text) },
+                                    descripcion = descripcion.ifEmpty {
+                                        context.getString(R.string.reading_notification_default_text)
+                                    },
                                     durationMinutes = duracionMin.toLong(),
                                     additionalData = mapOf(
                                         "habito_id" to habitoId,
@@ -274,7 +255,6 @@ fun PantallaConfiguracionHabitoEscritura(
                                     )
                                 )
 
-                                // Referencias para guardar progreso
                                 val db = FirebaseFirestore.getInstance()
                                 val userHabitsRef = userEmail?.let {
                                     db.collection("habitos").document(it)
@@ -289,10 +269,21 @@ fun PantallaConfiguracionHabitoEscritura(
 
                                 val progresoRef = userHabitsRef?.document(habitoId)
                                     ?.collection("progreso")
-                                    ?.document(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                                    ?.document(
+                                        LocalDate.now().format(
+                                            DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                                        )
+                                    )
 
                                 progresoRef?.set(progreso.toMap())?.addOnSuccessListener {
-                                    Log.d(TAG, "Guardando progreso para hábito ID: $habitoId, fecha: ${LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))}")
+                                    Log.d(
+                                        TAG,
+                                        "Guardando progreso para hábito ID: $habitoId, fecha: ${
+                                            LocalDate.now().format(
+                                                DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                                            )
+                                        }"
+                                    )
                                 }?.addOnFailureListener { e ->
                                     Toast.makeText(
                                         context,
@@ -324,16 +315,27 @@ fun PantallaConfiguracionHabitoEscritura(
                                 Log.d(TAG, "Tipo de hábito: ${habito.tipo}")
 
                                 val notificationService = WritingNotificationService()
-                                val notificationTime = LocalDateTime.of(LocalDateTime.now().toLocalDate(), hora)
+                                val notificationTime =
+                                    LocalDateTime.of(
+                                        LocalDateTime.now().toLocalDate(),
+                                        hora
+                                    )
 
                                 Log.d(TAG, "Iniciando servicio de notificaciones")
-                                context.startService(Intent(context, NotificationService::class.java))
+                                context.startService(
+                                    Intent(
+                                        context,
+                                        NotificationService::class.java
+                                    )
+                                )
 
                                 notificationService.scheduleNotification(
                                     context = context,
                                     diasSeleccionados = diasSeleccionados,
                                     hora = notificationTime,
-                                    descripcion = descripcion.ifEmpty { context.getString(R.string.reading_notification_default_text) },
+                                    descripcion = descripcion.ifEmpty {
+                                        context.getString(R.string.reading_notification_default_text)
+                                    },
                                     durationMinutes = duracionMin.toLong(),
                                     additionalData = mapOf(
                                         "habito_id" to nuevoHabitoId,
@@ -344,7 +346,6 @@ fun PantallaConfiguracionHabitoEscritura(
                                     )
                                 )
 
-                                // Referencias para guardar progreso
                                 val db = FirebaseFirestore.getInstance()
                                 val userHabitsRef = userEmail?.let {
                                     db.collection("habitos").document(it)
@@ -359,10 +360,21 @@ fun PantallaConfiguracionHabitoEscritura(
 
                                 val progresoRef = userHabitsRef?.document(nuevoHabitoId)
                                     ?.collection("progreso")
-                                    ?.document(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                                    ?.document(
+                                        LocalDate.now().format(
+                                            DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                                        )
+                                    )
 
                                 progresoRef?.set(progreso.toMap())?.addOnSuccessListener {
-                                    Log.d(TAG, "Guardando progreso para hábito ID: $nuevoHabitoId, fecha: ${LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))}")
+                                    Log.d(
+                                        TAG,
+                                        "Guardando progreso para hábito ID: $nuevoHabitoId, fecha: ${
+                                            LocalDate.now().format(
+                                                DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                                            )
+                                        }"
+                                    )
                                 }?.addOnFailureListener { e ->
                                     Toast.makeText(
                                         context,
@@ -405,7 +417,7 @@ fun PantallaConfiguracionHabitoEscritura(
         }
     }
 
-    /* ----------------------------------  UI  ---------------------------------- */
+    // ----------------------------------  UI  ----------------------------------
     Scaffold(
         topBar = {
             TopAppBar(
@@ -429,12 +441,12 @@ fun PantallaConfiguracionHabitoEscritura(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            /* -----------------------  Tarjeta principal  ----------------------- */
+            // Tarjeta principal
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape   = RoundedCornerShape(16.dp),
-                border  = BorderStroke(1.dp, BorderColor),
-                colors  = CardDefaults.cardColors(containerColor = ContainerColor)
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.dp, cardBorderColor),
+                colors = CardDefaults.cardColors(containerColor = cardContainerColor)
             ) {
                 Column(
                     Modifier.padding(24.dp),
@@ -455,8 +467,7 @@ fun PantallaConfiguracionHabitoEscritura(
                         Etiqueta("Objetivo de páginas: *")
                         OutlinedTextField(
                             value = if (objetivoPaginas == 0) "" else objetivoPaginas.toString(),
-                            onValueChange = {
-                                    nuevoTexto ->
+                            onValueChange = { nuevoTexto ->
                                 nuevoTexto.toIntOrNull()?.let {
                                     if (it > 0) objetivoPaginas = it
                                 }
@@ -477,7 +488,7 @@ fun PantallaConfiguracionHabitoEscritura(
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                    ){
+                    ) {
                         Etiqueta(stringResource(R.string.label_frecuencia))
                         TooltipDialogAyuda(
                             titulo = "Frecuencia",
@@ -485,19 +496,20 @@ fun PantallaConfiguracionHabitoEscritura(
                         )
                     }
 
-                    Column{
+                    Column {
                         Row(
                             Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceEvenly,
-                            verticalAlignment     = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             diasSemana.forEachIndexed { i, d ->
                                 DiaCircle(
                                     label = d,
                                     selected = diasSeleccionados[i],
-                                    onClick  = {
+                                    onClick = {
                                         diasSeleccionados =
-                                            diasSeleccionados.toMutableList().also { it[i] = !it[i] }
+                                            diasSeleccionados.toMutableList()
+                                                .also { it[i] = !it[i] }
                                     }
                                 )
                             }
@@ -509,7 +521,7 @@ fun PantallaConfiguracionHabitoEscritura(
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                    ){
+                    ) {
                         Etiqueta(stringResource(R.string.label_hora))
                         TooltipDialogAyuda(
                             titulo = "Recordatorio",
@@ -523,7 +535,7 @@ fun PantallaConfiguracionHabitoEscritura(
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
-                        ){
+                        ) {
                             Etiqueta(stringResource(R.string.label_duracion_escritura))
                             TooltipDialogAyuda(
                                 titulo = "Duración de la escritura",
@@ -531,93 +543,29 @@ fun PantallaConfiguracionHabitoEscritura(
                             )
                         }
                         Text(
-                            text  = formatearDuracion(duracionMin.roundToInt()),
+                            text = formatearDuracion(duracionMin.roundToInt()),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         DurationSlider(
-                            value         = duracionMin,
+                            value = duracionMin,
                             onValueChange = { duracionMin = it },
-                            valueRange    = rangoDuracion,
-                            tickEvery     = 15,          // marca cada 15 min
-                            modifier      = Modifier.fillMaxWidth()
+                            valueRange = rangoDuracion,
+                            tickEvery = 15,
+                            modifier = Modifier.fillMaxWidth()
                         )
                         Text(
-                            text  = stringResource(R.string.hint_duracion),
+                            text = stringResource(R.string.hint_duracion),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-
-                    /*
-                    // Notas
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        Arrangement.SpaceBetween,
-                        Alignment.CenterVertically
-                    ) {
-                        Text(stringResource(R.string.label_notas))
-                        Switch(
-                            checked = notasHabilitadas,
-                            onCheckedChange = { notasHabilitadas = it }
-                        )
-                    }
-
-                     */
                 }
             }
 
-            /* ----------------------------  Card de Notas  --------------------------- */
-            /*
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { 
-                        try {
-                            navController.navigate("notas") {
-                                launchSingleTop = true
-                                restoreState = true
-                                popUpTo("salud_mental") {
-                                    saveState = true
-                                }
-                            }
-                        } catch (e: Exception) {
-                            Log.e(TAG, "Error al navegar a notas: ${e.message}", e)
-                            Toast.makeText(
-                                context,
-                                "Error al abrir las notas: ${e.message}",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    },
-                shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, BorderColor),
-                colors = CardDefaults.cardColors(containerColor = ContainerColor)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(R.string.titulo_notas),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
-
-            */
             Spacer(Modifier.weight(1f))
 
-            /* ----------------------------  Guardar  --------------------------- */
+            // Botones Guardar / Cancelar
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
@@ -632,56 +580,62 @@ fun PantallaConfiguracionHabitoEscritura(
                     Button(
                         onClick = {
                             if (!diasSeleccionados.contains(true)) {
-                                mensajeValidacion = "Por favor, selecciona al menos un día de la semana."
+                                mensajeValidacion =
+                                    "Por favor, selecciona al menos un día de la semana."
                                 return@Button
                             }
 
                             if (duracionMin <= 0) {
-                                mensajeValidacion = "La duración debe ser mayor a 0 minutos."
+                                mensajeValidacion =
+                                    "La duración debe ser mayor a 0 minutos."
                                 return@Button
                             }
 
-                            if (objetivoPaginas <= 0 ) {
-                                mensajeValidacion = "Por favor, establece cuántas páginas quieres escribir por día."
+                            if (objetivoPaginas <= 0) {
+                                mensajeValidacion =
+                                    "Por favor, establece cuántas páginas quieres escribir por día."
                                 return@Button
                             }
 
-
-                            val currentUser = auth.currentUser
-                            if (currentUser == null) {
-                                mensajeValidacion = "Debes iniciar sesión para crear un hábito."
+                            val currentUserLocal = auth.currentUser
+                            if (currentUserLocal == null) {
+                                mensajeValidacion =
+                                    "Debes iniciar sesión para crear un hábito."
                                 return@Button
                             } else {
                                 permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                             }
-
                         },
                         modifier = Modifier
                             .width(180.dp)
                             .padding(horizontal = 16.dp, vertical = 8.dp),
                         shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
                     ) {
-                        Text(stringResource(R.string.boton_guardar), color = MaterialTheme.colorScheme.onPrimary)
+                        Text(
+                            stringResource(R.string.boton_guardar),
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
                     }
 
                     if (esEdicion) {
-                        // Boton de Cancelar
                         Button(
-                            onClick = {
-                                navController.navigateUp()
-                            },
+                            onClick = { navController.navigateUp() },
                             modifier = Modifier
                                 .width(180.dp)
                                 .padding(horizontal = 16.dp, vertical = 8.dp),
                             shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEC615B))
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFEC615B)
+                            )
                         ) {
                             Text(
                                 stringResource(R.string.boton_cancelar_modificaciones),
-                                color = MaterialTheme.colorScheme.onPrimary
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                maxLines = 1
                             )
-
                         }
                     }
                 }
@@ -689,12 +643,12 @@ fun PantallaConfiguracionHabitoEscritura(
         }
     }
 
-    /* ---------------------------  Time Picker  ---------------------------- */
+    // Time Picker
     if (mostrarTimePicker) {
         TimePickerDialog(
-            initialTime  = hora,
+            initialTime = hora,
             onTimePicked = { hora = it },
-            onDismiss    = { mostrarTimePicker = false }
+            onDismiss = { mostrarTimePicker = false }
         )
     }
 }
@@ -708,14 +662,13 @@ private fun Etiqueta(texto: String) = Text(
     fontWeight = FontWeight.Medium
 )
 
-/**
- * Muestra un día en forma de círculo seleccionable.
- */
 @Composable
 fun DiaCircle(label: String, selected: Boolean, onClick: () -> Unit) {
-    val bg          = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent
-    val borderColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
-    val textColor   = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+    val bg = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent
+    val borderColor =
+        if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+    val textColor =
+        if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
 
     Box(
         Modifier
@@ -730,9 +683,6 @@ fun DiaCircle(label: String, selected: Boolean, onClick: () -> Unit) {
     }
 }
 
-/**
- * Campo que muestra la hora elegida y abre el `TimePickerDialog`.
- */
 @Composable
 fun HoraField(hora: LocalTime, onClick: () -> Unit) {
     Surface(
@@ -750,16 +700,22 @@ fun HoraField(hora: LocalTime, onClick: () -> Unit) {
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Default.Edit, contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary)
+            Icon(
+                Icons.Default.Edit,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
             Spacer(Modifier.width(8.dp))
             Text(
-                text  = hora.format(DateTimeFormatter.ofPattern("hh:mm a")),
+                text = hora.format(DateTimeFormatter.ofPattern("hh:mm a")),
                 style = MaterialTheme.typography.bodyLarge
             )
             Spacer(Modifier.weight(1f))
-            Icon(Icons.Default.Schedule, contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Icon(
+                Icons.Default.Schedule,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -805,7 +761,7 @@ fun DurationSlider(
                     .height(trackHeight)
                     .align(Alignment.Center),
                 horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment     = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 val tickCount =
                     ((valueRange.endInclusive - valueRange.start) / tickEvery).toInt() + 1
@@ -821,7 +777,7 @@ fun DurationSlider(
                 }
             }
 
-            // Slider "real" (transparente, continuo)
+            // Slider transparente (para la lógica)
             Slider(
                 value = value,
                 onValueChange = {
@@ -829,21 +785,21 @@ fun DurationSlider(
                     haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 },
                 valueRange = valueRange,
-                steps = 0, // continuo
+                steps = 0,
                 colors = SliderDefaults.colors(
-                    activeTrackColor   = Color.Transparent,
+                    activeTrackColor = Color.Transparent,
                     inactiveTrackColor = Color.Transparent,
-                    activeTickColor    = Color.Transparent,
-                    inactiveTickColor  = Color.Transparent,
-                    thumbColor         = Color.Transparent
+                    activeTickColor = Color.Transparent,
+                    inactiveTickColor = Color.Transparent,
+                    thumbColor = Color.Transparent
                 ),
                 modifier = Modifier.fillMaxSize()
             )
 
-            // Thumb visual ligado a la posición actual
-            val progress     = (value - valueRange.start) /
-                    (valueRange.endInclusive - valueRange.start)
-            val thumbOffset  = with(density) { (progress * maxWidthPx).toDp() }
+            // Thumb visual
+            val progress =
+                (value - valueRange.start) / (valueRange.endInclusive - valueRange.start)
+            val thumbOffset = with(density) { (progress * maxWidthPx).toDp() }
 
             Box(
                 Modifier
@@ -863,9 +819,9 @@ fun DurationSlider(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimePickerDialog(
-    initialTime : LocalTime,
+    initialTime: LocalTime,
     onTimePicked: (LocalTime) -> Unit,
-    onDismiss   : () -> Unit,
+    onDismiss: () -> Unit,
 ) {
     val state = rememberTimePickerState(
         initialTime.hour, initialTime.minute, is24Hour = false
@@ -891,8 +847,8 @@ fun TimePickerDialog(
 /* ────────────────────────────  HELPERS  ─────────────────────────────────── */
 
 private fun formatearDuracion(min: Int): String = when {
-    min  < 60      -> "$min min"
-    min == 60      -> "1 hora"
-    min % 60 == 0  -> "${min / 60} h"
-    else           -> "${min / 60} h ${min % 60} min"
+    min < 60 -> "$min min"
+    min == 60 -> "1 hora"
+    min % 60 == 0 -> "${min / 60} h"
+    else -> "${min / 60} h ${min % 60} min"
 }

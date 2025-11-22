@@ -1,69 +1,80 @@
-/*  PantallaConfiguracionHabitoMeditación.kt  */
 package com.example.koalm.ui.screens.habitos.saludMental
 
+import android.Manifest
+import android.content.Intent
+import android.os.Build
+import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
-// import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-// import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-// import androidx.compose.ui.geometry.CornerRadius
-// import androidx.compose.ui.geometry.Offset
-// import androidx.compose.ui.hapticfeedback.HapticFeedback
-// import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-// import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.koalm.R
-import com.example.koalm.ui.components.BarraNavegacionInferior
-import com.example.koalm.ui.theme.BorderColor
-import com.example.koalm.ui.theme.ContainerColor
-import com.example.koalm.utils.TimeUtils
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
-import kotlin.math.roundToInt
-import android.Manifest
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import android.util.Log
-import android.content.Intent
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import com.example.koalm.model.ClaseHabito
 import com.example.koalm.model.Habito
+import com.example.koalm.model.ProgresoDiario
 import com.example.koalm.model.TipoHabito
 import com.example.koalm.repository.HabitoRepository
 import com.example.koalm.services.notifications.MeditationNotificationService
-import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.launch
-
-/* foundation */
-// import androidx.compose.foundation.Canvas          // ←  dibujar el track
-import androidx.compose.foundation.clickable       // ←  .clickable() que reporta error
-import androidx.compose.ui.graphics.Color
-import com.example.koalm.model.ProgresoDiario
+import com.example.koalm.ui.components.BarraNavegacionInferior
 import com.example.koalm.ui.components.ExitoDialogoGuardadoAnimado
 import com.example.koalm.ui.components.ValidacionesDialogoAnimado
 import com.example.koalm.ui.screens.habitos.personalizados.DiasSeleccionadosResumen
 import com.example.koalm.ui.screens.habitos.personalizados.TooltipDialogAyuda
+import com.example.koalm.ui.theme.BorderColor
+import com.example.koalm.ui.theme.ContainerColor
+import com.example.koalm.utils.TimeUtils
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import kotlin.math.roundToInt
 
-//@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+private const val TAG = "PantallaConfiguracionHabitoMeditacion"
+
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -72,25 +83,27 @@ fun PantallaConfiguracionHabitoMeditacion(
     habitoId: String? = null
 ) {
     val context = LocalContext.current
-    val TAG = "PantallaConfiguracionHabitoMeditacion"
     val habitosRepository = remember { HabitoRepository() }
     val scope = rememberCoroutineScope()
     val auth = FirebaseAuth.getInstance()
     val userEmail = FirebaseAuth.getInstance().currentUser?.email
     val esEdicion = habitoId != null
 
+    val isDark = isSystemInDarkTheme()
+    val colorScheme = MaterialTheme.colorScheme
+    val cardContainerColor = if (isDark) colorScheme.surface else ContainerColor
+    val cardBorderColor = if (isDark) colorScheme.outlineVariant else BorderColor
+
     var mensajeValidacion by remember { mutableStateOf<String?>(null) }
 
     if (mensajeValidacion != null) {
         ValidacionesDialogoAnimado(
             mensaje = mensajeValidacion!!,
-            onDismiss = {
-                mensajeValidacion = null
-            }
+            onDismiss = { mensajeValidacion = null }
         )
     }
 
-    var mostrarDialogoExito by remember{ mutableStateOf(false) }
+    var mostrarDialogoExito by remember { mutableStateOf(false) }
     if (mostrarDialogoExito) {
         ExitoDialogoGuardadoAnimado(
             mensaje = "¡Hábito configurado correctamente!",
@@ -103,22 +116,19 @@ fun PantallaConfiguracionHabitoMeditacion(
             }
         )
     }
-    
-    //------------------------------ Estados -------------------------------------
-    var descripcion         by remember { mutableStateOf("") }
-    val diasSemana          = listOf("L","M","X","J","V","S","D")
-    var diasSeleccionados   by remember { mutableStateOf(List(7){false})}
 
-    /* Hora */
-    var horaRecordatorio by remember { 
+    var descripcion by remember { mutableStateOf("") }
+    val diasSemana = listOf("L", "M", "X", "J", "V", "S", "D")
+    var diasSeleccionados by remember { mutableStateOf(List(7) { false }) }
+
+    var horaRecordatorio by remember {
         mutableStateOf(
             LocalTime.now().plusMinutes(1).withSecond(0).withNano(0)
-        ) 
+        )
     }
-    var mostrarTimePicker    by remember { mutableStateOf(false) }
+    var mostrarTimePicker by remember { mutableStateOf(false) }
 
-    /* Duración */
-    var duracionMin by remember { mutableStateOf(15f) }    // 1‑180 min
+    var duracionMin by remember { mutableStateOf(15f) }
     val rangoDuracion = 1f..180f
 
     val habitoEditando = remember { mutableStateOf<Habito?>(null) }
@@ -161,15 +171,12 @@ fun PantallaConfiguracionHabitoMeditacion(
         }
     }
 
-
-
-    /* --------------------  Permission launcher (POST_NOTIFICATIONS)  -------------------- */
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            val currentUser = auth.currentUser
-            if (currentUser == null) {
+            val currentUserLocal = auth.currentUser
+            if (currentUserLocal == null) {
                 mensajeValidacion = "Debes iniciar sesión para crear un hábito"
                 return@rememberLauncherForActivityResult
             }
@@ -177,7 +184,7 @@ fun PantallaConfiguracionHabitoMeditacion(
             scope.launch {
                 try {
                     val habito = Habito(
-                        id = habitoId ?: "",  // Para edición o creación nueva
+                        id = habitoId ?: "",
                         titulo = "Meditación",
                         descripcion = descripcion.ifEmpty { context.getString(R.string.meditation_notification_default_text) },
                         clase = ClaseHabito.MENTAL,
@@ -185,8 +192,9 @@ fun PantallaConfiguracionHabitoMeditacion(
                         diasSeleccionados = diasSeleccionados,
                         hora = horaRecordatorio.format(DateTimeFormatter.ofPattern("HH:mm")),
                         duracionMinutos = duracionMin.toInt(),
-                        userId = currentUser.uid,
-                        fechaCreacion = if (esEdicion) habitoExistente?.fechaCreacion else LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                        userId = currentUserLocal.uid,
+                        fechaCreacion = if (esEdicion) habitoExistente?.fechaCreacion else LocalDate.now()
+                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                         rachaActual = if (!esEdicion) {
                             0
                         } else {
@@ -201,14 +209,14 @@ fun PantallaConfiguracionHabitoMeditacion(
                     )
 
                     if (habitoId != null) {
-                        // EDICIÓN
                         habitosRepository.actualizarHabitoO(habitoId, habito).fold(
                             onSuccess = {
                                 Log.d(TAG, "Hábito actualizado exitosamente con ID: $habitoId")
                                 Log.d(TAG, "Tipo de hábito: ${habito.tipo}")
 
                                 val notificationService = MeditationNotificationService()
-                                val notificationTime = LocalDateTime.of(LocalDateTime.now().toLocalDate(), horaRecordatorio)
+                                val notificationTime =
+                                    LocalDateTime.of(LocalDateTime.now().toLocalDate(), horaRecordatorio)
 
                                 notificationService.cancelNotifications(context)
                                 notificationService.scheduleNotification(
@@ -228,7 +236,6 @@ fun PantallaConfiguracionHabitoMeditacion(
                                     )
                                 )
 
-                                // Referencias para guardar progreso
                                 val db = FirebaseFirestore.getInstance()
                                 val userHabitsRef = userEmail?.let {
                                     db.collection("habitos").document(it)
@@ -243,10 +250,21 @@ fun PantallaConfiguracionHabitoMeditacion(
 
                                 val progresoRef = userHabitsRef?.document(habitoId)
                                     ?.collection("progreso")
-                                    ?.document(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                                    ?.document(
+                                        LocalDate.now().format(
+                                            DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                                        )
+                                    )
 
                                 progresoRef?.set(progreso.toMap())?.addOnSuccessListener {
-                                    Log.d(TAG, "Guardando progreso para hábito ID: $habitoId, fecha: ${LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))}")
+                                    Log.d(
+                                        TAG,
+                                        "Guardando progreso para hábito ID: $habitoId, fecha: ${
+                                            LocalDate.now().format(
+                                                DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                                            )
+                                        }"
+                                    )
                                 }?.addOnFailureListener { e ->
                                     Toast.makeText(
                                         context,
@@ -271,14 +289,14 @@ fun PantallaConfiguracionHabitoMeditacion(
                             }
                         )
                     } else {
-                        // CREACIÓN
                         habitosRepository.crearHabito(habito).fold(
                             onSuccess = { nuevoHabitoId ->
                                 Log.d(TAG, "Hábito creado exitosamente con ID: $nuevoHabitoId")
                                 Log.d(TAG, "Tipo de hábito: ${habito.tipo}")
 
                                 val notificationService = MeditationNotificationService()
-                                val notificationTime = LocalDateTime.of(LocalDateTime.now().toLocalDate(), horaRecordatorio)
+                                val notificationTime =
+                                    LocalDateTime.of(LocalDateTime.now().toLocalDate(), horaRecordatorio)
 
                                 Log.d(TAG, "Iniciando servicio de notificaciones")
                                 context.startService(Intent(context, MeditationNotificationService::class.java))
@@ -300,7 +318,6 @@ fun PantallaConfiguracionHabitoMeditacion(
                                     )
                                 )
 
-                                // Referencias para guardar progreso
                                 val db = FirebaseFirestore.getInstance()
                                 val userHabitsRef = userEmail?.let {
                                     db.collection("habitos").document(it)
@@ -315,10 +332,21 @@ fun PantallaConfiguracionHabitoMeditacion(
 
                                 val progresoRef = userHabitsRef?.document(nuevoHabitoId)
                                     ?.collection("progreso")
-                                    ?.document(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                                    ?.document(
+                                        LocalDate.now().format(
+                                            DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                                        )
+                                    )
 
                                 progresoRef?.set(progreso.toMap())?.addOnSuccessListener {
-                                    Log.d(TAG, "Guardando progreso para hábito ID: $nuevoHabitoId, fecha: ${LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))}")
+                                    Log.d(
+                                        TAG,
+                                        "Guardando progreso para hábito ID: $nuevoHabitoId, fecha: ${
+                                            LocalDate.now().format(
+                                                DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                                            )
+                                        }"
+                                    )
                                 }?.addOnFailureListener { e ->
                                     Toast.makeText(
                                         context,
@@ -357,24 +385,21 @@ fun PantallaConfiguracionHabitoMeditacion(
         }
     }
 
-
-    //------------------------------ UI ------------------------------------------
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.titulo_config_meditacion)) },
                 navigationIcon = {
                     IconButton(onClick = navController::navigateUp) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                     }
                 }
             )
         },
         bottomBar = {
-            BarraNavegacionInferior(navController,"configurar_habito")
+            BarraNavegacionInferior(navController, "configurar_habito")
         }
     ) { innerPadding ->
-
         Column(
             Modifier
                 .padding(innerPadding)
@@ -382,19 +407,17 @@ fun PantallaConfiguracionHabitoMeditacion(
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {//--------------------- Tarjeta principal ----------------------
+        ) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, BorderColor),
-                colors = CardDefaults.cardColors(containerColor = ContainerColor)
+                border = BorderStroke(1.dp, cardBorderColor),
+                colors = CardDefaults.cardColors(containerColor = cardContainerColor)
             ) {
                 Column(
                     Modifier.padding(24.dp),
                     verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
-
-                    /*  Descripción  */
                     OutlinedTextField(
                         value = descripcion,
                         onValueChange = { descripcion = it },
@@ -403,11 +426,10 @@ fun PantallaConfiguracionHabitoMeditacion(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    /*  Días  */
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ){
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
                             text = stringResource(R.string.label_frecuencia),
                             style = MaterialTheme.typography.titleMedium,
@@ -438,11 +460,10 @@ fun PantallaConfiguracionHabitoMeditacion(
                         DiasSeleccionadosResumen(diasSeleccionados)
                     }
 
-                    /*  Hora  */
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ){
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
                             text = stringResource(R.string.label_hora),
                             style = MaterialTheme.typography.titleMedium,
@@ -456,13 +477,11 @@ fun PantallaConfiguracionHabitoMeditacion(
 
                     HoraField(horaRecordatorio) { mostrarTimePicker = true }
 
-
-                    /*  Duración (Slider personalizado)  */
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ){
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Text(
                                 text = stringResource(R.string.label_duracion_meditacion),
                                 style = MaterialTheme.typography.titleMedium,
@@ -482,7 +501,7 @@ fun PantallaConfiguracionHabitoMeditacion(
                             value = duracionMin,
                             onValueChange = { duracionMin = it },
                             valueRange = rangoDuracion,
-                            tickEvery = 15,           // marca cada 15 min
+                            tickEvery = 15,
                             modifier = Modifier.fillMaxWidth()
                         )
                         Text(
@@ -494,57 +513,8 @@ fun PantallaConfiguracionHabitoMeditacion(
                 }
             }
 
-            /* ----------------------------  Card de Meditación  --------------------------- */
-            /*
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { 
-                        try {
-                            navController.navigate("temporizador_meditacion/${duracionMin.roundToInt()}") {
-                                popUpTo(navController.graph.startDestinationId) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        } catch (e: Exception) {
-                            Log.e(TAG, "Error al navegar al temporizador: ${e.message}")
-                            Toast.makeText(
-                                context,
-                                "Error al abrir el temporizador",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    },
-                shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, BorderColor),
-                colors = CardDefaults.cardColors(containerColor = ContainerColor)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Iniciar Meditación",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Icon(
-                        imageVector = Icons.Default.Schedule,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
-            */
-
             Spacer(Modifier.weight(1f))
 
-            /* ----------------------------  Botón Guardar  --------------------------- */
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
@@ -561,7 +531,8 @@ fun PantallaConfiguracionHabitoMeditacion(
                             if (diasSeleccionados.any { it }) {
                                 permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                             } else {
-                                mensajeValidacion = "Por favor, selecciona al menos un día de la semana."
+                                mensajeValidacion =
+                                    "Por favor, selecciona al menos un día de la semana."
                                 return@Button
                             }
                         },
@@ -571,14 +542,14 @@ fun PantallaConfiguracionHabitoMeditacion(
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
-                        Text(stringResource(R.string.boton_guardar), color = MaterialTheme.colorScheme.onPrimary)
+                        Text(
+                            stringResource(R.string.boton_guardar),
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
                     }
                     if (esEdicion) {
-                        // Boton de Cancelar
                         Button(
-                            onClick = {
-                                navController.navigateUp()
-                            },
+                            onClick = { navController.navigateUp() },
                             modifier = Modifier
                                 .width(180.dp)
                                 .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -586,10 +557,10 @@ fun PantallaConfiguracionHabitoMeditacion(
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEC615B))
                         ) {
                             Text(
-                                stringResource(R.string.boton_cancelar_modificaciones),
-                                color = MaterialTheme.colorScheme.onPrimary
+                                text = stringResource(R.string.boton_cancelar_modificaciones),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                maxLines = 1
                             )
-
                         }
                     }
                 }
@@ -597,9 +568,8 @@ fun PantallaConfiguracionHabitoMeditacion(
         }
     }
 
-    //------------------------ Time  Picker ------------------------------
     if (mostrarTimePicker) {
-        TimePickerDialog(
+        TimePickerDialogMeditacion(
             initialTime = horaRecordatorio,
             onTimePicked = { horaRecordatorio = it },
             onDismiss = { mostrarTimePicker = false }
@@ -607,4 +577,34 @@ fun PantallaConfiguracionHabitoMeditacion(
     }
 }
 
-/*──────────────────────────  HELPERS  ─────────────────────────────────────*/
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TimePickerDialogMeditacion(
+    initialTime: LocalTime,
+    onTimePicked: (LocalTime) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val state = rememberTimePickerState(
+        initialHour = initialTime.hour,
+        initialMinute = initialTime.minute,
+        is24Hour = false
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                onTimePicked(LocalTime.of(state.hour, state.minute))
+                onDismiss()
+            }) { Text("Aceptar") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        },
+        text = {
+            TimePicker(state = state, modifier = Modifier.fillMaxWidth())
+        }
+    )
+}

@@ -2,7 +2,6 @@ package com.example.koalm.ui.screens.habitos.saludMental
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
 import android.widget.Toast
@@ -13,6 +12,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -22,8 +22,31 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,7 +59,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import com.example.koalm.R
 import com.example.koalm.model.ClaseHabito
@@ -52,16 +74,16 @@ import com.example.koalm.ui.screens.habitos.personalizados.DiasSeleccionadosResu
 import com.example.koalm.ui.screens.habitos.personalizados.TooltipDialogAyuda
 import com.example.koalm.ui.theme.BorderColor
 import com.example.koalm.ui.theme.ContainerColor
+import com.example.koalm.utils.TimeUtils
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
-import com.example.koalm.utils.TimeUtils
-import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.tasks.await
-import java.time.LocalDate
 
 private const val TAG = "PantallaConfiguracionDesconexion"
 
@@ -79,18 +101,21 @@ fun PantallaConfigurarDesconexionDigital(
     val userEmail = FirebaseAuth.getInstance().currentUser?.email
     val esEdicion = habitoId != null
 
+    val isDark = isSystemInDarkTheme()
+    val colorScheme = MaterialTheme.colorScheme
+    val cardContainerColor = if (isDark) colorScheme.surface else ContainerColor
+    val cardBorderColor = if (isDark) colorScheme.outlineVariant else BorderColor
+
     var mensajeValidacion by remember { mutableStateOf<String?>(null) }
 
     if (mensajeValidacion != null) {
         ValidacionesDialogoAnimado(
             mensaje = mensajeValidacion!!,
-            onDismiss = {
-                mensajeValidacion = null
-            }
+            onDismiss = { mensajeValidacion = null }
         )
     }
 
-    var mostrarDialogoExito by remember{ mutableStateOf(false) }
+    var mostrarDialogoExito by remember { mutableStateOf(false) }
     if (mostrarDialogoExito) {
         ExitoDialogoGuardadoAnimado(
             mensaje = "¡Hábito configurado correctamente!",
@@ -104,19 +129,16 @@ fun PantallaConfigurarDesconexionDigital(
         )
     }
 
-    /* -----------------------------  State  ------------------------------ */
+    // ----------------------------- State ------------------------------
     var titulo by remember { mutableStateOf("") }
     var descripcion by remember { mutableStateOf("") }
 
-    //  Días de la semana (L-Do). Duplicamos "M" para Martes y Miércoles.
     val diasSemana = listOf("L", "M", "X", "J", "V", "S", "D")
     var diasSeleccionados by remember { mutableStateOf(List(7) { false }) }
 
-    //  Duración
-    var duracionMin by remember { mutableStateOf(15f) }      // 1-180 min
+    var duracionMin by remember { mutableStateOf(15f) }
     val rangoDuracion = 1f..180f
 
-    //  Hora de notificación
     var hora by remember {
         mutableStateOf(
             LocalTime.now().plusMinutes(1).withSecond(0).withNano(0)
@@ -145,7 +167,7 @@ fun PantallaConfigurarDesconexionDigital(
                     duracionMin = habito.duracionMinutos.toFloat()
                 },
                 onFailure = {
-                    Log.e("PantallaConfig", "No se pudo cargar el hábito con ID: $habitoId")
+                    Log.e(TAG, "No se pudo cargar el hábito con ID: $habitoId")
                 }
             )
         }
@@ -165,14 +187,13 @@ fun PantallaConfigurarDesconexionDigital(
         }
     }
 
-
-    /* --------------------  Permission launcher (POST_NOTIFICATIONS)  -------------------- */
+    // Permission launcher
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            val currentUser = auth.currentUser
-            if (currentUser == null) {
+            val currentUserLocal = auth.currentUser
+            if (currentUserLocal == null) {
                 mensajeValidacion = "Debes iniciar sesión para crear un hábito"
                 return@rememberLauncherForActivityResult
             }
@@ -180,16 +201,23 @@ fun PantallaConfigurarDesconexionDigital(
             scope.launch {
                 try {
                     val habito = Habito(
-                        id = habitoId ?: "",  // Si estás editando, ya tienes un ID
+                        id = habitoId ?: "",
                         titulo = titulo.ifEmpty { "Desconexión Digital" },
-                        descripcion = descripcion.ifEmpty { context.getString(R.string.digital_disconnect_notification_default_text) },
+                        descripcion = descripcion.ifEmpty {
+                            context.getString(R.string.digital_disconnect_notification_default_text)
+                        },
                         clase = ClaseHabito.MENTAL,
                         tipo = TipoHabito.DESCONEXION_DIGITAL,
                         hora = hora.format(DateTimeFormatter.ofPattern("HH:mm")),
                         diasSeleccionados = diasSeleccionados,
                         duracionMinutos = duracionMin.roundToInt(),
-                        userId = currentUser.uid,
-                        fechaCreacion = if (esEdicion) habitoExistente?.fechaCreacion else LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                        userId = currentUserLocal.uid,
+                        fechaCreacion = if (esEdicion) {
+                            habitoExistente?.fechaCreacion
+                        } else {
+                            LocalDate.now()
+                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                        },
                         rachaActual = if (!esEdicion) {
                             0
                         } else {
@@ -200,24 +228,37 @@ fun PantallaConfigurarDesconexionDigital(
                         } else {
                             habitoExistente?.rachaMaxima ?: 0
                         },
-                        ultimoDiaCompletado = if (esEdicion) habitoExistente?.ultimoDiaCompletado else null
+                        ultimoDiaCompletado = if (esEdicion) {
+                            habitoExistente?.ultimoDiaCompletado
+                        } else {
+                            null
+                        }
                     )
 
                     if (habitoId != null) {
-                        // EDICIÓN
+                        // Edición
                         habitosRepository.actualizarHabitoO(habitoId, habito).fold(
                             onSuccess = {
                                 Log.d(TAG, "Hábito actualizado exitosamente con ID: $habitoId")
 
-                                val notificationService = DigitalDisconnectNotificationService()
-                                val notificationTime = LocalDateTime.of(LocalDateTime.now().toLocalDate(), hora)
+                                val notificationService =
+                                    DigitalDisconnectNotificationService()
+                                val notificationTime =
+                                    LocalDateTime.of(
+                                        LocalDateTime.now().toLocalDate(),
+                                        hora
+                                    )
 
                                 notificationService.cancelNotifications(context)
                                 notificationService.scheduleNotification(
                                     context = context,
                                     diasSeleccionados = diasSeleccionados,
                                     hora = notificationTime,
-                                    descripcion = descripcion.ifEmpty { context.getString(R.string.digital_disconnect_notification_default_text) },
+                                    descripcion = descripcion.ifEmpty {
+                                        context.getString(
+                                            R.string.digital_disconnect_notification_default_text
+                                        )
+                                    },
                                     durationMinutes = duracionMin.toLong(),
                                     additionalData = mapOf(
                                         "habitoId" to habitoId,
@@ -229,7 +270,6 @@ fun PantallaConfigurarDesconexionDigital(
                                     )
                                 )
 
-                                // Referencias para guardar progreso
                                 val db = FirebaseFirestore.getInstance()
                                 val userHabitsRef = userEmail?.let {
                                     db.collection("habitos").document(it)
@@ -244,10 +284,21 @@ fun PantallaConfigurarDesconexionDigital(
 
                                 val progresoRef = userHabitsRef?.document(habitoId)
                                     ?.collection("progreso")
-                                    ?.document(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                                    ?.document(
+                                        LocalDate.now().format(
+                                            DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                                        )
+                                    )
 
                                 progresoRef?.set(progreso.toMap())?.addOnSuccessListener {
-                                    Log.d(TAG, "Guardando progreso para hábito ID: $habitoId, fecha: ${LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))}")
+                                    Log.d(
+                                        TAG,
+                                        "Guardando progreso para hábito ID: $habitoId, fecha: ${
+                                            LocalDate.now().format(
+                                                DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                                            )
+                                        }"
+                                    )
                                 }?.addOnFailureListener { e ->
                                     Toast.makeText(
                                         context,
@@ -272,19 +323,28 @@ fun PantallaConfigurarDesconexionDigital(
                             }
                         )
                     } else {
-                        // CREACIÓN
+                        // Creación
                         habitosRepository.crearHabito(habito).fold(
                             onSuccess = { nuevoHabitoId ->
                                 Log.d(TAG, "Hábito creado exitosamente con ID: $nuevoHabitoId")
 
-                                val notificationService = DigitalDisconnectNotificationService()
-                                val notificationTime = LocalDateTime.of(LocalDateTime.now().toLocalDate(), hora)
+                                val notificationService =
+                                    DigitalDisconnectNotificationService()
+                                val notificationTime =
+                                    LocalDateTime.of(
+                                        LocalDateTime.now().toLocalDate(),
+                                        hora
+                                    )
 
                                 notificationService.scheduleNotification(
                                     context = context,
                                     diasSeleccionados = diasSeleccionados,
                                     hora = notificationTime,
-                                    descripcion = descripcion.ifEmpty { context.getString(R.string.digital_disconnect_notification_default_text) },
+                                    descripcion = descripcion.ifEmpty {
+                                        context.getString(
+                                            R.string.digital_disconnect_notification_default_text
+                                        )
+                                    },
                                     durationMinutes = duracionMin.toLong(),
                                     additionalData = mapOf(
                                         "habitoId" to nuevoHabitoId,
@@ -296,7 +356,6 @@ fun PantallaConfigurarDesconexionDigital(
                                     )
                                 )
 
-                                // Referencias para guardar progreso
                                 val db = FirebaseFirestore.getInstance()
                                 val userHabitsRef = userEmail?.let {
                                     db.collection("habitos").document(it)
@@ -311,10 +370,21 @@ fun PantallaConfigurarDesconexionDigital(
 
                                 val progresoRef = userHabitsRef?.document(nuevoHabitoId)
                                     ?.collection("progreso")
-                                    ?.document(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                                    ?.document(
+                                        LocalDate.now().format(
+                                            DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                                        )
+                                    )
 
                                 progresoRef?.set(progreso.toMap())?.addOnSuccessListener {
-                                    Log.d(TAG, "Guardando progreso para hábito ID: $nuevoHabitoId, fecha: ${LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))}")
+                                    Log.d(
+                                        TAG,
+                                        "Guardando progreso para hábito ID: $nuevoHabitoId, fecha: ${
+                                            LocalDate.now().format(
+                                                DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                                            )
+                                        }"
+                                    )
                                 }?.addOnFailureListener { e ->
                                     Toast.makeText(
                                         context,
@@ -354,7 +424,7 @@ fun PantallaConfigurarDesconexionDigital(
         }
     }
 
-    /* ----------------------------------  UI  ---------------------------------- */
+    // ---------------------------------- UI ----------------------------------
     Scaffold(
         topBar = {
             TopAppBar(
@@ -378,12 +448,12 @@ fun PantallaConfigurarDesconexionDigital(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            /* -----------------------  Tarjeta principal  ----------------------- */
+            // Tarjeta principal
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, BorderColor),
-                colors = CardDefaults.cardColors(containerColor = ContainerColor)
+                border = BorderStroke(1.dp, cardBorderColor),
+                colors = CardDefaults.cardColors(containerColor = cardContainerColor)
             ) {
                 Column(
                     Modifier.padding(24.dp),
@@ -395,15 +465,17 @@ fun PantallaConfigurarDesconexionDigital(
                         value = descripcion,
                         onValueChange = { descripcion = it },
                         label = { Text("Escribe tu motivación") },
-                        placeholder = { Text("Desconectar para reconectar... contigo mismo.") },
+                        placeholder = {
+                            Text("Desconectar para reconectar... contigo mismo.")
+                        },
                         modifier = Modifier.fillMaxWidth()
                     )
 
                     // Selección de días
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ){
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Etiqueta("Frecuencia: *")
                         TooltipDialogAyuda(
                             titulo = "Frecuencia",
@@ -431,12 +503,11 @@ fun PantallaConfigurarDesconexionDigital(
                         DiasSeleccionadosResumen(diasSeleccionados)
                     }
 
-
                     // Hora
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ){
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Etiqueta("Hora del recordatorio: *")
                         TooltipDialogAyuda(
                             titulo = "Recordatorio",
@@ -450,8 +521,8 @@ fun PantallaConfigurarDesconexionDigital(
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ){
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Etiqueta("Duración de la desconexión: *")
                             TooltipDialogAyuda(
                                 titulo = "Duración de la desconexión",
@@ -468,7 +539,7 @@ fun PantallaConfigurarDesconexionDigital(
                             value = duracionMin,
                             onValueChange = { newValue: Float -> duracionMin = newValue },
                             valueRange = rangoDuracion,
-                            tickEvery = 15,          // marca cada 15 min
+                            tickEvery = 15,
                             modifier = Modifier.fillMaxWidth()
                         )
                         Text(
@@ -482,7 +553,7 @@ fun PantallaConfigurarDesconexionDigital(
 
             Spacer(Modifier.weight(1f))
 
-            /* ----------------------------  Guardar  --------------------------- */
+            // Botones Guardar / Cancelar
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
@@ -498,53 +569,50 @@ fun PantallaConfigurarDesconexionDigital(
                     Button(
                         onClick = {
                             if (!diasSeleccionados.any { it }) {
-                                mensajeValidacion = "Por favor, selecciona al menos un día de la semana."
+                                mensajeValidacion =
+                                    "Por favor, selecciona al menos un día de la semana."
                                 return@Button
                             }
 
-                            if (ContextCompat.checkSelfPermission(
-                                    context, Manifest.permission.POST_NOTIFICATIONS
-                                ) == PackageManager.PERMISSION_GRANTED
-                            ) {
-                                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                            } else {
-                                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                            }
+                            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                         },
                         modifier = Modifier
                             .width(180.dp)
                             .padding(horizontal = 16.dp, vertical = 8.dp),
                         shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
                     ) {
-                        Text("Guardar", color = MaterialTheme.colorScheme.onPrimary)
+                        Text(
+                            stringResource(R.string.boton_guardar),
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
                     }
                     if (esEdicion) {
-                        // Boton de Cancelar
                         Button(
-                            onClick = {
-                                navController.navigateUp()
-                            },
+                            onClick = { navController.navigateUp() },
                             modifier = Modifier
                                 .width(180.dp)
                                 .padding(horizontal = 16.dp, vertical = 8.dp),
                             shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEC615B))
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFEC615B)
+                            )
                         ) {
                             Text(
-                                stringResource(R.string.boton_cancelar_modificaciones),
-                                color = MaterialTheme.colorScheme.onPrimary
+                                text = stringResource(R.string.boton_cancelar_modificaciones),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                maxLines = 1
                             )
-
                         }
                     }
                 }
-
             }
         }
     }
 
-    /* ---------------------------  Time Picker  ---------------------------- */
+    // Time Picker
     if (mostrarTimePicker) {
         TimePickerDialogDesconexion(
             initialTime = hora,
@@ -563,14 +631,13 @@ private fun Etiqueta(texto: String) = Text(
     fontWeight = FontWeight.Medium
 )
 
-/**
- * Muestra un día en forma de círculo seleccionable.
- */
 @Composable
 fun DiaCircleDesconexion(label: String, selected: Boolean, onClick: () -> Unit) {
     val bg = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent
-    val borderColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
-    val textColor = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+    val borderColor =
+        if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+    val textColor =
+        if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
 
     Box(
         Modifier
@@ -585,12 +652,9 @@ fun DiaCircleDesconexion(label: String, selected: Boolean, onClick: () -> Unit) 
     }
 }
 
-/**
- * Campo que muestra la hora elegida y abre el `TimePickerDialog`.
- */
 @Composable
 fun HoraFieldDesconexion(hora: LocalTime, onClick: () -> Unit) {
-    Surface(
+    androidx.compose.material3.Surface(
         tonalElevation = 0.dp,
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
@@ -605,16 +669,22 @@ fun HoraFieldDesconexion(hora: LocalTime, onClick: () -> Unit) {
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Default.Edit, contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary)
+            Icon(
+                Icons.Default.Edit,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
             Spacer(Modifier.width(8.dp))
             Text(
                 text = hora.format(DateTimeFormatter.ofPattern("hh:mm a")),
                 style = MaterialTheme.typography.bodyLarge
             )
             Spacer(Modifier.weight(1f))
-            Icon(Icons.Default.Schedule, contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Icon(
+                Icons.Default.Schedule,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -676,7 +746,7 @@ fun DurationSliderDesconexion(
                 }
             }
 
-            // Slider "real" (transparente, continuo)
+            // Slider transparente (para la lógica)
             Slider(
                 value = value,
                 onValueChange = {
@@ -684,7 +754,7 @@ fun DurationSliderDesconexion(
                     haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 },
                 valueRange = valueRange,
-                steps = 0, // continuo
+                steps = 0,
                 colors = SliderDefaults.colors(
                     activeTrackColor = Color.Transparent,
                     inactiveTrackColor = Color.Transparent,
@@ -695,9 +765,9 @@ fun DurationSliderDesconexion(
                 modifier = Modifier.fillMaxSize()
             )
 
-            // Thumb visual ligado a la posición actual
-            val progress = (value - valueRange.start) /
-                    (valueRange.endInclusive - valueRange.start)
+            // Thumb visual
+            val progress =
+                (value - valueRange.start) / (valueRange.endInclusive - valueRange.start)
             val thumbOffset = with(density) { (progress * maxWidthPx).toDp() }
 
             Box(
@@ -742,5 +812,3 @@ fun TimePickerDialogDesconexion(
         text = { TimePicker(state, modifier = Modifier.fillMaxWidth()) }
     )
 }
-
-/* ────────────────────────────  HELPERS  ─────────────────────────────────── */
