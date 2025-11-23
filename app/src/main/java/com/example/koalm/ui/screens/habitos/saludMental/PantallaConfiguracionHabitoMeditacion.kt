@@ -9,7 +9,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -26,13 +25,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberTimePickerState
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -57,7 +56,9 @@ import com.example.koalm.repository.HabitoRepository
 import com.example.koalm.services.notifications.MeditationNotificationService
 import com.example.koalm.ui.components.BarraNavegacionInferior
 import com.example.koalm.ui.components.ExitoDialogoGuardadoAnimado
+import com.example.koalm.ui.components.HoraField
 import com.example.koalm.ui.components.ValidacionesDialogoAnimado
+import com.example.koalm.ui.screens.habitos.personalizados.DiaCircle
 import com.example.koalm.ui.screens.habitos.personalizados.DiasSeleccionadosResumen
 import com.example.koalm.ui.screens.habitos.personalizados.TooltipDialogAyuda
 import com.example.koalm.ui.theme.BorderColor
@@ -65,13 +66,13 @@ import com.example.koalm.ui.theme.ContainerColor
 import com.example.koalm.utils.TimeUtils
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 private const val TAG = "PantallaConfiguracionHabitoMeditacion"
 
@@ -93,6 +94,7 @@ fun PantallaConfiguracionHabitoMeditacion(
     val colorScheme = MaterialTheme.colorScheme
     val cardContainerColor = if (isDark) colorScheme.surface else ContainerColor
     val cardBorderColor = if (isDark) colorScheme.outlineVariant else BorderColor
+    val textoColor = colorScheme.onSurface
 
     var mensajeValidacion by remember { mutableStateOf<String?>(null) }
 
@@ -135,6 +137,7 @@ fun PantallaConfiguracionHabitoMeditacion(
     var habitoExistente by remember { mutableStateOf<Habito?>(null) }
     val currentUser = auth.currentUser
 
+    // Cargar datos si es edición (desde el repositorio genérico)
     LaunchedEffect(habitoId) {
         if (habitoId != null) {
             val resultado = habitosRepository.obtenerHabito(habitoId)
@@ -157,6 +160,7 @@ fun PantallaConfiguracionHabitoMeditacion(
         }
     }
 
+    // Cargar datos completos del documento en Firestore (para rachas/fecha creación)
     LaunchedEffect(esEdicion, habitoId) {
         if (esEdicion && habitoId != null && currentUser != null) {
             val snapshot = FirebaseFirestore.getInstance()
@@ -171,6 +175,7 @@ fun PantallaConfiguracionHabitoMeditacion(
         }
     }
 
+    // Lanzador de permisos de notificación
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -186,7 +191,9 @@ fun PantallaConfiguracionHabitoMeditacion(
                     val habito = Habito(
                         id = habitoId ?: "",
                         titulo = "Meditación",
-                        descripcion = descripcion.ifEmpty { context.getString(R.string.meditation_notification_default_text) },
+                        descripcion = descripcion.ifEmpty {
+                            context.getString(R.string.meditation_notification_default_text)
+                        },
                         clase = ClaseHabito.MENTAL,
                         tipo = TipoHabito.MEDITACION,
                         diasSeleccionados = diasSeleccionados,
@@ -209,6 +216,7 @@ fun PantallaConfiguracionHabitoMeditacion(
                     )
 
                     if (habitoId != null) {
+                        // EDICIÓN
                         habitosRepository.actualizarHabitoO(habitoId, habito).fold(
                             onSuccess = {
                                 Log.d(TAG, "Hábito actualizado exitosamente con ID: $habitoId")
@@ -223,7 +231,9 @@ fun PantallaConfiguracionHabitoMeditacion(
                                     context = context,
                                     diasSeleccionados = diasSeleccionados,
                                     hora = notificationTime,
-                                    descripcion = descripcion.ifEmpty { context.getString(R.string.meditation_notification_default_text) },
+                                    descripcion = descripcion.ifEmpty {
+                                        context.getString(R.string.meditation_notification_default_text)
+                                    },
                                     durationMinutes = duracionMin.toLong(),
                                     additionalData = mapOf(
                                         "habito_id" to habitoId,
@@ -289,6 +299,7 @@ fun PantallaConfiguracionHabitoMeditacion(
                             }
                         )
                     } else {
+                        // CREACIÓN
                         habitosRepository.crearHabito(habito).fold(
                             onSuccess = { nuevoHabitoId ->
                                 Log.d(TAG, "Hábito creado exitosamente con ID: $nuevoHabitoId")
@@ -299,13 +310,20 @@ fun PantallaConfiguracionHabitoMeditacion(
                                     LocalDateTime.of(LocalDateTime.now().toLocalDate(), horaRecordatorio)
 
                                 Log.d(TAG, "Iniciando servicio de notificaciones")
-                                context.startService(Intent(context, MeditationNotificationService::class.java))
+                                context.startService(
+                                    Intent(
+                                        context,
+                                        MeditationNotificationService::class.java
+                                    )
+                                )
 
                                 notificationService.scheduleNotification(
                                     context = context,
                                     diasSeleccionados = diasSeleccionados,
                                     hora = notificationTime,
-                                    descripcion = descripcion.ifEmpty { context.getString(R.string.meditation_notification_default_text) },
+                                    descripcion = descripcion.ifEmpty {
+                                        context.getString(R.string.meditation_notification_default_text)
+                                    },
                                     durationMinutes = duracionMin.toLong(),
                                     additionalData = mapOf(
                                         "habito_id" to nuevoHabitoId,
@@ -381,7 +399,19 @@ fun PantallaConfiguracionHabitoMeditacion(
                 }
             }
         } else {
-            mensajeValidacion = "Se requieren permisos de notificaciones"
+            mensajeValidacion = context.getString(R.string.error_notification_permission)
+        }
+    }
+
+    // Lambda para validaciones del botón Guardar
+    val onGuardarClick: () -> Unit = {
+        when {
+            !diasSeleccionados.any { it } ->
+                mensajeValidacion = "Por favor, selecciona al menos un día de la semana."
+            duracionMin <= 0f ->
+                mensajeValidacion = "La duración debe ser mayor a 0 minutos."
+            else ->
+                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 
@@ -422,10 +452,13 @@ fun PantallaConfiguracionHabitoMeditacion(
                         value = descripcion,
                         onValueChange = { descripcion = it },
                         label = { Text(stringResource(R.string.label_descripcion)) },
-                        placeholder = { Text(stringResource(R.string.placeholder_descripcion_meditacion)) },
+                        placeholder = {
+                            Text(stringResource(R.string.placeholder_descripcion_meditacion))
+                        },
                         modifier = Modifier.fillMaxWidth()
                     )
 
+                    // Frecuencia (días)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
@@ -433,7 +466,8 @@ fun PantallaConfiguracionHabitoMeditacion(
                         Text(
                             text = stringResource(R.string.label_frecuencia),
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
+                            color = textoColor
                         )
                         TooltipDialogAyuda(
                             titulo = "Frecuencia",
@@ -451,8 +485,10 @@ fun PantallaConfiguracionHabitoMeditacion(
                                     label = d,
                                     selected = diasSeleccionados[i],
                                     onClick = {
-                                        diasSeleccionados = diasSeleccionados.toMutableList()
-                                            .also { it[i] = !it[i] }
+                                        diasSeleccionados =
+                                            diasSeleccionados.toMutableList().also { list ->
+                                                list[i] = !list[i]
+                                            }
                                     }
                                 )
                             }
@@ -460,6 +496,7 @@ fun PantallaConfiguracionHabitoMeditacion(
                         DiasSeleccionadosResumen(diasSeleccionados)
                     }
 
+                    // Hora de recordatorio
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
@@ -467,7 +504,8 @@ fun PantallaConfiguracionHabitoMeditacion(
                         Text(
                             text = stringResource(R.string.label_hora),
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
+                            color = textoColor
                         )
                         TooltipDialogAyuda(
                             titulo = "Recordatorio",
@@ -477,6 +515,7 @@ fun PantallaConfiguracionHabitoMeditacion(
 
                     HoraField(horaRecordatorio) { mostrarTimePicker = true }
 
+                    // Duración de meditación
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -485,7 +524,8 @@ fun PantallaConfiguracionHabitoMeditacion(
                             Text(
                                 text = stringResource(R.string.label_duracion_meditacion),
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Medium,
+                                color = textoColor
                             )
                             TooltipDialogAyuda(
                                 titulo = "Duración de la meditación",
@@ -513,8 +553,9 @@ fun PantallaConfiguracionHabitoMeditacion(
                 }
             }
 
-            Spacer(Modifier.weight(1f))
+            Spacer(Modifier.height(24.dp))
 
+            // Botones Guardar / Cancelar alineados con las demás pantallas
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
@@ -523,43 +564,57 @@ fun PantallaConfiguracionHabitoMeditacion(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.Center,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Button(
-                        onClick = {
-                            if (diasSeleccionados.any { it }) {
-                                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                            } else {
-                                mensajeValidacion =
-                                    "Por favor, selecciona al menos un día de la semana."
-                                return@Button
-                            }
-                        },
-                        modifier = Modifier
-                            .width(180.dp)
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                    ) {
-                        Text(
-                            stringResource(R.string.boton_guardar),
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
                     if (esEdicion) {
+                        Button(
+                            onClick = onGuardarClick,
+                            modifier = Modifier
+                                .weight(0.5f)
+                                .padding(vertical = 8.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Text(
+                                stringResource(R.string.boton_guardar),
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+
                         Button(
                             onClick = { navController.navigateUp() },
                             modifier = Modifier
-                                .width(180.dp)
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                                .weight(0.5f)
+                                .padding(vertical = 8.dp),
                             shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEC615B))
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFEC615B)
+                            )
                         ) {
                             Text(
                                 text = stringResource(R.string.boton_cancelar_modificaciones),
                                 color = MaterialTheme.colorScheme.onPrimary,
-                                maxLines = 1
+                                maxLines = 1,
+                                softWrap = false
+                            )
+                        }
+                    } else {
+                        Button(
+                            onClick = onGuardarClick,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Text(
+                                stringResource(R.string.boton_guardar),
+                                color = MaterialTheme.colorScheme.onPrimary
                             )
                         }
                     }

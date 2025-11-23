@@ -786,53 +786,90 @@ fun PantallaConfiguracionHabitoSueno(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.Center,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Button(
-                        onClick = {
-                            if (!diasSeleccionados.any { it }) {
-                                mensajeValidacion =
-                                    "Por favor, selecciona al menos un día de la semana."
-                                return@Button
-                            }
-
-                            scope.launch {
-                                val conflicto = validarConflictoHorario()
-                                if (conflicto) {
-                                    // Ya se mostró el mensaje dentro de la función
-                                    return@launch
+                    if (esEdicion) {
+                        // MODO EDICIÓN: Guardar y Cancelar, mismo tamaño
+                        Button(
+                            onClick = {
+                                if (!diasSeleccionados.any { it }) {
+                                    mensajeValidacion =
+                                        "Por favor, selecciona al menos un día de la semana."
+                                    return@Button
                                 }
 
-                                // Si no hay conflicto, continúa con la lógica de guardado
-                                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                            }
-                        },
-                        modifier = Modifier
-                            .width(180.dp)
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                    ) {
-                        Text(
-                            stringResource(R.string.boton_guardar),
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
+                                scope.launch {
+                                    val conflicto = validarConflictoHorario()
+                                    if (conflicto) {
+                                        // Ya se mostró el mensaje dentro de la función
+                                        return@launch
+                                    }
 
-                    if (esEdicion) {
+                                    // Si no hay conflicto, continúa con la lógica de guardado
+                                    permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                }
+                            },
+                            modifier = Modifier
+                                .weight(0.5f)
+                                .padding(vertical = 8.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Text(
+                                stringResource(R.string.boton_guardar),
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+
                         Button(
                             onClick = {
                                 navController.navigateUp()
                             },
                             modifier = Modifier
-                                .width(180.dp)
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                                .weight(0.5f)
+                                .padding(vertical = 8.dp),
                             shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEC615B))
                         ) {
                             Text(
                                 stringResource(R.string.boton_cancelar_modificaciones),
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+                    } else {
+                        // MODO CREACIÓN: solo Guardar ocupando todo el ancho
+                        Button(
+                            onClick = {
+                                if (!diasSeleccionados.any { it }) {
+                                    mensajeValidacion =
+                                        "Por favor, selecciona al menos un día de la semana."
+                                    return@Button
+                                }
+
+                                scope.launch {
+                                    val conflicto = validarConflictoHorario()
+                                    if (conflicto) {
+                                        // Ya se mostró el mensaje dentro de la función
+                                        return@launch
+                                    }
+
+                                    // Si no hay conflicto, continúa con la lógica de guardado
+                                    permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Text(
+                                stringResource(R.string.boton_guardar),
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
                         }

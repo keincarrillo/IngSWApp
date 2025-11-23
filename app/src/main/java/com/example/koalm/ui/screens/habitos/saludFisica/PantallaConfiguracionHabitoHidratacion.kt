@@ -7,8 +7,8 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -69,9 +69,10 @@ import com.example.koalm.services.notifications.HydrationNotificationService
 import com.example.koalm.ui.components.BarraNavegacionInferior
 import com.example.koalm.ui.components.ExitoDialogoGuardadoAnimado
 import com.example.koalm.ui.components.FalloDialogoGuardadoAnimado
+import com.example.koalm.ui.components.HoraField
+import com.example.koalm.ui.components.TimePickerDialog
 import com.example.koalm.ui.components.ValidacionesDialogoAnimado
 import com.example.koalm.ui.screens.habitos.personalizados.TooltipDialogAyuda
-import com.example.koalm.ui.screens.habitos.saludMental.TimePickerDialog
 import com.example.koalm.ui.theme.BorderColor
 import com.example.koalm.ui.theme.ContainerColor
 import com.google.firebase.auth.FirebaseAuth
@@ -104,7 +105,8 @@ fun PantallaConfiguracionHabitoHidratacion(
     val esEdicion = habitoId != null
 
     var cantLitros by remember { mutableStateOf(2) }
-    val rangoLitros = 0.5f..10f
+    // Ajustado a rango entero en litros
+    val rangoLitros = 1f..10f
 
     val horarios = remember { mutableStateListOf<LocalTime>() }
     var horaIni by remember { mutableStateOf(LocalTime.of(8, 0)) }
@@ -197,8 +199,8 @@ fun PantallaConfiguracionHabitoHidratacion(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            val currentUser = auth.currentUser
-            if (currentUser == null) {
+            val currentUserInner = auth.currentUser
+            if (currentUserInner == null) {
                 mensajeValidacion = "Debes iniciar sesión para crear un hábito"
                 return@rememberLauncherForActivityResult
             }
@@ -208,19 +210,19 @@ fun PantallaConfiguracionHabitoHidratacion(
                     val habito = Habito(
                         id = habitoId ?: "",
                         titulo = "Hidratación",
-                        descripcion = descripcion.ifEmpty { context.getString(R.string.hidratacionn_notification_default_text) },
+                        descripcion = descripcion.ifEmpty {
+                            context.getString(R.string.hidratacionn_notification_default_text)
+                        },
                         diasSeleccionados = List(7) { true },
                         clase = ClaseHabito.FISICO,
                         tipo = TipoHabito.HIDRATACION,
                         horarios = horarios.map {
                             it.format(
-                                DateTimeFormatter.ofPattern(
-                                    "HH:mm"
-                                )
+                                DateTimeFormatter.ofPattern("HH:mm")
                             )
                         },
                         objetivoPaginas = cantLitros,
-                        userId = currentUser.uid,
+                        userId = currentUserInner.uid,
                         fechaCreacion = if (esEdicion) habitoExistente?.fechaCreacion else LocalDate.now()
                             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                         metricasEspecificas = MetricasHabito(),
@@ -238,6 +240,7 @@ fun PantallaConfiguracionHabitoHidratacion(
                     )
 
                     if (habitoId != null) {
+                        // EDICIÓN
                         habitosRepository.actualizarHabitoO(habitoId, habito).fold(
                             onSuccess = {
                                 Log.d(TAG, "Hábito actualizado exitosamente con ID: $habitoId")
@@ -249,8 +252,14 @@ fun PantallaConfiguracionHabitoHidratacion(
 
                                 notificationService.scheduleNotification(
                                     context = context,
-                                    horarios = horarios.map { it.format(DateTimeFormatter.ofPattern("HH:mm")) },
-                                    descripcion = descripcion,
+                                    horarios = horarios.map {
+                                        it.format(
+                                            DateTimeFormatter.ofPattern("HH:mm")
+                                        )
+                                    },
+                                    descripcion = descripcion.ifEmpty {
+                                        context.getString(R.string.hidratacionn_notification_default_text)
+                                    },
                                     durationMinutes = 0,
                                     additionalData = mapOf(
                                         "habito_id" to habitoId,
@@ -310,6 +319,7 @@ fun PantallaConfiguracionHabitoHidratacion(
                             }
                         )
                     } else {
+                        // CREACIÓN
                         habitosRepository.crearHabito(habito).fold(
                             onSuccess = { nuevoHabitoId ->
                                 Log.d(TAG, "Hábito creado exitosamente con ID: $nuevoHabitoId")
@@ -321,8 +331,14 @@ fun PantallaConfiguracionHabitoHidratacion(
 
                                 notificationService.scheduleNotification(
                                     context = context,
-                                    horarios = horarios.map { it.format(DateTimeFormatter.ofPattern("HH:mm")) },
-                                    descripcion = descripcion,
+                                    horarios = horarios.map {
+                                        it.format(
+                                            DateTimeFormatter.ofPattern("HH:mm")
+                                        )
+                                    },
+                                    descripcion = descripcion.ifEmpty {
+                                        context.getString(R.string.hidratacionn_notification_default_text)
+                                    },
                                     durationMinutes = 0,
                                     additionalData = mapOf(
                                         "habito_id" to nuevoHabitoId,
@@ -393,6 +409,15 @@ fun PantallaConfiguracionHabitoHidratacion(
             }
         } else {
             mensajeValidacion = "Se requieren permisos de notificaciones"
+        }
+    }
+
+    // Lambda compartida para el botón Guardar
+    val onGuardarClick: () -> Unit = {
+        if (horarios.isNotEmpty()) {
+            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            mensajeValidacion = "Por favor, selecciona al menos un recordatorio."
         }
     }
 
@@ -485,10 +510,13 @@ fun PantallaConfiguracionHabitoHidratacion(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Box(modifier = Modifier.weight(1f)) {
-                                    HoraField(hora = hora) {
-                                        mostrarTimePicker = true
-                                        horaAEditarIndex = index
-                                    }
+                                    HoraField(
+                                        hora = hora,
+                                        onClick = {
+                                            mostrarTimePicker = true
+                                            horaAEditarIndex = index
+                                        }
+                                    )
                                 }
 
                                 IconButton(
@@ -530,8 +558,9 @@ fun PantallaConfiguracionHabitoHidratacion(
                 }
             }
 
-            Spacer(Modifier.weight(1f))
+            Spacer(Modifier.height(24.dp))
 
+            // ------------------------ Botones Guardar / Cancelar ------------------------
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
@@ -540,42 +569,54 @@ fun PantallaConfiguracionHabitoHidratacion(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.Center,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Button(
-                        onClick = {
-                            if (horarios.isNotEmpty()) {
-                                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                            } else {
-                                mensajeValidacion = "Por favor, selecciona al menos un recordatorio."
-                                return@Button
-                            }
-                        },
-                        modifier = Modifier
-                            .width(180.dp)
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                    ) {
-                        Text(
-                            stringResource(R.string.boton_guardar),
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
                     if (esEdicion) {
+                        // MODO EDICIÓN: Guardar y Cancelar, mismo tamaño
                         Button(
-                            onClick = {
-                                navController.navigateUp()
-                            },
+                            onClick = onGuardarClick,
                             modifier = Modifier
-                                .width(180.dp)
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                                .weight(0.5f)
+                                .padding(vertical = 8.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Text(
+                                stringResource(R.string.boton_guardar),
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+
+                        Button(
+                            onClick = { navController.navigateUp() },
+                            modifier = Modifier
+                                .weight(0.5f)
+                                .padding(vertical = 8.dp),
                             shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEC615B))
                         ) {
                             Text(
                                 stringResource(R.string.boton_cancelar_modificaciones),
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+                    } else {
+                        // MODO CREACIÓN: solo Guardar ocupando todo el ancho
+                        Button(
+                            onClick = onGuardarClick,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Text(
+                                stringResource(R.string.boton_guardar),
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
                         }
@@ -653,6 +694,7 @@ fun DurationSliderHidra(
                 .fillMaxWidth()
                 .height(trackHeight + 24.dp)
         ) {
+            // Fondo de la pista
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -662,6 +704,7 @@ fun DurationSliderHidra(
                     .align(Alignment.Center)
             )
 
+            // Puntos / ticks
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -671,21 +714,30 @@ fun DurationSliderHidra(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 val tickCount =
-                    ((valueRange.endInclusive - valueRange.start) / tickEvery).toInt() + 1
+                    ((valueRange.endInclusive - valueRange.start) / tickEvery.toFloat()).toInt() + 1
                 repeat(tickCount) {
                     Box(
                         modifier = Modifier
                             .size(trackHeight * 0.3f)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f))
+                            .background(
+                                MaterialTheme.colorScheme.onPrimary.copy(
+                                    alpha = 0.85f
+                                )
+                            )
                     )
                 }
             }
 
+            val sliderValue =
+                value.toFloat().coerceIn(valueRange.start, valueRange.endInclusive)
+
             Slider(
-                value = value.toFloat(),
-                onValueChange = {
-                    val rounded = it.roundToInt()
+                value = sliderValue,
+                onValueChange = { newValue ->
+                    val rounded = newValue
+                        .coerceIn(valueRange.start, valueRange.endInclusive)
+                        .roundToInt()
                     onValueChange(rounded)
                     haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 },
@@ -701,7 +753,9 @@ fun DurationSliderHidra(
                 modifier = Modifier.fillMaxSize()
             )
 
-            val progress = (value - valueRange.start) / (valueRange.endInclusive - valueRange.start)
+            val progress = ((sliderValue - valueRange.start) /
+                    (valueRange.endInclusive - valueRange.start))
+                .coerceIn(0f, 1f)
             val thumbOffset = with(density) { (progress * maxWidthPx).toDp() }
 
             Box(

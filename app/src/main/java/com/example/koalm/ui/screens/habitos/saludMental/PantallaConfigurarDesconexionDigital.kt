@@ -420,7 +420,20 @@ fun PantallaConfigurarDesconexionDigital(
                 }
             }
         } else {
-            mensajeValidacion = "Se requieren permisos de notificaciones"
+            // Igual que en meditación: usar stringResource centralizado
+            mensajeValidacion = context.getString(R.string.error_notification_permission)
+        }
+    }
+
+    // Lambda para validaciones del botón Guardar (como en meditación)
+    val onGuardarClick: () -> Unit = {
+        when {
+            !diasSeleccionados.any { it } ->
+                mensajeValidacion = "Por favor, selecciona al menos un día de la semana."
+            duracionMin <= 0f ->
+                mensajeValidacion = "La duración debe ser mayor a 0 minutos."
+            else ->
+                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 
@@ -551,9 +564,9 @@ fun PantallaConfigurarDesconexionDigital(
                 }
             }
 
-            Spacer(Modifier.weight(1f))
+            Spacer(Modifier.height(24.dp))
 
-            // Botones Guardar / Cancelar
+            // Botones Guardar / Cancelar alineados como en meditación
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
@@ -562,39 +575,31 @@ fun PantallaConfigurarDesconexionDigital(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.Center,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-
-                    Button(
-                        onClick = {
-                            if (!diasSeleccionados.any { it }) {
-                                mensajeValidacion =
-                                    "Por favor, selecciona al menos un día de la semana."
-                                return@Button
-                            }
-
-                            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                        },
-                        modifier = Modifier
-                            .width(180.dp)
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        Text(
-                            stringResource(R.string.boton_guardar),
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
                     if (esEdicion) {
+                        Button(
+                            onClick = onGuardarClick,
+                            modifier = Modifier
+                                .weight(0.5f)
+                                .padding(vertical = 8.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Text(
+                                stringResource(R.string.boton_guardar),
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+
                         Button(
                             onClick = { navController.navigateUp() },
                             modifier = Modifier
-                                .width(180.dp)
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                                .weight(0.5f)
+                                .padding(vertical = 8.dp),
                             shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFFEC615B)
@@ -604,6 +609,22 @@ fun PantallaConfigurarDesconexionDigital(
                                 text = stringResource(R.string.boton_cancelar_modificaciones),
                                 color = MaterialTheme.colorScheme.onPrimary,
                                 maxLines = 1
+                            )
+                        }
+                    } else {
+                        Button(
+                            onClick = onGuardarClick,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Text(
+                                stringResource(R.string.boton_guardar),
+                                color = MaterialTheme.colorScheme.onPrimary
                             )
                         }
                     }

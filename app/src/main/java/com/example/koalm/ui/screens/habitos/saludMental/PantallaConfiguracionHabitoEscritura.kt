@@ -25,8 +25,32 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,13 +83,13 @@ import com.example.koalm.ui.theme.BorderColor
 import com.example.koalm.ui.theme.ContainerColor
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -184,6 +208,12 @@ fun PantallaConfiguracionHabitoEscritura(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
+            val currentUserLocal = auth.currentUser
+            if (currentUserLocal == null) {
+                mensajeValidacion = "Debes iniciar sesión para crear un hábito"
+                return@rememberLauncherForActivityResult
+            }
+
             scope.launch {
                 try {
                     val habito = Habito(
@@ -197,7 +227,7 @@ fun PantallaConfiguracionHabitoEscritura(
                         diasSeleccionados = diasSeleccionados,
                         hora = hora.format(DateTimeFormatter.ofPattern("HH:mm")),
                         duracionMinutos = duracionMin.toInt(),
-                        userId = currentUser?.uid,
+                        userId = currentUserLocal.uid,
                         objetivoPaginas = objetivoPaginas,
                         metricasEspecificas = MetricasHabito(),
                         fechaCreacion = if (esEdicion) {
@@ -409,11 +439,24 @@ fun PantallaConfiguracionHabitoEscritura(
                 }
             }
         } else {
-            Toast.makeText(
-                context,
-                context.getString(R.string.error_notification_permission),
-                Toast.LENGTH_LONG
-            ).show()
+            mensajeValidacion = context.getString(R.string.error_notification_permission)
+        }
+    }
+
+    // Lambda para validaciones del botón Guardar (alineado con meditación)
+    val onGuardarClick: () -> Unit = {
+        when {
+            !diasSeleccionados.any { it } ->
+                mensajeValidacion = "Por favor, selecciona al menos un día de la semana."
+            duracionMin <= 0f ->
+                mensajeValidacion = "La duración debe ser mayor a 0 minutos."
+            objetivoPaginas <= 0 ->
+                mensajeValidacion =
+                    "Por favor, establece cuántas páginas quieres escribir por día."
+            auth.currentUser == null ->
+                mensajeValidacion = "Debes iniciar sesión para crear un hábito."
+            else ->
+                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 
@@ -563,9 +606,9 @@ fun PantallaConfiguracionHabitoEscritura(
                 }
             }
 
-            Spacer(Modifier.weight(1f))
+            Spacer(Modifier.height(24.dp))
 
-            // Botones Guardar / Cancelar
+            // Botones Guardar / Cancelar alineados como en meditación
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
@@ -574,67 +617,57 @@ fun PantallaConfiguracionHabitoEscritura(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.Center,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Button(
-                        onClick = {
-                            if (!diasSeleccionados.contains(true)) {
-                                mensajeValidacion =
-                                    "Por favor, selecciona al menos un día de la semana."
-                                return@Button
-                            }
-
-                            if (duracionMin <= 0) {
-                                mensajeValidacion =
-                                    "La duración debe ser mayor a 0 minutos."
-                                return@Button
-                            }
-
-                            if (objetivoPaginas <= 0) {
-                                mensajeValidacion =
-                                    "Por favor, establece cuántas páginas quieres escribir por día."
-                                return@Button
-                            }
-
-                            val currentUserLocal = auth.currentUser
-                            if (currentUserLocal == null) {
-                                mensajeValidacion =
-                                    "Debes iniciar sesión para crear un hábito."
-                                return@Button
-                            } else {
-                                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                            }
-                        },
-                        modifier = Modifier
-                            .width(180.dp)
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        Text(
-                            stringResource(R.string.boton_guardar),
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
-
                     if (esEdicion) {
+                        Button(
+                            onClick = onGuardarClick,
+                            modifier = Modifier
+                                .weight(0.5f)
+                                .padding(vertical = 8.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Text(
+                                stringResource(R.string.boton_guardar),
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+
                         Button(
                             onClick = { navController.navigateUp() },
                             modifier = Modifier
-                                .width(180.dp)
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                                .weight(0.5f)
+                                .padding(vertical = 8.dp),
                             shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFFEC615B)
                             )
                         ) {
                             Text(
-                                stringResource(R.string.boton_cancelar_modificaciones),
+                                text = stringResource(R.string.boton_cancelar_modificaciones),
                                 color = MaterialTheme.colorScheme.onPrimary,
-                                maxLines = 1
+                                maxLines = 1,
+                                softWrap = false
+                            )
+                        }
+                    } else {
+                        Button(
+                            onClick = onGuardarClick,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Text(
+                                stringResource(R.string.boton_guardar),
+                                color = MaterialTheme.colorScheme.onPrimary
                             )
                         }
                     }

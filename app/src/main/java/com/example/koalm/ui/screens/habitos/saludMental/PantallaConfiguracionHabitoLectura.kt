@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
@@ -47,7 +48,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.navigation.NavHostController
 import com.example.koalm.R
 import com.example.koalm.model.ClaseHabito
@@ -59,6 +59,7 @@ import com.example.koalm.services.notifications.ReadingNotificationService
 import com.example.koalm.services.timers.NotificationService
 import com.example.koalm.ui.components.BarraNavegacionInferior
 import com.example.koalm.ui.components.ExitoDialogoGuardadoAnimado
+import com.example.koalm.ui.components.HoraField
 import com.example.koalm.ui.components.ValidacionesDialogoAnimado
 import com.example.koalm.ui.screens.habitos.personalizados.DiaCircle
 import com.example.koalm.ui.screens.habitos.personalizados.DiasSeleccionadosResumen
@@ -92,7 +93,7 @@ fun PantallaConfiguracionHabitoLectura(
     val userEmail = FirebaseAuth.getInstance().currentUser?.email
     val esEdicion = habitoId != null
 
-    // 🎨 Misma lógica de colores que PantallaConfiguracionHabitoAlimentacion
+    // 🎨 Misma lógica de colores que otras pantallas
     val isDark = isSystemInDarkTheme()
     val colorScheme = MaterialTheme.colorScheme
     val cardContainerColor = if (isDark) colorScheme.surface else ContainerColor
@@ -186,11 +187,7 @@ fun PantallaConfiguracionHabitoLectura(
             val currentUserLocal = auth.currentUser
             if (currentUserLocal == null) {
                 Log.e(TAG, "No hay usuario autenticado")
-                Toast.makeText(
-                    context,
-                    "Debes iniciar sesión para crear un hábito",
-                    Toast.LENGTH_SHORT
-                ).show()
+                mensajeValidacion = "Debes iniciar sesión para crear un hábito"
                 return@rememberLauncherForActivityResult
             }
 
@@ -199,7 +196,9 @@ fun PantallaConfiguracionHabitoLectura(
                     val habito = Habito(
                         id = habitoId ?: "",
                         titulo = "Lectura",
-                        descripcion = descripcion.ifEmpty { context.getString(R.string.reading_notification_default_text) },
+                        descripcion = descripcion.ifEmpty {
+                            context.getString(R.string.reading_notification_default_text)
+                        },
                         clase = ClaseHabito.MENTAL,
                         tipo = TipoHabito.LECTURA,
                         diasSeleccionados = diasSeleccionados,
@@ -238,7 +237,9 @@ fun PantallaConfiguracionHabitoLectura(
                                     context = context,
                                     diasSeleccionados = diasSeleccionados,
                                     hora = notificationTime,
-                                    descripcion = descripcion.ifEmpty { context.getString(R.string.reading_notification_default_text) },
+                                    descripcion = descripcion.ifEmpty {
+                                        context.getString(R.string.reading_notification_default_text)
+                                    },
                                     durationMinutes = duracionMin.toLong(),
                                     additionalData = mapOf(
                                         "habito_id" to habitoId,
@@ -312,13 +313,20 @@ fun PantallaConfiguracionHabitoLectura(
                                     LocalDateTime.of(LocalDateTime.now().toLocalDate(), horaRecordatorio)
 
                                 Log.d(TAG, "Iniciando servicio de notificaciones")
-                                context.startService(Intent(context, NotificationService::class.java))
+                                context.startService(
+                                    Intent(
+                                        context,
+                                        NotificationService::class.java
+                                    )
+                                )
 
                                 notificationService.scheduleNotification(
                                     context = context,
                                     diasSeleccionados = diasSeleccionados,
                                     hora = notificationTime,
-                                    descripcion = descripcion.ifEmpty { context.getString(R.string.reading_notification_default_text) },
+                                    descripcion = descripcion.ifEmpty {
+                                        context.getString(R.string.reading_notification_default_text)
+                                    },
                                     durationMinutes = duracionMin.toLong(),
                                     additionalData = mapOf(
                                         "habito_id" to nuevoHabitoId,
@@ -391,11 +399,22 @@ fun PantallaConfiguracionHabitoLectura(
                 }
             }
         } else {
-            Toast.makeText(
-                context,
-                context.getString(R.string.error_notification_permission),
-                Toast.LENGTH_LONG
-            ).show()
+            mensajeValidacion = context.getString(R.string.error_notification_permission)
+        }
+    }
+
+    // Lambda compartida para el botón Guardar (mismas validaciones en creación / edición)
+    val onGuardarClick: () -> Unit = {
+        when {
+            !diasSeleccionados.any { it } ->
+                mensajeValidacion = "Por favor, selecciona al menos un día de la semana."
+            duracionMin <= 0f ->
+                mensajeValidacion = "La duración debe ser mayor a 0 minutos."
+            objetivoPaginas <= 0 ->
+                mensajeValidacion =
+                    "Por favor, establece cuántas páginas quieres leer por día."
+            else ->
+                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 
@@ -423,7 +442,7 @@ fun PantallaConfiguracionHabitoLectura(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 🔹 Card con mismos colores que Alimentación
+            // 🔹 Card con mismos colores que Alimentación / Sueño / Hidratación
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -439,7 +458,9 @@ fun PantallaConfiguracionHabitoLectura(
                         value = descripcion,
                         onValueChange = { descripcion = it },
                         label = { Text(stringResource(R.string.label_descripcion)) },
-                        placeholder = { Text(stringResource(R.string.placeholder_descripcion_lectura)) },
+                        placeholder = {
+                            Text(stringResource(R.string.placeholder_descripcion_lectura))
+                        },
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -498,8 +519,10 @@ fun PantallaConfiguracionHabitoLectura(
                                     label = d,
                                     selected = diasSeleccionados[i],
                                     onClick = {
-                                        diasSeleccionados = diasSeleccionados.toMutableList()
-                                            .also { it[i] = !it[i] }
+                                        diasSeleccionados =
+                                            diasSeleccionados.toMutableList().also { list ->
+                                                list[i] = !list[i]
+                                            }
                                     }
                                 )
                             }
@@ -563,9 +586,9 @@ fun PantallaConfiguracionHabitoLectura(
                 }
             }
 
-            Spacer(Modifier.weight(1f))
+            Spacer(Modifier.height(24.dp))
 
-            // Botones Guardar / Cancelar (mismo estilo que Alimentación)
+            // Botones Guardar / Cancelar (alineados con otras pantallas)
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
@@ -574,50 +597,32 @@ fun PantallaConfiguracionHabitoLectura(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.Center,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Button(
-                        onClick = {
-                            if (!diasSeleccionados.any { it }) {
-                                mensajeValidacion =
-                                    "Por favor, selecciona al menos un día de la semana."
-                                return@Button
-                            }
-
-                            if (duracionMin <= 0) {
-                                mensajeValidacion =
-                                    "La duración debe ser mayor a 0 minutos."
-                                return@Button
-                            }
-
-                            if (objetivoPaginas <= 0) {
-                                mensajeValidacion =
-                                    "Por favor, establece cuántas páginas quieres leer por día."
-                                return@Button
-                            } else {
-                                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                            }
-                        },
-                        modifier = Modifier
-                            .width(180.dp)
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        Text(
-                            stringResource(R.string.boton_guardar),
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
                     if (esEdicion) {
+                        // EDICIÓN: Guardar + Cancelar, mismo tamaño
+                        Button(
+                            onClick = onGuardarClick,
+                            modifier = Modifier
+                                .weight(0.5f)
+                                .padding(vertical = 8.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Text(
+                                stringResource(R.string.boton_guardar),
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+
                         Button(
                             onClick = { navController.navigateUp() },
                             modifier = Modifier
-                                .width(180.dp)
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                                .weight(0.5f)
+                                .padding(vertical = 8.dp),
                             shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFFEC615B)
@@ -628,6 +633,23 @@ fun PantallaConfiguracionHabitoLectura(
                                 color = MaterialTheme.colorScheme.onPrimary,
                                 maxLines = 1,
                                 softWrap = false
+                            )
+                        }
+                    } else {
+                        // CREACIÓN: solo Guardar ocupando todo el ancho
+                        Button(
+                            onClick = onGuardarClick,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Text(
+                                stringResource(R.string.boton_guardar),
+                                color = MaterialTheme.colorScheme.onPrimary
                             )
                         }
                     }
