@@ -58,6 +58,15 @@ class PantallaSuenoViewModel : ViewModel() {
                 Log.d(TAG, "Número de hábitos encontrados: ${habitos.documents.size}")
                 if (habitos.documents.isEmpty()) {
                     Log.d(TAG, "No se encontraron hábitos de sueño")
+                    // CORRECCIÓN: Inicializar con datos vacíos en lugar de solo hacer return
+                    datosSueno = DatosSueno(
+                        puntos = 0,
+                        fecha = fechaHoy.format(DateTimeFormatter.ISO_DATE),
+                        horas = 0,
+                        minutos = 0,
+                        duracionHoras = 0f,
+                        historialSemanal = emptyList()
+                    )
                     return@launch
                 }
 
@@ -122,6 +131,15 @@ class PantallaSuenoViewModel : ViewModel() {
                         }
                     } catch (e: Exception) {
                         Log.e(TAG, "Error procesando documento: ${e.message}")
+                        // CORRECCIÓN: Inicializar con datos vacíos en lugar de solo hacer return
+                        datosSueno = DatosSueno(
+                            puntos = 0,
+                            fecha = fechaHoy.format(DateTimeFormatter.ISO_DATE),
+                            horas = 0,
+                            minutos = 0,
+                            duracionHoras = 0f,
+                            historialSemanal = emptyList()
+                        )
                         e.printStackTrace()
                     }
                 }

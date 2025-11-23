@@ -131,7 +131,6 @@ dependencies {
     implementation ("androidx.compose.runtime:runtime-livedata")
 
 
-
 }
 
 apply(plugin = "com.google.gms.google-services")
