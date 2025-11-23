@@ -240,20 +240,28 @@ fun PantallaMenuPrincipal(navController: NavHostController) {
                     .padding(innerPadding)
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(horizontal = 16.dp)
             ) {
                 val viewModel: DashboardViewModel = viewModel()
                 val racha = viewModel.rachaSemanal
-                Spacer(modifier = Modifier.height(1.dp))
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 SeccionTitulo("Racha semanal")
+
+                Spacer(modifier = Modifier.height(4.dp))
 
                 FormatoRacha(
                     dias = racha,
                     onClick = { /* navController.navigate("racha_habitos") */ }
                 )
 
+                Spacer(modifier = Modifier.height(16.dp))
+
                 SeccionTitulo("Hábitos pingü")
+
+                Spacer(modifier = Modifier.height(4.dp))
+
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     items(habitosPingu) { habito ->
                         HabitoCarruselItem(
@@ -269,7 +277,12 @@ fun PantallaMenuPrincipal(navController: NavHostController) {
                     }
                 }
 
+                Spacer(modifier = Modifier.height(16.dp))
+
                 SeccionTitulo("Mis hábitos")
+
+                Spacer(modifier = Modifier.height(2.dp))
+
                 if (usuarioEmail != null && userId != null) {
                     DashboardScreen(
                         usuarioEmail = usuarioEmail,
@@ -549,6 +562,12 @@ fun FormatoRacha(
     dias: List<Pair<String, Boolean>>,
     onClick: () -> Unit = {}
 ) {
+    val isDark = isSystemInDarkTheme()
+    val dayTextColor =
+        if (isDark) MaterialTheme.colorScheme.onSurface else Color.Black
+    val emptyTextColor =
+        if (isDark) MaterialTheme.colorScheme.onSurfaceVariant else Color.Gray
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -561,7 +580,7 @@ fun FormatoRacha(
             Text(
                 text = "¡Empieza hoy y construye tu racha!",
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray,
+                color = emptyTextColor,
                 modifier = Modifier.padding(vertical = 16.dp)
             )
         } else {
@@ -589,7 +608,7 @@ fun FormatoRacha(
                         Text(
                             text = letra,
                             style = MaterialTheme.typography.labelMedium,
-                            color = Color.Black,
+                            color = dayTextColor,
                             modifier = Modifier.padding(top = 4.dp)
                         )
                     }
@@ -598,6 +617,7 @@ fun FormatoRacha(
         }
     }
 }
+
 
 @Composable
 fun HabitoCarruselItem(
@@ -684,16 +704,14 @@ fun DashboardScreen(
     var tipoSeleccionado by remember { mutableStateOf("todos") }
     val tipos = listOf("todos", "personalizado", "fisico", "mental")
 
-    // Cargar los hábitos
     LaunchedEffect(usuarioEmail, userId) {
         viewModel.cargarHabitos(usuarioEmail, userId)
     }
 
-    // Filtros de tipo
     LazyRow(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(top = 2.dp, bottom = 2.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(tipos) { tipo ->
@@ -772,15 +790,16 @@ fun DashboardScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp),
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 val hayHabitosGuardados = habitos.isNotEmpty() || habitosPre.isNotEmpty()
+
                 Text(
                     text = when (tipoFiltrado) {
                         "personalizado" -> "¿Qué son los hábitos personalizados?\nCrea los tuyos según tus metas."
-                        "físico" -> "¿Qué son los hábitos físicos?\nActividades como control de sueño, alimentación e hidratación."
+                        "fisico" -> "¿Qué son los hábitos físicos?\nActividades como control de sueño, alimentación e hidratación."
                         "mental" -> "¿Qué son los hábitos mentales?\nActividades como meditar, leer o escribir."
                         else -> {
                             if (hayHabitosGuardados) {
@@ -791,21 +810,17 @@ fun DashboardScreen(
                         }
                     },
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
 
-                // Mostrar botón según tipo
+                // Mostrar botón según tipo seleccionado
                 if (tipoFiltrado != "todos") {
                     val ruta = when (tipoFiltrado) {
-                        "físico" -> "salud_fisica"
+                        "personalizado" -> "configurar_habito_personalizado"
+                        "fisico" -> "salud_fisica"
                         "mental" -> "salud_mental"
                         else -> "configurar_habito_personalizado"
-                    }
-
-                    val textoBoton = when (tipoFiltrado) {
-                        "físico", "mental" -> "Configurar"
-                        else -> stringResource(R.string.boton_agregar)
                     }
 
                     Button(
@@ -814,7 +829,7 @@ fun DashboardScreen(
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(text = textoBoton)
+                        Text(text = stringResource(R.string.boton_agregar))
                     }
                 }
             }
@@ -848,7 +863,7 @@ fun HabitoCardPersonalizado(
         )
     }
 
-    // Progreso del hábito visualmente
+    // --- Progreso ---
     val total = habito.objetivoDiario
     val progresoPorcentaje = (realizados.toFloat() / total).coerceIn(0f, 1f)
 
@@ -863,114 +878,135 @@ fun HabitoCardPersonalizado(
         animationSpec = tween(durationMillis = 300)
     )
 
-    // Obtener colores
-    val colorFondo = parseColorFromFirebase(habito.colorEtiqueta)
+    // --- Colores estilo TarjetaNotificacion ---
+    val isDark = isSystemInDarkTheme()
+    val colorEtiqueta = parseColorFromFirebase(habito.colorEtiqueta)
     val icono = obtenerIconoPorNombre(habito.iconoEtiqueta)
     val colorIcono = parseColorFromFirebase(habito.colorEtiqueta, darken = true)
 
-    // Visualizar recordatorios
+    val cardContainerColor =
+        if (isDark) MaterialTheme.colorScheme.surface
+        else colorEtiqueta.copy(alpha = 0.18f)
+
+    val dateAndSubTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val baseCircleColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+    val trackColor = MaterialTheme.colorScheme.surfaceVariant
+    val plusColor = MaterialTheme.colorScheme.onSurface
+
     val progresoText = if (realizados >= total && total > 0) {
         "Completado: $realizados/$total"
     } else {
         "Objetivo por día: $realizados/$total"
     }
 
-    Column(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .border(1.dp, colorIcono, RoundedCornerShape(16.dp))
-            .background(colorFondo.copy(alpha = 0.2f), shape = RoundedCornerShape(16.dp))
-            .padding(16.dp)
+            .border(1.dp, colorIcono, RoundedCornerShape(16.dp)),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = cardContainerColor,
+            contentColor = MaterialTheme.colorScheme.onSurface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth()
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = icono,
-                    contentDescription = "Icono del Hábito",
-                    tint = colorIcono,
-                    modifier = Modifier
-                        .size(33.dp)
-                        .padding(end = 12.dp)
-                )
-                Column {
-                    Text(
-                        text = habito.nombre,
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = icono,
+                        contentDescription = "Icono del Hábito",
+                        tint = colorIcono,
+                        modifier = Modifier
+                            .size(33.dp)
+                            .padding(end = 12.dp)
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = progresoText,
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                    Column {
+                        Text(
+                            text = habito.nombre,
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = progresoText,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = dateAndSubTextColor
+                        )
+                    }
                 }
-            }
 
-            if (completado) {
-                Icon(
-                    imageVector = Icons.Default.Check,
-                    modifier = Modifier
-                        .size(40.dp),
-                    contentDescription = "Completado",
-                    tint = colorIcono
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(Color.Transparent, shape = CircleShape)
-                        .drawBehind {
-                            val strokeWidth = 4.dp.toPx()
-                            val radius = size.minDimension / 2 - strokeWidth / 2
+                if (completado) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        modifier = Modifier.size(40.dp),
+                        contentDescription = "Completado",
+                        tint = colorIcono
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(Color.Transparent, shape = CircleShape)
+                            .drawBehind {
+                                val strokeWidth = 4.dp.toPx()
+                                val radius = size.minDimension / 2 - strokeWidth / 2
 
-                            // Fondo base gris
-                            drawCircle(
-                                color = Color.LightGray,
-                                radius = radius,
-                                center = center,
-                                style = Stroke(width = strokeWidth)
-                            )
+                                drawCircle(
+                                    color = baseCircleColor,
+                                    radius = radius,
+                                    center = center,
+                                    style = Stroke(width = strokeWidth)
+                                )
 
-                            // Fondo animado sobrepuesto
-                            drawArc(
-                                color = colorIcono,
-                                startAngle = -90f,
-                                sweepAngle = 360 * animatedProgress,
-                                useCenter = false,
-                                style = Stroke(width = strokeWidth),
-                                topLeft = Offset(
-                                    (size.width - radius * 2) / 2,
-                                    (size.height - radius * 2) / 2
-                                ),
-                                size = Size(radius * 2, radius * 2)
+                                drawArc(
+                                    color = colorIcono,
+                                    startAngle = -90f,
+                                    sweepAngle = 360 * animatedProgress,
+                                    useCenter = false,
+                                    style = Stroke(width = strokeWidth),
+                                    topLeft = Offset(
+                                        (size.width - radius * 2) / 2,
+                                        (size.height - radius * 2) / 2
+                                    ),
+                                    size = Size(radius * 2, radius * 2)
+                                )
+                            }
+                    ) {
+                        IconButton(
+                            onClick = { onIncrementar(1) },
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = "Sumar",
+                                tint = plusColor
                             )
                         }
-                ) {
-                    IconButton(
-                        onClick = { onIncrementar(1) },
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = "Sumar", tint = Color.Black)
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            LinearProgressIndicator(
+                progress = { animatedProgress },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(10.dp)
+                    .clip(RoundedCornerShape(50)),
+                color = colorIcono,
+                trackColor = trackColor
+            )
         }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        LinearProgressIndicator(
-            progress = { animatedProgress },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(10.dp)
-                .clip(RoundedCornerShape(50)),
-            color = colorIcono,
-            trackColor = Color(0xFFE0E0E0),
-        )
     }
 }
 
@@ -1003,11 +1039,9 @@ fun HabitoCardPredeterminado(
         )
     }
 
-    // Dialogo para ingresar el progreso
+    // --- Diálogo (lo dejo igual que el tuyo) ---
     if (mostrarDialogo) {
-        Dialog(
-            onDismissRequest = { mostrarDialogo = false }
-        ) {
+        Dialog(onDismissRequest = { mostrarDialogo = false }) {
             Surface(
                 shape = RoundedCornerShape(16.dp),
                 color = MaterialTheme.colorScheme.surface,
@@ -1058,7 +1092,9 @@ fun HabitoCardPredeterminado(
                             )
                         },
                         keyboardOptions = KeyboardOptions(
-                            keyboardType = if (habito.tipo == TipoHabito.SUEÑO) KeyboardType.Decimal else KeyboardType.Number
+                            keyboardType = if (habito.tipo == TipoHabito.SUEÑO)
+                                KeyboardType.Decimal
+                            else KeyboardType.Number
                         ),
                         textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
                         singleLine = true,
@@ -1104,7 +1140,7 @@ fun HabitoCardPredeterminado(
         }
     }
 
-    // Progreso del hábito visualmente
+    // --- Progreso ---
     val progresoPorcentaje = if (totalRecordatoriosxDia == 1) {
         if (completado) 1f else 0f
     } else {
@@ -1123,149 +1159,174 @@ fun HabitoCardPredeterminado(
         animationSpec = tween(durationMillis = 300)
     )
 
-    // Visualizar recordatorios y métricas específicas según el tipo de hábito
+    val isDark = isSystemInDarkTheme()
+    val cardContainerColor =
+        if (isDark) MaterialTheme.colorScheme.surface else ContainerColor
+    val borderColor =
+        if (isDark) MaterialTheme.colorScheme.outline else BorderColor
+    val baseCircleColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+    val ringColor = MaterialTheme.colorScheme.primary
+    val trackColor = MaterialTheme.colorScheme.surfaceVariant
+    val plusColor = MaterialTheme.colorScheme.onSurface
+    val subTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+
     val progresoText = when (habito.tipo) {
-        //Hábitos mentales
         TipoHabito.ESCRITURA -> {
             val paginasEscritas = realizados
-            if (completado) "Completado: $paginasEscritas páginas" else "Objetivo: $paginasEscritas/${habito.objetivoPaginas} páginas"
+            if (completado) "Completado: $paginasEscritas páginas"
+            else "Objetivo: $paginasEscritas/${habito.objetivoPaginas} páginas"
         }
         TipoHabito.LECTURA -> {
             val paginasLeidas = realizados
-            if (completado) "Completado: $paginasLeidas páginas" else "Objetivo: $paginasLeidas/${habito.objetivoPaginas} páginas"
+            if (completado) "Completado: $paginasLeidas páginas"
+            else "Objetivo: $paginasLeidas/${habito.objetivoPaginas} páginas"
         }
         TipoHabito.MEDITACION -> {
             val minutosMeditados = realizados
-            if (completado) "Completado: $minutosMeditados minutos" else "Objetivo: $minutosMeditados/${habito.duracionMinutos} minutos"
+            if (completado) "Completado: $minutosMeditados minutos"
+            else "Objetivo: $minutosMeditados/${habito.duracionMinutos} minutos"
         }
         TipoHabito.DESCONEXION_DIGITAL -> {
             val minutosDesconectado = realizados
-            if (completado) "Completado: $minutosDesconectado minutos" else "Objetivo: $minutosDesconectado/${habito.duracionMinutos} minutos"
+            if (completado) "Completado: $minutosDesconectado minutos"
+            else "Objetivo: $minutosDesconectado/${habito.duracionMinutos} minutos"
         }
-
-        //Hábitos de salud
         TipoHabito.SUEÑO -> {
             val horasDormidas = realizados
-            if (completado) "Completado: $horasDormidas horas" else "Objetivo: $horasDormidas/${habito.objetivoHorasSueno} horas"
+            if (completado) "Completado: $horasDormidas horas"
+            else "Objetivo: $horasDormidas/${habito.objetivoHorasSueno} horas"
         }
-
         TipoHabito.ALIMENTACION -> {
             val comidasRealizadas = realizados
-            if (completado) "Completado: $comidasRealizadas comidas" else "Objetivo: $comidasRealizadas/${habito.objetivoPaginas} comidas"
+            if (completado) "Completado: $comidasRealizadas comidas"
+            else "Objetivo: $comidasRealizadas/${habito.objetivoPaginas} comidas"
         }
         TipoHabito.HIDRATACION -> {
             val vasosAgua = realizados
-            if (completado) "Completado: $vasosAgua litros" else "Objetivo: $vasosAgua/${habito.objetivoPaginas} litros"
+            if (completado) "Completado: $vasosAgua litros"
+            else "Objetivo: $vasosAgua/${habito.objetivoPaginas} litros"
         }
     }
 
-    Column(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .border(1.dp, BorderColor, RoundedCornerShape(16.dp))
-            .background(ContainerColor.copy(alpha = 0.3f), shape = RoundedCornerShape(16.dp))
-            .padding(16.dp)
+            .border(1.dp, borderColor, RoundedCornerShape(16.dp)),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = cardContainerColor,
+            contentColor = MaterialTheme.colorScheme.onSurface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth()
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = when (habito.tipo) {
-                        TipoHabito.MEDITACION -> Icons.Default.SelfImprovement
-                        TipoHabito.LECTURA -> Icons.Default.MenuBook
-                        TipoHabito.DESCONEXION_DIGITAL -> Icons.Default.PhoneDisabled
-                        TipoHabito.ESCRITURA -> Icons.Default.Edit
-                        TipoHabito.SUEÑO -> Icons.Default.Nightlight
-                        TipoHabito.ALIMENTACION -> Icons.Default.Restaurant
-                        TipoHabito.HIDRATACION -> Icons.Default.LocalDrink
-                    },
-                    contentDescription = "Icono del Hábito",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier
-                        .size(33.dp)
-                        .padding(end = 12.dp)
-                )
-                Column {
-                    Text(
-                        text = habito.titulo,
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = when (habito.tipo) {
+                            TipoHabito.MEDITACION -> Icons.Default.SelfImprovement
+                            TipoHabito.LECTURA -> Icons.Default.MenuBook
+                            TipoHabito.DESCONEXION_DIGITAL -> Icons.Default.PhoneDisabled
+                            TipoHabito.ESCRITURA -> Icons.Default.Edit
+                            TipoHabito.SUEÑO -> Icons.Default.Nightlight
+                            TipoHabito.ALIMENTACION -> Icons.Default.Restaurant
+                            TipoHabito.HIDRATACION -> Icons.Default.LocalDrink
+                        },
+                        contentDescription = "Icono del Hábito",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .size(33.dp)
+                            .padding(end = 12.dp)
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = progresoText,
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                    Column {
+                        Text(
+                            text = habito.titulo,
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = progresoText,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = subTextColor
+                        )
+                    }
                 }
-            }
 
-            if (completado) {
-                Icon(
-                    imageVector = Icons.Default.Check,
-                    modifier = Modifier
-                        .size(40.dp),
-                    contentDescription = "Completado",
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(Color.Transparent, shape = CircleShape)
-                        .drawBehind {
-                            val strokeWidth = 4.dp.toPx()
-                            val radius = size.minDimension / 2 - strokeWidth / 2
+                if (completado) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        modifier = Modifier.size(40.dp),
+                        contentDescription = "Completado",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(Color.Transparent, shape = CircleShape)
+                            .drawBehind {
+                                val strokeWidth = 4.dp.toPx()
+                                val radius = size.minDimension / 2 - strokeWidth / 2
 
-                            // Fondo base gris
-                            drawCircle(
-                                color = Color.LightGray,
-                                radius = radius,
-                                center = center,
-                                style = Stroke(width = strokeWidth)
-                            )
+                                drawCircle(
+                                    color = baseCircleColor,
+                                    radius = radius,
+                                    center = center,
+                                    style = Stroke(width = strokeWidth)
+                                )
 
-                            // Fondo animado sobrepuesto
-                            drawArc(
-                                color = PrimaryColor,
-                                startAngle = -90f,
-                                sweepAngle = 360 * animatedProgress,
-                                useCenter = false,
-                                style = Stroke(width = strokeWidth),
-                                topLeft = Offset(
-                                    (size.width - radius * 2) / 2,
-                                    (size.height - radius * 2) / 2
-                                ),
-                                size = Size(radius * 2, radius * 2)
+                                drawArc(
+                                    color = ringColor,
+                                    startAngle = -90f,
+                                    sweepAngle = 360 * animatedProgress,
+                                    useCenter = false,
+                                    style = Stroke(width = strokeWidth),
+                                    topLeft = Offset(
+                                        (size.width - radius * 2) / 2,
+                                        (size.height - radius * 2) / 2
+                                    ),
+                                    size = Size(radius * 2, radius * 2)
+                                )
+                            }
+                    ) {
+                        IconButton(
+                            onClick = { mostrarDialogo = true },
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = "Sumar",
+                                tint = plusColor
                             )
                         }
-                ) {
-                    IconButton(
-                        onClick = { mostrarDialogo = true },
-                        modifier = Modifier
-                            .fillMaxSize()
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = "Sumar", tint = Color.Black)
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            LinearProgressIndicator(
+                progress = { animatedProgress },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(10.dp)
+                    .clip(RoundedCornerShape(50)),
+                color = ringColor,
+                trackColor = trackColor
+            )
         }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        LinearProgressIndicator(
-            progress = { animatedProgress },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(10.dp)
-                .clip(RoundedCornerShape(50)),
-            color = MaterialTheme.colorScheme.primary,
-            trackColor = Color(0xFFE0E0E0),
-        )
     }
 }
+
 
 @Composable
 fun IconoNotificacionesConBadge(

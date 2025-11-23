@@ -13,15 +13,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.navigation.NavHostController
 import com.example.koalm.ui.components.BarraNavegacionInferior
 import com.example.koalm.ui.theme.ContainerColor
+import com.example.koalm.ui.theme.CriticalColor
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
@@ -46,6 +47,7 @@ fun PantallaNotificacionesPersonalizados(navController: NavHostController) {
                 .document(usuarioEmail)
                 .collection("notificaciones")
 
+            // Marcar como leídas
             notificacionesRef
                 .whereEqualTo("leido", false)
                 .get()
@@ -55,6 +57,7 @@ fun PantallaNotificacionesPersonalizados(navController: NavHostController) {
                     }
                 }
 
+            // Escucha en tiempo real
             notificacionesRef
                 .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
                 .addSnapshotListener { snapshots, e ->
@@ -83,23 +86,36 @@ fun PantallaNotificacionesPersonalizados(navController: NavHostController) {
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
+                )
             )
         },
         bottomBar = {
             BarraNavegacionInferior(navController, "inicio")
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
                 .padding(16.dp)
         ) {
             if (notificaciones.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No hay notificaciones aún 💤")
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "No hay notificaciones aún 💤",
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
                 }
             } else {
                 Box(
@@ -136,10 +152,16 @@ fun PantallaNotificacionesPersonalizados(navController: NavHostController) {
                                 Row(
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .background(Color.Red.copy(alpha = alpha), RoundedCornerShape(16.dp))
+                                        .background(
+                                            CriticalColor.copy(alpha = alpha),
+                                            RoundedCornerShape(16.dp)
+                                        )
                                         .padding(horizontal = 20.dp),
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = if (offsetX < 0) Arrangement.End else Arrangement.Start
+                                    horizontalArrangement = if (offsetX < 0)
+                                        Arrangement.End
+                                    else
+                                        Arrangement.Start
                                 ) {
                                     if (offsetX != 0f) {
                                         Icon(
@@ -162,18 +184,22 @@ fun PantallaNotificacionesPersonalizados(navController: NavHostController) {
                                                         recentlyDeleted = eliminado
 
                                                         scope.launch {
-                                                            val result = snackbarHostState.showSnackbar(
-                                                                message = "Notificación eliminada",
-                                                                actionLabel = "Deshacer",
-                                                                duration = SnackbarDuration.Short
-                                                            )
+                                                            val result =
+                                                                snackbarHostState.showSnackbar(
+                                                                    message = "Notificación eliminada",
+                                                                    actionLabel = "Deshacer",
+                                                                    duration = SnackbarDuration.Short
+                                                                )
                                                             if (result != SnackbarResult.ActionPerformed) {
                                                                 usuarioEmail?.let { email ->
-                                                                    val id = eliminado["id"] as? String
+                                                                    val id =
+                                                                        eliminado["id"] as? String
                                                                     if (id != null) {
                                                                         db.collection("usuarios")
                                                                             .document(email)
-                                                                            .collection("notificaciones")
+                                                                            .collection(
+                                                                                "notificaciones"
+                                                                            )
                                                                             .document(id)
                                                                             .delete()
                                                                     }
@@ -190,7 +216,8 @@ fun PantallaNotificacionesPersonalizados(navController: NavHostController) {
                                                     }
                                                 },
                                                 onHorizontalDrag = { _, dragAmount ->
-                                                    offsetX = (offsetX + dragAmount).coerceIn(-300f, 300f)
+                                                    offsetX = (offsetX + dragAmount)
+                                                        .coerceIn(-300f, 300f)
                                                 }
                                             )
                                         }
@@ -215,24 +242,39 @@ fun TarjetaNotificacion(noti: Map<String, Any>) {
         SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date(it))
     } ?: "Fecha desconocida"
 
+    val isDark = isSystemInDarkTheme()
+    val cardContainerColor =
+        if (isDark) MaterialTheme.colorScheme.surface else ContainerColor
+    val dateColor =
+        if (isDark) MaterialTheme.colorScheme.onSurfaceVariant else Color.Gray
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = ContainerColor),
+        colors = CardDefaults.cardColors(
+            containerColor = cardContainerColor,
+            contentColor = MaterialTheme.colorScheme.onSurface
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        // ✅ IMPORTANTE: ahora la columna llena el ancho de la card
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()      // <- antes solo tenías padding
+                .padding(16.dp)
+        ) {
             Text("🔔 $habitName", style = MaterialTheme.typography.titleMedium)
             Text(mensaje, style = MaterialTheme.typography.bodyMedium)
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = fecha,
                 style = MaterialTheme.typography.labelSmall,
-                color = Color.Gray,
-                modifier = Modifier.align(Alignment.End)
+                color = dateColor,
+                modifier = Modifier.align(Alignment.End)   // ahora sí se va hasta la derecha
             )
         }
     }
 }
+
