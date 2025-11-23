@@ -139,7 +139,7 @@ fun PantallaGestionHabitosPersonalizados(navController: NavHostController) {
                         modifier = Modifier.padding(16.dp)
                     ) {
                         Image(
-                            painter = painterResource(id = R.drawable.koala_triste),
+                            painter = painterResource(id = R.drawable.pinguino_triste),
                             contentDescription = null,
                             modifier = Modifier.size(200.dp)
                         )
