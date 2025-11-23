@@ -12,6 +12,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -20,66 +21,102 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDefaults
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.koalm.R
-import com.example.koalm.ui.components.BarraNavegacionInferior
-import com.example.koalm.ui.theme.BorderColor
-import com.example.koalm.ui.theme.ContainerColor
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
-import java.util.*
-import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.sp
-import com.example.koalm.ui.theme.PrimaryColor
 import com.example.koalm.model.HabitoPersonalizado
 import com.example.koalm.model.ProgresoDiario
 import com.example.koalm.model.Recordatorios
+import com.example.koalm.services.notifications.NotificationScheduler
+import com.example.koalm.services.timers.NotificationReceiverPers
+import com.example.koalm.ui.components.BarraNavegacionInferior
+import com.example.koalm.ui.components.ExitoDialogoGuardadoAnimado
+import com.example.koalm.ui.components.FalloDialogoGuardadoAnimado
 import com.example.koalm.ui.components.SelectorDeIconoDialog
+import com.example.koalm.ui.components.ValidacionesDialogoAnimado
 import com.example.koalm.ui.components.obtenerIconoPorNombre
 import com.example.koalm.ui.screens.habitos.saludMental.HoraField
 import com.example.koalm.ui.screens.habitos.saludMental.TimePickerDialog
+import com.example.koalm.ui.theme.BorderColor
+import com.example.koalm.ui.theme.ContainerColor
+import com.example.koalm.ui.theme.PrimaryColor
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import androidx.compose.runtime.Composable
-import com.example.koalm.services.notifications.NotificationScheduler
-import com.example.koalm.services.timers.NotificationReceiverPers
-import com.example.koalm.ui.components.ExitoDialogoGuardadoAnimado
-import com.example.koalm.ui.components.FalloDialogoGuardadoAnimado
-import com.example.koalm.ui.components.ValidacionesDialogoAnimado
-
+import java.util.Calendar
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nombreHabitoEditar: String? = null) {
+fun PantallaConfigurarHabitoPersonalizado(
+    navController: NavHostController,
+    nombreHabitoEditar: String? = null
+) {
     val context = LocalContext.current
+    val isDark = isSystemInDarkTheme()
+
+    // Colores adaptados a tema claro/oscuro
+    val cardContainerColor =
+        if (isDark) MaterialTheme.colorScheme.surface else ContainerColor
+    val cardBorderColor =
+        if (isDark) MaterialTheme.colorScheme.outlineVariant else BorderColor
+
     val idHabitoOriginal = nombreHabitoEditar?.replace(" ", "_")
     val esEdicion = nombreHabitoEditar != null
+
     var nombreHabito by remember { mutableStateOf("") }
     var descripcion by remember { mutableStateOf("") }
     var horaRecordatorio by remember { mutableStateOf(LocalTime.of(7, 0)) }
@@ -94,21 +131,27 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
 
     var mostrarSelectorColor by remember { mutableStateOf(false) }
     var colorSeleccionado by remember { mutableStateOf(Color(0xFFF6FBF2)) }
+
     var recordatorioActivo by remember { mutableStateOf(false) }
     var frecuenciaActivo by remember { mutableStateOf(false) }
     var finalizarActivo by remember { mutableStateOf(false) }
-    val horarios = remember { mutableStateListOf<LocalTime>()}
+
+    val horarios = remember { mutableStateListOf<LocalTime>() }
     var horaAEditarIndex by remember { mutableStateOf<Int?>(null) }
+
     val habitoOriginal = remember { mutableStateOf<HabitoPersonalizado?>(null) }
     val progresoHabitoOriginal = remember { mutableStateOf<ProgresoDiario?>(null) }
+
     val esLunes = LocalDate.now().dayOfWeek == DayOfWeek.MONDAY
     val objetivoHabilitado = !esEdicion || esLunes
+
     var objetivoDiario by remember { mutableStateOf(1) }
     val objetivoDiarioOriginal = progresoHabitoOriginal.value?.totalObjetivoDiario ?: 1
     val diasOriginales = progresoHabitoOriginal.value?.frecuencia ?: List(7) { false }
     val modificoObjetivo = objetivoDiario != objetivoDiarioOriginal
     val modificoFrecuencia = diasSeleccionados != diasOriginales
-    var mostrarDialogoExito by remember{ mutableStateOf(false) }
+
+    var mostrarDialogoExito by remember { mutableStateOf(false) }
     if (mostrarDialogoExito) {
         ExitoDialogoGuardadoAnimado(
             mensaje = "¡Hábito guardado con éxito!",
@@ -118,7 +161,8 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
             }
         )
     }
-    var mostrarDialogoFalloFecha by remember{ mutableStateOf(false) }
+
+    var mostrarDialogoFalloFecha by remember { mutableStateOf(false) }
     if (mostrarDialogoFalloFecha) {
         FalloDialogoGuardadoAnimado(
             mensaje = "Selecciona una fecha válida.",
@@ -127,7 +171,8 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
             }
         )
     }
-    var mostrarDialogoFalloHora by remember{ mutableStateOf(false) }
+
+    var mostrarDialogoFalloHora by remember { mutableStateOf(false) }
     if (mostrarDialogoFalloHora) {
         FalloDialogoGuardadoAnimado(
             mensaje = "Ya agregaste esta hora.",
@@ -136,7 +181,8 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
             }
         )
     }
-    var validacionesDialogo by remember{ mutableStateOf(false) }
+
+    var validacionesDialogo by remember { mutableStateOf(false) }
     if (validacionesDialogo) {
         ValidacionesDialogoAnimado(
             mensaje = "¡Ups! Los campos Nombre del hábito, Objetivo diario y Frecuencia son obligatorios.\n" +
@@ -147,11 +193,11 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
         )
     }
 
-    var modoAutomatico by remember { mutableStateOf(true) }
     var modoPersonalizado by remember { mutableStateOf(true) }
 
-    val colorIcono = parseColorFromFirebase(colorSeleccionado.toString(),darken = true)
-    var nombreError by remember { mutableStateOf(false)}
+    // Color del icono: un poquito más oscuro que el color seleccionado
+    val colorIcono = colorSeleccionado.darken(0.15f)
+    var nombreError by remember { mutableStateOf(false) }
 
     // Si nombreHabito NO es null, editamos y cargamos los datos
     LaunchedEffect(nombreHabitoEditar) {
@@ -161,7 +207,8 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
         val progresoHabitoExistente = cargarProgresoHabitoPorNombre(nombreHabitoEditar)
 
         if (habitoExistente == null) {
-            Toast.makeText(context, "No se encontró el hábito para editar", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "No se encontró el hábito para editar", Toast.LENGTH_SHORT)
+                .show()
             navController.navigateUp()
             return@LaunchedEffect
         }
@@ -181,7 +228,6 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
         // Frecuencia (días seleccionados)
         diasSeleccionados = habitoExistente.frecuencia ?: List(7) { false }
         frecuenciaActivo = habitoExistente.frecuencia?.any { it } == true
-
 
         // Recordatorios
         recordatorioActivo = !habitoExistente.recordatorios?.horas.isNullOrEmpty()
@@ -205,16 +251,17 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                 }
             }
         } else {
-            diasDuracion = if (!habitoExistente.fechaInicio.isNullOrBlank() && !habitoExistente.fechaFin.isNullOrBlank()) {
-                try {
-                    val inicio = LocalDate.parse(habitoExistente.fechaInicio)
-                    val fin = LocalDate.parse(habitoExistente.fechaFin)
-                    ChronoUnit.DAYS.between(inicio, fin).toString()
-                } catch (e: Exception) {
-                    Log.e("ParseError", "Error calculando duración")
-                    ""
-                }
-            } else ""
+            diasDuracion =
+                if (!habitoExistente.fechaInicio.isNullOrBlank() && !habitoExistente.fechaFin.isNullOrBlank()) {
+                    try {
+                        val inicio = LocalDate.parse(habitoExistente.fechaInicio)
+                        val fin = LocalDate.parse(habitoExistente.fechaFin)
+                        ChronoUnit.DAYS.between(inicio, fin).toString()
+                    } catch (e: Exception) {
+                        Log.e("ParseError", "Error calculando duración")
+                        ""
+                    }
+                } else ""
         }
 
         // Fecha de inicio (solo si no es modo calendario)
@@ -228,8 +275,8 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
             }
         }
 
-        finalizarActivo = habitoExistente.fechaFin != null && habitoExistente.fechaFin.lowercase()!="null"
-
+        finalizarActivo =
+            habitoExistente.fechaFin != null && habitoExistente.fechaFin.lowercase() != "null"
     }
 
     Scaffold(
@@ -254,13 +301,15 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Card(
-                colors = CardDefaults.cardColors(containerColor = ContainerColor),
-                border = BorderStroke(1.dp, BorderColor),
+                colors = CardDefaults.cardColors(containerColor = cardContainerColor),
+                border = BorderStroke(1.dp, cardBorderColor),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Column(
+                    Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
                     Text(
                         text = stringResource(R.string.label_vista_previa),
                         style = MaterialTheme.typography.titleMedium,
@@ -272,22 +321,24 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                         onValueChange = { nuevoValor ->
                             val regex = Regex("^[a-zA-Z0-9][a-zA-Z0-9 ]*\$")
 
-                            // Cortamos el texto a máximo 20 caracteres primero
-                            val valorFiltrado = if (nuevoValor.length > 20) nuevoValor.take(20) else nuevoValor
+                            val valorFiltrado =
+                                if (nuevoValor.length > 20) nuevoValor.take(20) else nuevoValor
 
-                            // Validamos si está vacío o cumple regex
-                            val esValidoRegex = valorFiltrado.isEmpty() || regex.matches(valorFiltrado)
+                            val esValidoRegex =
+                                valorFiltrado.isEmpty() || regex.matches(valorFiltrado)
 
-                            // Actualizamos el estado con valor filtrado
-                            nombreHabito = valorFiltrado
+                            if (esValidoRegex) {
+                                nombreHabito = valorFiltrado
+                            } else {
+                                nombreError = true
+                            }
                         },
-
                         label = { Text(stringResource(R.string.label_nombre_habito)) },
                         isError = nombreError,
                         modifier = Modifier.fillMaxWidth(),
                         enabled = !esEdicion,
                         supportingText = {
-                                Text("${nombreHabito.length}/20 caracteres")
+                            Text("${nombreHabito.length}/20 caracteres")
                         }
                     )
 
@@ -298,11 +349,11 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                         OutlinedButton(
                             onClick = { mostrarSelectorColor = true },
                             shape = RoundedCornerShape(50),
-                            border = BorderStroke(1.dp, BorderColor),
+                            border = BorderStroke(1.dp, cardBorderColor),
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.outlinedButtonColors(
                                 containerColor = Color.Transparent,
-                                contentColor = Color.Black
+                                contentColor = MaterialTheme.colorScheme.onSurface
                             )
                         ) {
                             Text("Color")
@@ -313,20 +364,20 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                                     .background(colorSeleccionado, CircleShape)
                                     .border(
                                         width = 1.dp,
-                                        color = Color.Gray,
+                                        color = MaterialTheme.colorScheme.outlineVariant,
                                         shape = CircleShape
-                                )
+                                    )
                             )
                         }
 
                         OutlinedButton(
                             onClick = { mostrarSelectorIconos = true },
                             shape = RoundedCornerShape(50),
-                            border = BorderStroke(1.dp, BorderColor),
+                            border = BorderStroke(1.dp, cardBorderColor),
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.outlinedButtonColors(
                                 containerColor = Color.Transparent,
-                                contentColor = Color.Black
+                                contentColor = MaterialTheme.colorScheme.onSurface
                             )
                         ) {
                             Text("Icono")
@@ -337,21 +388,25 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                                 tint = colorIcono
                             )
                         }
-
                     }
 
                     OutlinedTextField(
                         value = descripcion,
                         onValueChange = { descripcion = it },
                         label = { Text(stringResource(R.string.label_descripcion)) },
-                        placeholder = {Text("Ejemplo: Quiero ir al gimnasio para sentirme con más energía, mejorar mi salud y aumentar mi autoestima." )},
+                        placeholder = {
+                            Text(
+                                "Ejemplo: Quiero ir al gimnasio para sentirme con más energía, mejorar mi salud y aumentar mi autoestima.",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        },
                         modifier = Modifier.fillMaxWidth()
                     )
 
                     HorizontalDivider(
                         modifier = Modifier.padding(vertical = 8.dp),
                         thickness = 1.dp,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.outlineVariant
                     )
 
                     Text(
@@ -364,7 +419,7 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                         Text(
                             text = "La configuración del hábito solo se pueden modificar cada lunes para comenzar la semana con nuevos objetivos.",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = 4.dp, bottom = 8.dp),
@@ -375,7 +430,7 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                    ){
+                    ) {
                         Text(
                             text = stringResource(R.string.label_objetivo_texto),
                             style = MaterialTheme.typography.titleMedium,
@@ -393,8 +448,6 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-
-                        // TextField con filtro: no permite ingresar "0" como único valor
                         OutlinedTextField(
                             value = if (objetivoDiario == 0) "" else objetivoDiario.toString(),
                             onValueChange = { nuevoTexto ->
@@ -411,20 +464,23 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                         )
 
-                        AnimatedContent(targetState = objetivoDiario, label = "CambioTexto") { valor ->
+                        AnimatedContent(
+                            targetState = objetivoDiario,
+                            label = "CambioTexto"
+                        ) { valor ->
                             Text(
                                 text = if (valor == 1)
-                                    stringResource(R.string.label_objetivo_diarioDef) // vez al día
+                                    stringResource(R.string.label_objetivo_diarioDef)
                                 else
-                                    stringResource(R.string.label_objetivo_diario)    // veces al día
+                                    stringResource(R.string.label_objetivo_diario)
                             )
                         }
-
                     }
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                    ){
+                    ) {
                         Text(
                             text = stringResource(R.string.label_frecuencia_P),
                             style = MaterialTheme.typography.titleMedium,
@@ -448,7 +504,8 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                                     selected = diasSeleccionados[index],
                                     enabled = !esEdicion || esLunes
                                 ) {
-                                    diasSeleccionados = diasSeleccionados.toMutableList().also { it[index] = !it[index] }
+                                    diasSeleccionados =
+                                        diasSeleccionados.toMutableList().also { it[index] = !it[index] }
                                 }
                             }
                         }
@@ -458,7 +515,7 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                     HorizontalDivider(
                         modifier = Modifier.padding(vertical = 8.dp),
                         thickness = 1.dp,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.outlineVariant
                     )
 
                     Text(
@@ -468,7 +525,9 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                     )
 
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
@@ -488,14 +547,14 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                                 if (!it) {
                                     horarios.clear()
                                     modoPersonalizado = true
-                                    }
+                                }
                             },
                             modifier = Modifier.padding(start = 10.dp),
                             colors = SwitchDefaults.colors(
-                                checkedThumbColor = Color.White,
+                                checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                                 checkedTrackColor = PrimaryColor,
-                                uncheckedThumbColor = Color.LightGray,
-                                uncheckedTrackColor = Color.Gray
+                                uncheckedThumbColor = MaterialTheme.colorScheme.outlineVariant,
+                                uncheckedTrackColor = MaterialTheme.colorScheme.outline
                             )
                         )
                     }
@@ -513,14 +572,14 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                         ) {
                             OutlinedButton(
                                 onClick = { modoPersonalizado = true },
-                                border = BorderStroke(1.dp, BorderColor ),
+                                border = BorderStroke(1.dp, cardBorderColor),
                                 colors = ButtonDefaults.outlinedButtonColors(
                                     containerColor = if (modoPersonalizado) {
-                                       MaterialTheme.colorScheme.primary
+                                        MaterialTheme.colorScheme.primary
                                     } else Color.Transparent,
                                     contentColor = if (modoPersonalizado) {
-                                        Color.White
-                                    } else Color.Black
+                                        MaterialTheme.colorScheme.onPrimary
+                                    } else MaterialTheme.colorScheme.onSurface
                                 ),
                                 shape = RoundedCornerShape(50),
                                 modifier = Modifier.weight(1f),
@@ -530,14 +589,14 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
 
                             OutlinedButton(
                                 onClick = { modoPersonalizado = false },
-                                border = BorderStroke(1.dp, BorderColor),
+                                border = BorderStroke(1.dp, cardBorderColor),
                                 colors = ButtonDefaults.outlinedButtonColors(
                                     containerColor = if (!modoPersonalizado) {
                                         MaterialTheme.colorScheme.primary
                                     } else Color.Transparent,
                                     contentColor = if (!modoPersonalizado) {
-                                        Color.White
-                                    } else Color.Black
+                                        MaterialTheme.colorScheme.onPrimary
+                                    } else MaterialTheme.colorScheme.onSurface
                                 ),
                                 shape = RoundedCornerShape(50),
                                 modifier = Modifier.weight(1f),
@@ -598,8 +657,8 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                                     ) {
                                         Box(modifier = Modifier.weight(1f)) {
                                             HoraField(hora = hora) {
-                                                    mostrarTimePicker = true
-                                                    horaAEditarIndex = index
+                                                mostrarTimePicker = true
+                                                horaAEditarIndex = index
                                             }
                                         }
 
@@ -622,7 +681,7 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
                                     .clickable {
-                                        horaAEditarIndex = null // <- Indica que es una nueva hora
+                                        horaAEditarIndex = null
                                         mostrarTimePicker = true
                                     }
                                     .padding(top = 8.dp)
@@ -636,14 +695,16 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                                 Text(
                                     text = "Agregar hora.",
                                     fontSize = 14.sp,
-                                    color = Color.Black
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                         }
                     }
 
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
@@ -664,14 +725,14 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                                     fechaSeleccionada = null
                                     diasDuracion = ""
                                     modoFecha = true
-                                    }
+                                }
                             },
                             modifier = Modifier.padding(start = 10.dp),
                             colors = SwitchDefaults.colors(
-                                checkedThumbColor = Color.White,
+                                checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                                 checkedTrackColor = PrimaryColor,
-                                uncheckedThumbColor = Color.LightGray,
-                                uncheckedTrackColor = Color.Gray
+                                uncheckedThumbColor = MaterialTheme.colorScheme.outlineVariant,
+                                uncheckedTrackColor = MaterialTheme.colorScheme.outline
                             )
                         )
                     }
@@ -683,10 +744,10 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                         ) {
                             OutlinedButton(
                                 onClick = { modoFecha = true },
-                                border = BorderStroke(1.dp, BorderColor),
+                                border = BorderStroke(1.dp, cardBorderColor),
                                 colors = ButtonDefaults.outlinedButtonColors(
                                     containerColor = if (modoFecha) MaterialTheme.colorScheme.primary else Color.Transparent,
-                                    contentColor = if (modoFecha) Color.White else Color.Black
+                                    contentColor = if (modoFecha) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
                                 ),
                                 shape = RoundedCornerShape(50),
                                 modifier = Modifier.weight(1f)
@@ -696,10 +757,10 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
 
                             OutlinedButton(
                                 onClick = { modoFecha = false },
-                                border = BorderStroke(1.dp, BorderColor),
+                                border = BorderStroke(1.dp, cardBorderColor),
                                 colors = ButtonDefaults.outlinedButtonColors(
                                     containerColor = if (!modoFecha) MaterialTheme.colorScheme.primary else Color.Transparent,
-                                    contentColor = if (!modoFecha) Color.White else Color.Black
+                                    contentColor = if (!modoFecha) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
                                 ),
                                 shape = RoundedCornerShape(50),
                                 modifier = Modifier.weight(1f)
@@ -760,7 +821,7 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
 
                                 OutlinedButton(
                                     onClick = { mostrarDatePicker = true },
-                                    border = BorderStroke(1.dp, BorderColor),
+                                    border = BorderStroke(1.dp, cardBorderColor),
                                     shape = RoundedCornerShape(50),
                                     colors = ButtonDefaults.outlinedButtonColors(
                                         containerColor = Color.Transparent,
@@ -770,9 +831,11 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                                     Icon(Icons.Default.CalendarToday, contentDescription = null)
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        fechaSeleccionada?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                                        fechaSeleccionada?.format(
+                                            DateTimeFormatter.ofPattern("dd/MM/yyyy")
+                                        )
                                             ?: stringResource(R.string.boton_seleccionar_fecha),
-                                        color = Color.Black
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
                                 }
                             }
@@ -810,7 +873,6 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                                     textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center)
                                 )
 
-
                                 Spacer(modifier = Modifier.width(8.dp))
 
                                 AnimatedContent(
@@ -819,14 +881,12 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                                 ) { valor ->
                                     Text(
                                         text = if (valor == 1)
-                                            stringResource(R.string.label_dia)  // día
+                                            stringResource(R.string.label_dia)
                                         else
-                                            stringResource(R.string.label_dias) // días
+                                            stringResource(R.string.label_dias)
                                     )
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
-
-
                             }
                         }
                     }
@@ -835,6 +895,7 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
 
             Spacer(Modifier.weight(1f))
 
+            // === BOTONES INFERIORES: MISMO TAMAÑO CUANDO ES EDICIÓN ===
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
@@ -843,177 +904,175 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.Center,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    if (esEdicion) {
+                        // GUARDAR (izquierda)
+                        Button(
+                            onClick = {
+                                val frecuenciaDias = diasSeleccionados.count { it }
 
-                    Button(
-                        onClick = {
-                            // Validaciones de campos obligatorios
-                            val frecuenciaDias = diasSeleccionados.count { it }
+                                if (nombreHabito.isBlank() || objetivoDiario <= 0 || frecuenciaDias <= 0) {
+                                    validacionesDialogo = true
+                                } else {
+                                    val userEmail =
+                                        FirebaseAuth.getInstance().currentUser?.email
+                                    val db = FirebaseFirestore.getInstance()
 
-                            if (nombreHabito.isBlank() || objetivoDiario <= 0 || frecuenciaDias <= 0 ) {
-                                validacionesDialogo = true
-                            }
-                            else {
-                                // Obtener la referencia al usuario actual en Firebase Authentication
-                                val userEmail = FirebaseAuth.getInstance().currentUser?.email
-                                val db = FirebaseFirestore.getInstance()
+                                    if (userEmail != null) {
+                                        val userHabitsRef = db.collection("habitos")
+                                            .document(userEmail)
+                                            .collection("personalizados")
 
-                                // Asegurarnos de que el correo del usuario no sea nulo
-                                if (userEmail != null) {
-                                    // Referencia a la colección de hábitos del usuario
-                                    val userHabitsRef = db.collection("habitos").document(userEmail)
-                                        .collection("personalizados")
-
-                                    //Control de racha
-                                    if (esEdicion && modificoObjetivo && progresoHabitoOriginal.value?.completado != false) {
-                                        habitoOriginal.value = habitoOriginal.value?.copy(
-                                            rachaActual = maxOf(0, (habitoOriginal.value?.rachaActual ?: 1) - 1)
-                                        )
-                                    }
-
-                                    if (esEdicion && modificoObjetivo && progresoHabitoOriginal.value?.completado != false) {
-                                        habitoOriginal.value = habitoOriginal.value?.copy(
-                                            rachaMaxima = maxOf(0, (habitoOriginal.value?.rachaMaxima ?: 1) - 1)
-                                        )
-                                    }
-
-                                    // Crear el objeto HabitoPersonalizado
-                                    val habitoPersonalizado = HabitoPersonalizado(
-                                        nombre = nombreHabito,
-                                        colorEtiqueta = colorSeleccionado.toString(),
-                                        iconoEtiqueta = iconoSeleccionado.toString(),
-                                        descripcion = descripcion,
-                                        objetivoDiario = objetivoDiario,
-                                        frecuencia = diasSeleccionados,
-                                        recordatorios = Recordatorios(
-                                            tipo = if (modoPersonalizado) "personalizado" else "automatico",
-                                            horas = if (modoPersonalizado)
-                                                horarios.map {
-                                                    it.format(
-                                                        DateTimeFormatter.ofPattern(
-                                                            "HH:mm"
-                                                        )
-                                                    )
-                                                }
-                                            else
-                                                HabitoPersonalizado.generarHorasAutomaticas()
-                                        ),
-                                        fechaInicio = if (esEdicion) habitoOriginal.value?.fechaInicio else HabitoPersonalizado.calcularFechaInicio(),
-                                        fechaFin = HabitoPersonalizado.calcularFechaFin(
-                                            modoFecha,
-                                            fechaSeleccionada.toString(), diasDuracion
-                                        ),
-                                        modoFin = if (modoFecha) "calendario" else "dias",  // Definimos el modo de fin
-                                        rachaActual = if (!esEdicion) {
-                                            0
-                                        } else {
-                                            habitoOriginal.value?.rachaActual ?: 0
-                                        },
-                                        rachaMaxima = if (!esEdicion) {
-                                            0
-                                        } else {
-                                            habitoOriginal.value?.rachaMaxima ?: 0
-                                        },
-                                        ultimoDiaCompletado = if (esEdicion) habitoOriginal.value?.ultimoDiaCompletado else null,
-                                        estaActivo = true
-                                    )
-
-                                    // Convertir el objeto a un mapa
-                                    val habitoMap = habitoPersonalizado.toMap()
-
-                                    // Usar el nombre del hábito como ID, reemplazando espacios por guiones bajos
-                                    val habitoId = if (idHabitoOriginal != null) {
-                                        // Si estamos editando, usamos el nombre original como ID
-                                        idHabitoOriginal
-                                    } else {
-                                        // Si estamos creando, usamos el nombre nuevo
-                                        nombreHabito.replace(" ", "_")
-                                    }
-
-
-                                    // Guardar el hábito en Firestore bajo la subcolección "personalizados" del usuario
-                                    val isEditing = (idHabitoOriginal != null) // Variable que indica si es edición o nuevo
-                                    val habitIdToUse = idHabitoOriginal ?: habitoId
-
-                                    // 1. Si es edición, cancelar todas las alarmas antiguas (todas las del hábito)
-                                    if (isEditing) {
-                                        val originalReminderCount = habitoOriginal.value?.recordatorios?.horas?.size ?: 0
-                                        //val diasOriginales = habitoOriginal.value?.frecuencia ?: List(7) { false }
-
-                                        for (index in 0 until originalReminderCount) {
-                                            NotificationScheduler.cancelHabitReminder(
-                                                context = context,
-                                                habitId = habitIdToUse,
-                                                reminderIndex = index,
+                                        // Control de racha
+                                        if (esEdicion && modificoObjetivo && progresoHabitoOriginal.value?.completado != false) {
+                                            habitoOriginal.value = habitoOriginal.value?.copy(
+                                                rachaActual = maxOf(
+                                                    0,
+                                                    (habitoOriginal.value?.rachaActual ?: 1) - 1
+                                                )
                                             )
                                         }
-                                    }
 
+                                        if (esEdicion && modificoObjetivo && progresoHabitoOriginal.value?.completado != false) {
+                                            habitoOriginal.value = habitoOriginal.value?.copy(
+                                                rachaMaxima = maxOf(
+                                                    0,
+                                                    (habitoOriginal.value?.rachaMaxima ?: 1) - 1
+                                                )
+                                            )
+                                        }
 
-
-                                    // 2. Guardar o actualizar en Firestore
-                                    userHabitsRef.document(habitIdToUse)
-                                        .set(habitoMap)
-                                        .addOnSuccessListener {
-                                            mostrarDialogoExito = true
-
-                                            // 3.1 Programar nuevas alarmas para cada horario, pasando también la frecuencia (días seleccionados)
-                                            // Obtener lista de horarios (tanto si es personalizado como automático)
-
-                                            val listaHorarios = if (modoPersonalizado) {
-                                                horarios
+                                        val habitoPersonalizado = HabitoPersonalizado(
+                                            nombre = nombreHabito,
+                                            colorEtiqueta = colorSeleccionado.toString(),
+                                            iconoEtiqueta = iconoSeleccionado.toString(),
+                                            descripcion = descripcion,
+                                            objetivoDiario = objetivoDiario,
+                                            frecuencia = diasSeleccionados,
+                                            recordatorios = Recordatorios(
+                                                tipo = if (modoPersonalizado) "personalizado" else "automatico",
+                                                horas = if (modoPersonalizado)
+                                                    horarios.map {
+                                                        it.format(
+                                                            DateTimeFormatter.ofPattern(
+                                                                "HH:mm"
+                                                            )
+                                                        )
+                                                    }
+                                                else
+                                                    HabitoPersonalizado.generarHorasAutomaticas()
+                                            ),
+                                            fechaInicio = if (esEdicion) habitoOriginal.value?.fechaInicio
+                                            else HabitoPersonalizado.calcularFechaInicio(),
+                                            fechaFin = HabitoPersonalizado.calcularFechaFin(
+                                                modoFecha,
+                                                fechaSeleccionada.toString(), diasDuracion
+                                            ),
+                                            modoFin = if (modoFecha) "calendario" else "dias",
+                                            rachaActual = if (!esEdicion) {
+                                                0
                                             } else {
-                                                HabitoPersonalizado.generarHorasAutomaticas().map {
-                                                    LocalTime.parse(it, DateTimeFormatter.ofPattern("HH:mm"))
-                                                }
-                                            }
-                                            listaHorarios.forEachIndexed { index, horario ->
-                                                NotificationScheduler.scheduleHabitReminder(
+                                                habitoOriginal.value?.rachaActual ?: 0
+                                            },
+                                            rachaMaxima = if (!esEdicion) {
+                                                0
+                                            } else {
+                                                habitoOriginal.value?.rachaMaxima ?: 0
+                                            },
+                                            ultimoDiaCompletado = if (esEdicion) habitoOriginal.value?.ultimoDiaCompletado else null,
+                                            estaActivo = true
+                                        )
+
+                                        val habitoMap = habitoPersonalizado.toMap()
+
+                                        val habitoId = if (idHabitoOriginal != null) {
+                                            idHabitoOriginal
+                                        } else {
+                                            nombreHabito.replace(" ", "_")
+                                        }
+
+                                        val isEditing = (idHabitoOriginal != null)
+                                        val habitIdToUse = idHabitoOriginal ?: habitoId
+
+                                        // Cancelar recordatorios antiguos si es edición
+                                        if (isEditing) {
+                                            val originalReminderCount =
+                                                habitoOriginal.value?.recordatorios?.horas?.size
+                                                    ?: 0
+
+                                            for (index in 0 until originalReminderCount) {
+                                                NotificationScheduler.cancelHabitReminder(
                                                     context = context,
                                                     habitId = habitIdToUse,
-                                                    habitName = nombreHabito,
-                                                    hour = horario.hour,
-                                                    minute = horario.minute,
                                                     reminderIndex = index,
-                                                    frecuencia = diasSeleccionados
                                                 )
                                             }
-
-                                        }
-                                        .addOnFailureListener { e ->
-                                            Toast.makeText(
-                                                context,
-                                                "Error al guardar el hábito: ${e.message}",
-                                                Toast.LENGTH_LONG
-                                            ).show()
-                                            navController?.navigateUp()
                                         }
 
-                                    // Crear el objeto de progreso
+                                        userHabitsRef.document(habitIdToUse)
+                                            .set(habitoMap)
+                                            .addOnSuccessListener {
+                                                mostrarDialogoExito = true
+
+                                                val listaHorarios = if (modoPersonalizado) {
+                                                    horarios
+                                                } else {
+                                                    HabitoPersonalizado.generarHorasAutomaticas()
+                                                        .map {
+                                                            LocalTime.parse(
+                                                                it,
+                                                                DateTimeFormatter.ofPattern("HH:mm")
+                                                            )
+                                                        }
+                                                }
+                                                listaHorarios.forEachIndexed { index, horario ->
+                                                    NotificationScheduler.scheduleHabitReminder(
+                                                        context = context,
+                                                        habitId = habitIdToUse,
+                                                        habitName = nombreHabito,
+                                                        hour = horario.hour,
+                                                        minute = horario.minute,
+                                                        reminderIndex = index,
+                                                        frecuencia = diasSeleccionados
+                                                    )
+                                                }
+
+                                            }
+                                            .addOnFailureListener { e ->
+                                                Toast.makeText(
+                                                    context,
+                                                    "Error al guardar el hábito: ${e.message}",
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+                                                navController.navigateUp()
+                                            }
+
                                         val progreso = ProgresoDiario(
                                             realizados = if (!esEdicion) {
-                                                    0
-                                                } else if (modificoObjetivo || modificoFrecuencia) {
-                                                    0
-                                                } else {
-                                                    progresoHabitoOriginal.value?.realizados ?: 0
-                                                },
+                                                0
+                                            } else if (modificoObjetivo || modificoFrecuencia) {
+                                                0
+                                            } else {
+                                                progresoHabitoOriginal.value?.realizados ?: 0
+                                            },
                                             completado = if (!esEdicion) {
-                                                    false
-                                                } else if (modificoObjetivo || modificoFrecuencia) {
-                                                    false
-                                                } else {
-                                                    progresoHabitoOriginal.value?.completado ?: false
-                                                },
+                                                false
+                                            } else if (modificoObjetivo || modificoFrecuencia) {
+                                                false
+                                            } else {
+                                                progresoHabitoOriginal.value?.completado ?: false
+                                            },
                                             totalObjetivoDiario = objetivoDiario,
-                                            fecha = if (esEdicion) progresoHabitoOriginal.value?.fecha ?: LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-                                            else LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                                            fecha = if (esEdicion) progresoHabitoOriginal.value?.fecha
+                                                ?: LocalDate.now()
+                                                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                                            else LocalDate.now()
+                                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                                             frecuencia = diasSeleccionados
                                         )
 
-                                        // Referenciar al documento de progreso usando la fecha actual como ID
                                         val progresoRef = userHabitsRef.document(habitoId)
                                             .collection("progreso")
                                             .document(
@@ -1021,66 +1080,45 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                                                     .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
                                             )
 
-                                        // Guardar en Firestore usando el .toMap()
                                         progresoRef.set(progreso.toMap())
                                             .addOnSuccessListener {
-                                                /*
-                                                Toast.makeText(
-                                                    context,
-                                                    "Progreso diario guardado",
-                                                    Toast.LENGTH_LONG
-                                                ).show()
-                                                  */
-                                                //navController.navigateUp()
+                                                // OK, ya se guarda el progreso
                                             }
-                                            .addOnFailureListener { e ->
-                                                /*
-                                                Toast.makeText(
-                                                    context,
-                                                    "Error al guardar el progreso: ${e.message}",
-                                                    Toast.LENGTH_LONG
-                                                ).show()
-                                                 */
+                                            .addOnFailureListener { _ ->
                                                 navController.navigateUp()
                                             }
-                                } else {
-                                    Toast.makeText(
-                                        context,
-                                        "Usuario no autenticado",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                    navController.navigateUp()
+                                    } else {
+                                        Toast.makeText(
+                                            context,
+                                            "Usuario no autenticado",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                        navController.navigateUp()
+                                    }
                                 }
-                            }
-                        },
-                        modifier = Modifier
-                            .width(180.dp)
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                    ) {
-                        if (!esEdicion) {
-                            Text(
-                                stringResource(R.string.boton_guardar),
-                                color = MaterialTheme.colorScheme.onPrimary
+                            },
+                            modifier = Modifier
+                                .weight(.5f)
+                                .padding(vertical = 8.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
                             )
-                        } else {
+                        ) {
                             Text(
                                 stringResource(R.string.boton_guardar),
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
                         }
 
-                    }
-                    if (esEdicion) {
-                        // Boton de Cancelar
+                        // CANCELAR (derecha, mismo tamaño)
                         Button(
                             onClick = {
                                 navController.navigateUp()
                             },
                             modifier = Modifier
-                                .width(180.dp)
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                                .weight(.5f)
+                                .padding(vertical = 8.dp),
                             shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEC615B))
                         ) {
@@ -1088,7 +1126,145 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                                 stringResource(R.string.boton_cancelar_modificaciones),
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
+                        }
+                    } else {
+                        // MODO CREACIÓN: solo botón Guardar a lo ancho
+                        Button(
+                            onClick = {
+                                val frecuenciaDias = diasSeleccionados.count { it }
 
+                                if (nombreHabito.isBlank() || objetivoDiario <= 0 || frecuenciaDias <= 0) {
+                                    validacionesDialogo = true
+                                } else {
+                                    val userEmail =
+                                        FirebaseAuth.getInstance().currentUser?.email
+                                    val db = FirebaseFirestore.getInstance()
+
+                                    if (userEmail != null) {
+                                        val userHabitsRef = db.collection("habitos")
+                                            .document(userEmail)
+                                            .collection("personalizados")
+
+                                        val habitoPersonalizado = HabitoPersonalizado(
+                                            nombre = nombreHabito,
+                                            colorEtiqueta = colorSeleccionado.toString(),
+                                            iconoEtiqueta = iconoSeleccionado.toString(),
+                                            descripcion = descripcion,
+                                            objetivoDiario = objetivoDiario,
+                                            frecuencia = diasSeleccionados,
+                                            recordatorios = Recordatorios(
+                                                tipo = if (modoPersonalizado) "personalizado" else "automatico",
+                                                horas = if (modoPersonalizado)
+                                                    horarios.map {
+                                                        it.format(
+                                                            DateTimeFormatter.ofPattern(
+                                                                "HH:mm"
+                                                            )
+                                                        )
+                                                    }
+                                                else
+                                                    HabitoPersonalizado.generarHorasAutomaticas()
+                                            ),
+                                            fechaInicio = HabitoPersonalizado.calcularFechaInicio(),
+                                            fechaFin = HabitoPersonalizado.calcularFechaFin(
+                                                modoFecha,
+                                                fechaSeleccionada.toString(), diasDuracion
+                                            ),
+                                            modoFin = if (modoFecha) "calendario" else "dias",
+                                            rachaActual = 0,
+                                            rachaMaxima = 0,
+                                            ultimoDiaCompletado = null,
+                                            estaActivo = true
+                                        )
+
+                                        val habitoMap = habitoPersonalizado.toMap()
+
+                                        val habitoId = nombreHabito.replace(" ", "_")
+                                        val habitIdToUse = habitoId
+
+                                        userHabitsRef.document(habitIdToUse)
+                                            .set(habitoMap)
+                                            .addOnSuccessListener {
+                                                mostrarDialogoExito = true
+
+                                                val listaHorarios = if (modoPersonalizado) {
+                                                    horarios
+                                                } else {
+                                                    HabitoPersonalizado.generarHorasAutomaticas()
+                                                        .map {
+                                                            LocalTime.parse(
+                                                                it,
+                                                                DateTimeFormatter.ofPattern("HH:mm")
+                                                            )
+                                                        }
+                                                }
+                                                listaHorarios.forEachIndexed { index, horario ->
+                                                    NotificationScheduler.scheduleHabitReminder(
+                                                        context = context,
+                                                        habitId = habitIdToUse,
+                                                        habitName = nombreHabito,
+                                                        hour = horario.hour,
+                                                        minute = horario.minute,
+                                                        reminderIndex = index,
+                                                        frecuencia = diasSeleccionados
+                                                    )
+                                                }
+
+                                            }
+                                            .addOnFailureListener { e ->
+                                                Toast.makeText(
+                                                    context,
+                                                    "Error al guardar el hábito: ${e.message}",
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+                                                navController.navigateUp()
+                                            }
+
+                                        val progreso = ProgresoDiario(
+                                            realizados = 0,
+                                            completado = false,
+                                            totalObjetivoDiario = objetivoDiario,
+                                            fecha = LocalDate.now()
+                                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                                            frecuencia = diasSeleccionados
+                                        )
+
+                                        val progresoRef = userHabitsRef.document(habitoId)
+                                            .collection("progreso")
+                                            .document(
+                                                LocalDate.now()
+                                                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                                            )
+
+                                        progresoRef.set(progreso.toMap())
+                                            .addOnSuccessListener {
+                                                // OK
+                                            }
+                                            .addOnFailureListener { _ ->
+                                                navController.navigateUp()
+                                            }
+                                    } else {
+                                        Toast.makeText(
+                                            context,
+                                            "Usuario no autenticado",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                        navController.navigateUp()
+                                    }
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Text(
+                                stringResource(R.string.boton_guardar),
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
                         }
                     }
                 }
@@ -1103,10 +1279,8 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                 val horaSinSegundos = nuevaHora.withSecond(0).withNano(0)
 
                 if (horaAEditarIndex != null) {
-                    // Editando
                     horarios[horaAEditarIndex!!] = horaSinSegundos
                 } else {
-                    // Agregando
                     if (!horarios.contains(horaSinSegundos)) {
                         horarios.add(horaSinSegundos)
                     } else {
@@ -1119,7 +1293,6 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
             onDismiss = { mostrarTimePicker = false }
         )
     }
-
 
     if (mostrarDatePicker) {
         val localeContext = remember { context.withLocale(Locale("es", "MX")) }
@@ -1150,7 +1323,8 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                         }
 
                         if (selected.timeInMillis >= millisHoy) {
-                            val localDate = LocalDate.ofEpochDay(millis / 86_400_000)
+                            val localDate =
+                                LocalDate.ofEpochDay(millis / 86_400_000)
                             fechaSeleccionada = localDate
                             mostrarDatePicker = false
                         } else {
@@ -1171,9 +1345,9 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                 state = datePickerState,
                 showModeToggle = false,
                 colors = DatePickerDefaults.colors(
-                    selectedDayContainerColor = ContainerColor,
-                    selectedDayContentColor = Color.Black,
-                    todayDateBorderColor = BorderColor
+                    selectedDayContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    selectedDayContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    todayDateBorderColor = MaterialTheme.colorScheme.primary
                 )
             )
         }
@@ -1181,7 +1355,7 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
 
     if (mostrarSelectorIconos) {
         SelectorDeIconoDialog(
-            iconoSeleccionadoNombre= iconoSeleccionado,
+            iconoSeleccionadoNombre = iconoSeleccionado,
             onSeleccionar = { iconoSeleccionado = it },
             onCerrar = { mostrarSelectorIconos = false }
         )
@@ -1189,26 +1363,26 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
 
     if (mostrarSelectorColor) {
         val colores = listOf(
-            Color(0xFFA5D6A7), // Verde suave
-            Color(0xFF90CAF9), // Azul claro
-            Color(0xFFFFCC80), // Naranja pastel
-            Color(0xFFEF9A9A), // Rojo rosado
-            Color(0xCEB39DDB), // Púrpura pastel
-            Color(0xFF80CBC4), // Verde azulado claro
-            Color(0xFFFFF59D), // Amarillo claro
-            Color(0xFFD1C4E9), // Lavanda suave
-            Color(0xFFB2EBF2), // Azul verdoso muy claro
-            Color(0xFFFFAB91), // Coral claro
-            Color(0xFFC5E1A5), // Verde lima pálido
-            Color(0xFF9FA8DA), // Azul lavanda
-            Color(0xFFF0F4C3), // Verde amarillento tenue
-            Color(0xFFD7CCC8), // Marrón claro grisáceo
-            Color(0xFFCFD8DC), // Azul gris claro
-            Color(0xFFF8BBD0), // Rosa bebé
-            Color(0xFFDCEDC8), // Verde muy suave
-            Color(0xFFE1BEE7), // Violeta claro
-            Color(0xFFEF5350), // Rojo coral más fuerte
-            Color(0xFF64B5F6)  //Azul cielo
+            Color(0xFFA5D6A7),
+            Color(0xFF90CAF9),
+            Color(0xFFFFCC80),
+            Color(0xFFEF9A9A),
+            Color(0xCEB39DDB),
+            Color(0xFF80CBC4),
+            Color(0xFFFFF59D),
+            Color(0xFFD1C4E9),
+            Color(0xFFB2EBF2),
+            Color(0xFFFFAB91),
+            Color(0xFFC5E1A5),
+            Color(0xFF9FA8DA),
+            Color(0xFFF0F4C3),
+            Color(0xFFD7CCC8),
+            Color(0xFFCFD8DC),
+            Color(0xFFF8BBD0),
+            Color(0xFFDCEDC8),
+            Color(0xFFE1BEE7),
+            Color(0xFFEF5350),
+            Color(0xFF64B5F6)
         )
 
         AlertDialog(
@@ -1219,7 +1393,9 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
                     colores.chunked(5).forEach { fila ->
                         Row(
                             horizontalArrangement = Arrangement.SpaceEvenly,
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
                         ) {
                             fila.forEach { color ->
                                 Box(
@@ -1239,7 +1415,6 @@ fun PantallaConfigurarHabitoPersonalizado(navController: NavHostController, nomb
             confirmButton = {}
         )
     }
-
 }
 
 // Extensión para oscurecer el color
@@ -1253,7 +1428,11 @@ fun Color.darken(factor: Float): Color {
 }
 
 // Función para hacer el parseo de color desde FB
-fun parseColorFromFirebase(colorString: String, darken: Boolean = false, darkenFactor: Float = 0.15f): Color {
+fun parseColorFromFirebase(
+    colorString: String,
+    darken: Boolean = false,
+    darkenFactor: Float = 0.15f
+): Color {
     val regex = Regex("""Color\(([\d.]+), ([\d.]+), ([\d.]+), ([\d.]+),.*\)""")
     val match = regex.find(colorString)
     return if (match != null) {
@@ -1358,7 +1537,10 @@ fun TooltipDialogAyuda(
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = mensaje,
-                        style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 20.sp,  textAlign = TextAlign.Justify),
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            lineHeight = 20.sp,
+                            textAlign = TextAlign.Justify
+                        ),
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
@@ -1394,27 +1576,42 @@ fun DiasSeleccionadosResumen(diasSeleccionados: List<Boolean>) {
 }
 
 @Composable
-fun DiaCircle(label: String, selected: Boolean, enabled: Boolean = true, onClick: () -> Unit) {
+fun DiaCircle(
+    label: String,
+    selected: Boolean,
+    enabled: Boolean = true,
+    onClick: () -> Unit
+) {
+    val disabledBg = MaterialTheme.colorScheme.surfaceVariant
+    val disabledBorder = MaterialTheme.colorScheme.outlineVariant
+    val disabledText = MaterialTheme.colorScheme.onSurfaceVariant
+
     val targetBgColor = when {
-        !enabled -> Color(0xFFE0E0E0)
+        !enabled -> disabledBg
         selected -> MaterialTheme.colorScheme.primary
         else -> Color.Transparent
     }
 
     val targetBorderColor = when {
-        !enabled -> Color(0xFFE0E0E0)
+        !enabled -> disabledBorder
         selected -> MaterialTheme.colorScheme.primary
         else -> MaterialTheme.colorScheme.outline
     }
 
     val textColor = when {
-        !enabled -> Color.DarkGray
+        !enabled -> disabledText
         selected -> MaterialTheme.colorScheme.onPrimary
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
 
-    val animatedBgColor by animateColorAsState(targetValue = targetBgColor, label = "backgroundColorAnimation")
-    val animatedBorderColor by animateColorAsState(targetValue = targetBorderColor, label = "borderColorAnimation")
+    val animatedBgColor by animateColorAsState(
+        targetValue = targetBgColor,
+        label = "backgroundColorAnimation"
+    )
+    val animatedBorderColor by animateColorAsState(
+        targetValue = targetBorderColor,
+        label = "borderColorAnimation"
+    )
 
     Box(
         Modifier
@@ -1431,11 +1628,13 @@ fun DiaCircle(label: String, selected: Boolean, enabled: Boolean = true, onClick
 
 @Composable
 fun HorarioItem(hora: String, onEditar: () -> Unit) {
-    Surface(
+    val accent = Color(0xFF4CAF50)
+
+    androidx.compose.material3.Surface(
         tonalElevation = 0.dp,
         shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, Color(0xFF4CAF50)),
-        color = Color.White,
+        border = BorderStroke(1.dp, accent),
+        color = MaterialTheme.colorScheme.surface,
         modifier = Modifier
             .widthIn(max = 180.dp)
             .height(48.dp)
@@ -1449,7 +1648,7 @@ fun HorarioItem(hora: String, onEditar: () -> Unit) {
             Icon(
                 imageVector = Icons.Default.Edit,
                 contentDescription = "Editar",
-                tint = Color(0xFF4CAF50),
+                tint = accent,
                 modifier = Modifier
                     .size(18.dp)
                     .clickable(onClick = onEditar)
@@ -1460,18 +1659,16 @@ fun HorarioItem(hora: String, onEditar: () -> Unit) {
             Text(
                 text = hora,
                 style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Icon(
                 imageVector = Icons.Default.AccessTime,
                 contentDescription = "Hora",
-                tint = Color(0xFF4CAF50),
+                tint = accent,
                 modifier = Modifier.size(18.dp)
             )
         }
     }
 }
-
-
-
