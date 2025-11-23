@@ -511,6 +511,7 @@ fun PantallaConfiguracionHabitoAlimentacion(
 
             Spacer(Modifier.weight(1f))
 
+            // === BOTONES INFERIORES: MISMO COMPORTAMIENTO QUE EN HABITOS PERSONALIZADOS ===
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
@@ -519,42 +520,70 @@ fun PantallaConfiguracionHabitoAlimentacion(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.Center,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Button(
-                        onClick = {
-                            if (horarios.isNotEmpty()) {
-                                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                            } else {
-                                mensajeValidacion = "Por favor, selecciona al menos un recordatorio."
-                                return@Button
-                            }
-                        },
-                        modifier = Modifier
-                            .width(180.dp)
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                    ) {
-                        Text(
-                            stringResource(R.string.boton_guardar),
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
                     if (esEdicion) {
+                        // MODO EDICIÓN: Guardar y Cancelar, mismo tamaño
                         Button(
                             onClick = {
-                                navController.navigateUp()
+                                if (horarios.isNotEmpty()) {
+                                    permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                } else {
+                                    mensajeValidacion = "Por favor, selecciona al menos un recordatorio."
+                                    return@Button
+                                }
                             },
                             modifier = Modifier
-                                .width(180.dp)
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                                .weight(0.5f)
+                                .padding(vertical = 8.dp),
                             shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEC615B))
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Text(
+                                stringResource(R.string.boton_guardar),
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+
+                        Button(
+                            onClick = { navController.navigateUp() },
+                            modifier = Modifier
+                                .weight(0.5f)
+                                .padding(vertical = 8.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFEC615B)
+                            )
                         ) {
                             Text(
                                 stringResource(R.string.boton_cancelar_modificaciones),
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+                    } else {
+                        // MODO CREACIÓN: solo Guardar ocupando todo el ancho
+                        Button(
+                            onClick = {
+                                if (horarios.isNotEmpty()) {
+                                    permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                } else {
+                                    mensajeValidacion = "Por favor, selecciona al menos un recordatorio."
+                                    return@Button
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Text(
+                                stringResource(R.string.boton_guardar),
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
                         }
