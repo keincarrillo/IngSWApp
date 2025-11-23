@@ -18,6 +18,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.isSystemInDarkTheme
+import com.example.koalm.ui.theme.TertiaryDarkColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -44,7 +46,13 @@ fun PantallaLibros(navController: NavHostController) {
     var libros by remember { mutableStateOf(listOf<Libro>()) }
     var mostrarDialogoNuevoLibro by remember { mutableStateOf(false) }
     var libroAEditar by remember { mutableStateOf<Libro?>(null) }
-    
+    // --- CORRECCIÓN DE TEMA ---
+    val isDark = isSystemInDarkTheme()
+    // Si es oscuro, usamos fondo gris (TertiaryDarkColor), si no, el azul claro original
+    val cardContainerColor = if (isDark) TertiaryDarkColor else ContainerColor
+    // Si es oscuro, borde gris, si no, el borde azul original
+    val cardBorderColor = if (isDark) Color.Gray else BorderColor
+    // ---------------------------
     val auth = FirebaseAuth.getInstance()
     val db = FirebaseFirestore.getInstance()
 
@@ -124,8 +132,8 @@ fun PantallaLibros(navController: NavHostController) {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
-                        border = BorderStroke(1.dp, BorderColor),
-                        colors = CardDefaults.cardColors(containerColor = ContainerColor)
+                        border = BorderStroke(1.dp, cardBorderColor),
+                        colors = CardDefaults.cardColors(containerColor = cardContainerColor)
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp)

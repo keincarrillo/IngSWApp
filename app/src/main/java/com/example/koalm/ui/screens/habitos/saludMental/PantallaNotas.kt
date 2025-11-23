@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
+import androidx.compose.foundation.isSystemInDarkTheme
+import com.example.koalm.ui.theme.TertiaryDarkColor
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
@@ -54,6 +56,13 @@ import com.lottiefiles.dotlottie.core.compose.ui.DotLottieAnimation
 @Composable
 fun PantallaNotas(navController: NavHostController) {
     val context = LocalContext.current
+    // --- CORRECCIÓN DE TEMA ---
+    val isDark = isSystemInDarkTheme()
+    // Si es oscuro, fondo gris (TertiaryDarkColor), si no, el azul claro original
+    val noteCardColor = if (isDark) TertiaryDarkColor else ContainerColor
+    // Si es oscuro, borde gris, si no, el borde azul original
+    val noteBorderColor = if (isDark) Color.Gray else BorderColor
+    // ---------------------------
     var notas by remember { mutableStateOf(listOf<Nota>()) }
 
     /*
@@ -237,8 +246,8 @@ fun PantallaNotas(navController: NavHostController) {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
-                        border = BorderStroke(1.dp, BorderColor),
-                        colors = CardDefaults.cardColors(containerColor = ContainerColor)
+                        border = BorderStroke(1.dp, noteBorderColor),
+                        colors = CardDefaults.cardColors(containerColor = noteCardColor)
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp)
