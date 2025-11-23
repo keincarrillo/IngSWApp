@@ -56,10 +56,11 @@ import com.lottiefiles.dotlottie.core.compose.ui.DotLottieAnimation
 @Composable
 fun PantallaNotas(navController: NavHostController) {
     val context = LocalContext.current
+    val colorScheme = MaterialTheme.colorScheme
     // --- CORRECCIÓN DE TEMA ---
     val isDark = isSystemInDarkTheme()
     // Si es oscuro, fondo gris (TertiaryDarkColor), si no, el azul claro original
-    val noteCardColor = if (isDark) TertiaryDarkColor else ContainerColor
+    val noteCardColor = if (isDark) colorScheme.surface else ContainerColor
     // Si es oscuro, borde gris, si no, el borde azul original
     val noteBorderColor = if (isDark) Color.Gray else BorderColor
     // ---------------------------

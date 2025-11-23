@@ -47,9 +47,10 @@ fun PantallaLibros(navController: NavHostController) {
     var mostrarDialogoNuevoLibro by remember { mutableStateOf(false) }
     var libroAEditar by remember { mutableStateOf<Libro?>(null) }
     // --- CORRECCIÓN DE TEMA ---
+    val colorScheme = MaterialTheme.colorScheme
     val isDark = isSystemInDarkTheme()
     // Si es oscuro, usamos fondo gris (TertiaryDarkColor), si no, el azul claro original
-    val cardContainerColor = if (isDark) TertiaryDarkColor else ContainerColor
+    val cardContainerColor = if (isDark) colorScheme.surface else ContainerColor
     // Si es oscuro, borde gris, si no, el borde azul original
     val cardBorderColor = if (isDark) Color.Gray else BorderColor
     // ---------------------------
@@ -161,7 +162,7 @@ fun PantallaLibros(navController: NavHostController) {
                                     Icon(
                                         imageVector = Icons.Default.Edit,
                                         contentDescription = "Editar",
-                                        tint = MaterialTheme.colorScheme.primary
+                                        tint = MaterialTheme.colorScheme.primary,
                                     )
                                 }
                                 IconButton(
