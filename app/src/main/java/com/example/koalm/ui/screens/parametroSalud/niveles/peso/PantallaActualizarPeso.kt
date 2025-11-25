@@ -7,8 +7,10 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts.GetContent
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.border
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -23,7 +25,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
@@ -33,6 +34,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.koalm.ui.components.BarraNavegacionInferior
 import com.example.koalm.ui.components.ExitoDialogoGuardadoAnimado
+import com.example.koalm.ui.theme.BorderColor
+import com.example.koalm.ui.theme.ContainerColor
+import com.example.koalm.ui.theme.PrimaryColor
 import com.example.koalm.viewmodels.PesoViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ktx.firestore
@@ -52,19 +56,22 @@ fun PantallaActualizarPeso(
     val correo = FirebaseAuth.getInstance().currentUser?.email
 
     val firestore = Firebase.firestore
-    val storage   = Firebase.storage
+    val storage = Firebase.storage
 
-    val coroutineScope   = rememberCoroutineScope()
-    var showPhotoCheck by remember { mutableStateOf(false) }
-    var pesoText by remember { mutableStateOf(TextFieldValue(if (peso == 0f) "" else peso.toString())) }
+    val coroutineScope = rememberCoroutineScope()
+    var pesoText by remember {
+        mutableStateOf(
+            TextFieldValue(
+                if (peso == 0f) "" else peso.toString()
+            )
+        )
+    }
 
-    var mostrarDialogoExito by remember{ mutableStateOf(false) }
+    var mostrarDialogoExito by remember { mutableStateOf(false) }
     if (mostrarDialogoExito) {
         ExitoDialogoGuardadoAnimado(
             mensaje = "¡Subido correctamente!",
-            onDismiss = {
-                mostrarDialogoExito = false
-            }
+            onDismiss = { mostrarDialogoExito = false }
         )
     }
 
@@ -73,7 +80,7 @@ fun PantallaActualizarPeso(
             coroutineScope.launch {
                 try {
                     val path = "usuarios/$correo/fotos/${System.currentTimeMillis()}.jpg"
-                    val ref  = storage.reference.child(path)
+                    val ref = storage.reference.child(path)
                     ref.putFile(it).await()
                     val url = ref.downloadUrl.await().toString()
                     firestore.collection("usuarios")
@@ -81,15 +88,19 @@ fun PantallaActualizarPeso(
                         .update("photoUrl", url)
                         .await()
                     mostrarDialogoExito = true
-                } catch(e: Exception) {
-                    Log.e("DEBUG_PESO","Error subiendo foto",e)
+                } catch (e: Exception) {
+                    Log.e("DEBUG_PESO", "Error subiendo foto", e)
                 }
             }
         }
     }
 
-    val green = Color(0xFF4CAF50)
-    val shape = RoundedCornerShape(8.dp)
+    val shape = RoundedCornerShape(16.dp)
+    val colorScheme = MaterialTheme.colorScheme
+    val isDark = isSystemInDarkTheme()
+
+    val borderColor = if (isDark) colorScheme.outlineVariant else BorderColor
+    val cardColor = if (isDark) colorScheme.surface else ContainerColor
 
     Scaffold(
         topBar = {
@@ -97,7 +108,11 @@ fun PantallaActualizarPeso(
                 title = { Text("Actualizar peso") },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Atrás",
+                            tint = colorScheme.onSurface
+                        )
                     }
                 },
                 actions = {
@@ -105,14 +120,24 @@ fun PantallaActualizarPeso(
                         val nuevo = pesoText.text.toFloatOrNull() ?: 0f
                         viewModel.actualizarPeso(nuevo) {
                             coroutineScope.launch {
-                                guardarPesoEnHistorial(nuevo, fecha, correo!!)
+                                if (correo != null) {
+                                    guardarPesoEnHistorial(nuevo, fecha, correo)
+                                }
                             }
                             navController.navigateUp()
                         }
                     }) {
-                        Icon(Icons.Default.Check, contentDescription = "Guardar")
+                        Icon(
+                            Icons.Default.Check,
+                            contentDescription = "Guardar",
+                            tint = PrimaryColor
+                        )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = colorScheme.surface,
+                    titleContentColor = colorScheme.onSurface
+                )
             )
         },
         bottomBar = { BarraNavegacionInferior(navController, "inicio") }
@@ -120,87 +145,108 @@ fun PantallaActualizarPeso(
         Column(
             Modifier
                 .padding(inner)
+                .background(colorScheme.background)
                 .padding(24.dp)
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Peso grande centrado
             Text(
                 text = if (peso == 0f) "—" else String.format(Locale.getDefault(), "%.1f kg", peso),
                 style = MaterialTheme.typography.headlineMedium.copy(fontSize = 48.sp),
-                color = green
+                color = PrimaryColor
             )
 
             Spacer(Modifier.height(32.dp))
 
-            // Row: "Peso actual", input recuadro, "kg el ..."
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Peso actual", fontSize = 16.sp, color = Color.Black)
+                Text(
+                    "Peso actual",
+                    fontSize = 16.sp,
+                    color = colorScheme.onBackground
+                )
+
                 val pesoRegex = Regex("^\\d{0,3}(\\.\\d{0,2})?$")
 
-                // recuadro para ingresar peso
                 Box(
                     modifier = Modifier
                         .width(80.dp)
-                        .height(30.dp)
-                        .border(BorderStroke(1.dp, green), shape)
-                        .clip(shape)
+                        .height(36.dp)
+                        .border(BorderStroke(1.dp, PrimaryColor), RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(12.dp))
                         .padding(horizontal = 8.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     BasicTextField(
                         value = pesoText,
                         onValueChange = { newValue ->
-                            // Filtrar SOLO si pasa el regex O está vacío
                             if (newValue.text.isEmpty() || pesoRegex.matches(newValue.text)) {
                                 pesoText = newValue
                             }
                         },
                         singleLine = true,
-                        textStyle = TextStyle(fontSize = 16.sp),
+                        textStyle = TextStyle(
+                            fontSize = 16.sp,
+                            color = colorScheme.onSurface
+                        ),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
                 }
 
-                // Fecha y unidad
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("kg el $fecha", color = green, fontSize = 14.sp)
+                    Text(
+                        "kg el $fecha",
+                        color = PrimaryColor,
+                        fontSize = 14.sp
+                    )
                     Spacer(Modifier.width(4.dp))
-                    Icon(Icons.Default.CalendarToday, contentDescription = "Fecha", tint = green)
+                    Icon(
+                        Icons.Default.CalendarToday,
+                        contentDescription = "Fecha",
+                        tint = PrimaryColor
+                    )
                 }
             }
 
             Spacer(Modifier.height(48.dp))
 
-            // Subir foto
-            Box(
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
                     .clip(shape)
-                    .clickable { imagePicker.launch("image/*") }
-                    .padding(horizontal = 16.dp),
-                contentAlignment = Alignment.CenterStart
+                    .clickable { imagePicker.launch("image/*") },
+                color = cardColor,
+                border = BorderStroke(1.dp, borderColor),
+                tonalElevation = 0.dp,
+                shape = shape
             ) {
                 Row(
-                    Modifier.fillMaxWidth(),
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Subir foto", color = green, fontSize = 16.sp)
-                    Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Seleccionar imagen", tint = green)
+                    Text(
+                        "Subir foto",
+                        color = PrimaryColor,
+                        fontSize = 16.sp
+                    )
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = "Seleccionar imagen",
+                        tint = PrimaryColor
+                    )
                 }
             }
-
         }
     }
 }
 
-//Función para historial de pesos
 suspend fun guardarPesoEnHistorial(peso: Float, fecha: String, correo: String) {
     val firestore = Firebase.firestore
     val historialRef = firestore.collection("usuarios")
@@ -208,10 +254,7 @@ suspend fun guardarPesoEnHistorial(peso: Float, fecha: String, correo: String) {
         .collection("historialPeso")
 
     try {
-        // Obtener todos los documentos actuales
         val documentos = historialRef.get().await()
-
-        // Contar cuántos registros hay
         val siguienteNumero = documentos.size() + 1
         val idPersonalizado = "peso$siguienteNumero"
 
@@ -220,13 +263,9 @@ suspend fun guardarPesoEnHistorial(peso: Float, fecha: String, correo: String) {
             "fecha" to fecha
         )
 
-        // Guardar usando el ID personalizado
         historialRef.document(idPersonalizado).set(registro).await()
         Log.d("DEBUG_PESO", "Historial guardado con ID: $idPersonalizado")
-
     } catch (e: Exception) {
         Log.e("DEBUG_PESO", "Error al guardar historial de peso", e)
     }
 }
-
-
