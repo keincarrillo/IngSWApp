@@ -22,6 +22,8 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialException
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.koalm.navigation.AppNavigation
 import com.example.koalm.ui.theme.KoalmTheme
@@ -33,8 +35,6 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.NavHostController
 
 class MainActivity : ComponentActivity() {
 
@@ -124,37 +124,30 @@ class MainActivity : ComponentActivity() {
     // ---------------- GOOGLE SIGN-IN (Credential Manager) ----------------
 
     private fun handleGoogleSignIn() {
-        // Primero intentamos con cuentas ya autorizadas
-        val option = GetGoogleIdOption.Builder()
-            .setFilterByAuthorizedAccounts(true)
-            .setServerClientId(getString(R.string.default_web_client_id))
-            .setAutoSelectEnabled(true)
-            .build()
-
-        val request = GetCredentialRequest.Builder()
-            .addCredentialOption(option)
-            .build()
-
-        lifecycleScope.launch {
-            try {
-                val response: GetCredentialResponse =
-                    credentialManager.getCredential(this@MainActivity, request)
-                processCredential(response)
-            } catch (_: GetCredentialException) {
-                // Si no hay cuentas preautorizadas, pasamos a flujo de "sign up"
-                handleGoogleSignUp()
-            }
+        // 1) Validar que el client ID esté bien configurado
+        val webClientId = getString(R.string.default_web_client_id)
+        if (webClientId.isBlank() ||
+            webClientId.contains("YOUR_WEB_CLIENT_ID", ignoreCase = true)
+        ) {
+            Toast.makeText(
+                this,
+                "default_web_client_id no está configurado correctamente.\n" +
+                        "Revisa strings.xml y google-services.json.",
+                Toast.LENGTH_LONG
+            ).show()
+            return
         }
-    }
 
-    private fun handleGoogleSignUp() {
-        val option = GetGoogleIdOption.Builder()
-            .setFilterByAuthorizedAccounts(false)
-            .setServerClientId(getString(R.string.default_web_client_id))
+        // 2) Opción de Google ID para Credential Manager
+        val googleIdOption = GetGoogleIdOption.Builder()
+            .setServerClientId(webClientId)
+            .setFilterByAuthorizedAccounts(false) // permite cuentas nuevas y existentes
+            // Puedes quitar AutoSelect para que siempre muestre el selector.
+            //.setAutoSelectEnabled(true)
             .build()
 
         val request = GetCredentialRequest.Builder()
-            .addCredentialOption(option)
+            .addCredentialOption(googleIdOption)
             .build()
 
         lifecycleScope.launch {
@@ -163,10 +156,11 @@ class MainActivity : ComponentActivity() {
                     credentialManager.getCredential(this@MainActivity, request)
                 processCredential(response)
             } catch (e: GetCredentialException) {
-                // Aquí es donde te salía "Error al registrar con Google"
+                e.printStackTrace()
+                val msg = e.errorMessage ?: e.message ?: "Error desconocido en Google Sign-In"
                 Toast.makeText(
                     this@MainActivity,
-                    "Error al registrar con Google: ${e.errorMessage ?: e.message}",
+                    "No se pudo iniciar sesión con Google.\n$msg",
                     Toast.LENGTH_LONG
                 ).show()
             }
@@ -174,11 +168,23 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun processCredential(response: GetCredentialResponse) {
-        val idToken: String =
-            GoogleIdTokenCredential.createFrom(response.credential.data).idToken ?: run {
-                Toast.makeText(this, "No se pudo obtener el ID Token.", Toast.LENGTH_LONG).show()
-                return
-            }
+        // Extraer el ID token de la credencial de Google
+        val googleCredential = try {
+            GoogleIdTokenCredential.createFrom(response.credential.data)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(
+                this,
+                "Error al obtener la credencial de Google.",
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
+
+        val idToken: String = googleCredential.idToken ?: run {
+            Toast.makeText(this, "No se pudo obtener el ID Token.", Toast.LENGTH_LONG).show()
+            return
+        }
 
         firebaseAuth.signInWithCredential(
             GoogleAuthProvider.getCredential(idToken, null)
@@ -248,7 +254,7 @@ class MainActivity : ComponentActivity() {
             } else {
                 Toast.makeText(
                     this,
-                    "Error al iniciar con Google: ${task.exception?.localizedMessage}",
+                    "Error al iniciar con Google (Firebase): ${task.exception?.localizedMessage}",
                     Toast.LENGTH_LONG
                 ).show()
             }
