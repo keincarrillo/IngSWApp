@@ -3,6 +3,7 @@
 package com.example.koalm.ui.screens.parametroSalud.niveles.peso
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,7 +17,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -24,24 +24,24 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.koalm.ui.components.BarraNavegacionInferior
+import com.example.koalm.ui.theme.BorderColor
+import com.example.koalm.ui.theme.ContainerColor
+import com.example.koalm.ui.theme.PrimaryColor
 import com.example.koalm.viewmodels.ObjetivosPesoViewModel
-
 
 @Composable
 fun PantallaObjetivosPeso(
     navController: NavHostController,
     viewModel: ObjetivosPesoViewModel = viewModel()
 ) {
-    // Estado desde el ViewModel
-    val pesoIni  by viewModel.pesoInicial.collectAsState()
+    val pesoIni by viewModel.pesoInicial.collectAsState()
     val fechaIni by viewModel.fechaInicial.collectAsState()
-    val pesoAct  by viewModel.pesoActual.collectAsState()
+    val pesoAct by viewModel.pesoActual.collectAsState()
     val fechaAct by viewModel.fechaActual.collectAsState()
-    val pesoObj  by viewModel.pesoObjetivo.collectAsState()
-    //Estandar de objetivo
-    val pesoRegex = Regex("^\\d{0,3}(\\.\\d{0,2})?$")
+    val pesoObj by viewModel.pesoObjetivo.collectAsState()
 
-    val green = Color(0xFF4CAF50)
+    val pesoRegex = Regex("^\\d{0,3}(\\.\\d{0,2})?$")
+    val colorScheme = MaterialTheme.colorScheme
 
     Scaffold(
         topBar = {
@@ -49,19 +49,30 @@ fun PantallaObjetivosPeso(
                 title = { Text("Objetivos de peso") },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Atrás",
+                            tint = colorScheme.onSurface
+                        )
                     }
                 },
                 actions = {
                     IconButton(onClick = {
-                        // Guardar pesoObjetivo en Firestore
                         viewModel.guardarObjetivo {
                             navController.navigateUp()
                         }
                     }) {
-                        Icon(Icons.Default.Check, contentDescription = "Guardar")
+                        Icon(
+                            Icons.Default.Check,
+                            contentDescription = "Guardar",
+                            tint = PrimaryColor
+                        )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = colorScheme.surface,
+                    titleContentColor = colorScheme.onSurface
+                )
             )
         },
         bottomBar = {
@@ -71,29 +82,27 @@ fun PantallaObjetivosPeso(
         Column(
             Modifier
                 .padding(padding)
+                .background(colorScheme.background)
                 .padding(24.dp)
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(32.dp)
         ) {
-            // 1) Peso inicial (sólo lectura)
             FieldRow(
                 label = "Peso inicial",
-                value = pesoIni.toString(),
+                value = if (pesoIni == 0f) "—" else pesoIni.toString(),
                 fecha = fechaIni,
                 editable = false,
                 onValueChange = {}
             )
 
-            // 2) Peso actual (sólo lectura)
             FieldRow(
                 label = "Peso actual",
-                value = pesoAct.toString(),
+                value = if (pesoAct == 0f) "—" else pesoAct.toString(),
                 fecha = fechaAct,
                 editable = false,
                 onValueChange = {}
             )
 
-            // 3) Peso objetivo (editable, actualiza ViewModel)
             FieldRow(
                 label = "Peso objetivo",
                 value = if (pesoObj == 0f) "" else pesoObj.toString(),
@@ -119,22 +128,26 @@ private fun FieldRow(
     editable: Boolean,
     onValueChange: (String) -> Unit
 ) {
-    val green = Color(0xFF4CAF50)
-    val shape = RoundedCornerShape(4.dp)
+    val colorScheme = MaterialTheme.colorScheme
+    val shape = RoundedCornerShape(12.dp)
 
     Row(
         Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(label, fontSize = 16.sp, color = Color.Black)
+        Text(
+            label,
+            fontSize = 16.sp,
+            color = colorScheme.onBackground
+        )
 
         if (editable) {
             Box(
-                Modifier
+                modifier = Modifier
                     .width(80.dp)
-                    .height(30.dp)
-                    .border(BorderStroke(1.dp, green), shape)
+                    .height(36.dp)
+                    .border(BorderStroke(1.dp, PrimaryColor), shape)
                     .padding(horizontal = 8.dp),
                 contentAlignment = Alignment.CenterStart
             ) {
@@ -142,24 +155,40 @@ private fun FieldRow(
                     value = value,
                     onValueChange = onValueChange,
                     singleLine = true,
-                    textStyle = TextStyle(fontSize = 16.sp, color = Color.Black),
+                    textStyle = TextStyle(
+                        fontSize = 16.sp,
+                        color = colorScheme.onSurface
+                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth()
                 )
             }
         } else {
-            Text(value, color = Color.Black, fontSize = 16.sp)
+            Text(
+                value,
+                color = colorScheme.onSurface,
+                fontSize = 16.sp
+            )
         }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("kg", color = green, fontSize = 14.sp)
+            Text(
+                "kg",
+                color = PrimaryColor,
+                fontSize = 14.sp
+            )
             fecha?.let {
                 Spacer(Modifier.width(6.dp))
-                Text("el $it", color = green, fontSize = 14.sp)
+                Text(
+                    "el $it",
+                    color = PrimaryColor,
+                    fontSize = 14.sp
+                )
                 Spacer(Modifier.width(4.dp))
                 Icon(
                     imageVector = Icons.Default.CalendarToday,
                     contentDescription = null,
-                    tint = green,
+                    tint = PrimaryColor,
                     modifier = Modifier.size(18.dp)
                 )
             }
