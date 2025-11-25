@@ -2,7 +2,6 @@ package com.example.koalm.ui.screens.parametroSalud
 
 /* ----------  IMPORTS  ---------- */
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -12,19 +11,22 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.MonitorWeight
+import androidx.compose.material.icons.filled.PsychologyAlt
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.navigation.NavHostController
 import com.example.koalm.R
@@ -32,11 +34,11 @@ import com.example.koalm.services.obtenerMinutosLocales
 import com.example.koalm.data.StepCounterRepository
 import com.example.koalm.ui.components.snapshotsAsState
 import com.example.koalm.ui.components.BarraNavegacionInferior
+import com.example.koalm.ui.components.Logo
 import com.example.koalm.ui.theme.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import java.time.LocalDate
 import android.util.Log
 import kotlinx.coroutines.tasks.await
 
@@ -49,7 +51,6 @@ fun PantallaParametrosSalud(
 
     val context = LocalContext.current
     val correo = FirebaseAuth.getInstance().currentUser?.email
-
 
     val ansiedad = remember(correo) {
         Firebase.firestore.collection("resultadosAnsiedad")
@@ -71,28 +72,11 @@ fun PantallaParametrosSalud(
     val metaPasos by metas.snapshotsAsState { it?.getLong("metaPasos")?.toInt() ?: 10000 }
     val metaMinutos by metas.snapshotsAsState { it?.getLong("metaMinutos")?.toInt() ?: 100 }
     val metaCalorias by metas.snapshotsAsState { it?.getLong("metaCalorias")?.toInt() ?: 500 }
-    val ResAnsiedad by ansiedad.snapshotsAsState { it?.getString("nivel")?.toString()}
-
+    val ResAnsiedad by ansiedad.snapshotsAsState { it?.getString("nivel")?.toString() }
 
     val pasos by StepCounterRepository.steps.collectAsState()
     val calorias = (pasos * peso.value * 0.0007).toInt()
-    //val segundos by StepCounterRepository.activeSeconds.collectAsState()
-    //val minutos = segundos / 60
     val minutos = remember { obtenerMinutosLocales(context) }
-
-
-    val today = LocalDate.now().toString()
-    /*val calorias: Int = if (correo != null) {
-        val doc = remember(correo, today) {
-            Firebase.firestore.collection("usuarios")
-                .document(correo)
-                .collection("metricasDiarias")
-                .document(today)
-        }
-        val c by doc.snapshotsAsState { it?.getLong("calorias")?.toInt() ?: 0 }
-        c
-    } else 0
-     */
 
     Scaffold(
         topBar = {
@@ -128,13 +112,19 @@ fun PantallaParametrosSalud(
                     .padding(vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.training),
-                    contentDescription = "Koala salud",
+                // 🐧 MISMO COMPORTAMIENTO QUE EN PANTALLA INICIAR SESIÓN:
+                // Logo se encarga del fondo circular gris en modo oscuro, sin fondo en claro
+                Box(
                     modifier = Modifier
                         .size(150.dp)
-                        .offset(y = (-10).dp)
-                )
+                        .offset(y = (-10).dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Logo(
+                        logoRes = R.drawable.pinguino_training,
+                        contentDescription = "Koala salud"
+                    )
+                }
 
                 Spacer(Modifier.width(16.dp))
 
@@ -155,14 +145,14 @@ fun PantallaParametrosSalud(
                     .padding(vertical = 8.dp)
             ) {
                 InfoMiniCard("Pasos", "$pasos/$metaPasos", Icons.AutoMirrored.Filled.DirectionsWalk)
-                InfoMiniCard("Tiempo Activo", "$minutos/$metaMinutos min", Icons.Default.AccessTime)
-                InfoMiniCard("Calorías", "$calorias kcal/$metaCalorias kcal", Icons.Default.LocalFireDepartment)
+                InfoMiniCard("Tiempo Activo", "$minutos/$metaMinutos min", Icons.Default.AccessTime)
+                InfoMiniCard("Calorías", "$calorias kcal/$metaCalorias kcal", Icons.Default.LocalFireDepartment)
             }
 
-            InfoCard("Sueño", "7 h 7 min", Icons.Default.Bedtime, 0.88f) {
+            InfoCard("Sueño", "7 h 7 min", Icons.Default.Bedtime, 0.88f) {
                 navController.navigate("sueño-de-anoche")
             }
-            InfoCard("Ritmo Cardíaco", "88 PPM", Icons.Default.Favorite) {
+            InfoCard("Ritmo Cardíaco", "88 PPM", Icons.Default.Favorite) {
                 navController.navigate("ritmo-cardiaco")
             }
             InfoCard("Estrés", "${ResAnsiedad}", Icons.Default.PsychologyAlt, 0.6f) {
@@ -184,7 +174,6 @@ fun PantallaParametrosSalud(
 @Composable
 fun TituloYBarra(titulo: String, progreso: Float) {
     val isDark = isSystemInDarkTheme()
-    // Usamos un gris oscuro para el fondo de la barra en modo nocturno
     val trackColor = if (isDark) Color.DarkGray else TertiaryColor
 
     Column {
@@ -192,7 +181,7 @@ fun TituloYBarra(titulo: String, progreso: Float) {
             titulo,
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onBackground // Asegura que el texto se vea
+            color = MaterialTheme.colorScheme.onBackground
         )
         LinearProgressIndicator(
             progress = { progreso.coerceIn(0f, 1f) },
@@ -200,7 +189,7 @@ fun TituloYBarra(titulo: String, progreso: Float) {
                 .fillMaxWidth()
                 .height(8.dp),
             color = if (progreso > 0f) PrimaryColor else trackColor,
-            trackColor = trackColor // <--- APLICAMOS EL COLOR DE FONDO DINÁMICO
+            trackColor = trackColor
         )
     }
 }
@@ -226,47 +215,65 @@ fun InfoCard(
     progreso: Float? = null,
     onClick: (() -> Unit)? = null
 ) {
-    // 1. Detectamos si es modo oscuro
     val isDark = isSystemInDarkTheme()
+    val colorScheme = MaterialTheme.colorScheme
 
-    // 2. Definimos los colores según el tema
-    // Fondo: Oscuro en dark mode, Azul claro (ContainerColor) en light mode
-    val cardColor = if (isDark) TertiaryDarkColor else ContainerColor
-
-    // Borde: Gris oscuro en dark mode para que no brille tanto
-    val borderColor = if (isDark) Color.DarkGray else Color.LightGray
-
-    // Texto e Icono: Se ajustan automáticamente con onSurface, pero podemos forzarlo si es necesario
-    val contentColor = MaterialTheme.colorScheme.onSurface
+    // 🔹 Mismos criterios visuales que HabitoCategoriaCard (PantallaHabitos)
+    val borderColor = if (isDark) colorScheme.outlineVariant else BorderColor
+    val cardColor = if (isDark) colorScheme.surface else ContainerColor
+    val titleColor = colorScheme.onSurface
+    val bodyColor = TertiaryMediumColor
 
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
             .let { if (onClick != null) it.clickable(onClick = onClick) else it },
-        shape = RoundedCornerShape(12.dp),
-        tonalElevation = 2.dp,
-        color = cardColor, // <--- APLICAMOS EL COLOR DINÁMICO AQUÍ
-        border = BorderStroke(1.dp, borderColor) // <--- BORDE DINÁMICO
+        shape = RoundedCornerShape(16.dp),
+        tonalElevation = 0.dp,
+        color = cardColor,
+        border = BorderStroke(1.dp, borderColor)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(16.dp)
         ) {
-            Icon(
-                imageVector = icono,
-                contentDescription = titulo,
-                modifier = Modifier.size(32.dp),
-                tint = MaterialTheme.colorScheme.primary // El icono en color primario se ve bien en ambos temas
-            )
-            Spacer(Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(titulo, fontWeight = FontWeight.Bold, color = contentColor)
-                if (dato.isNotBlank()) Text(dato, color = contentColor)
+            Surface(
+                shape = MaterialTheme.shapes.medium,
+                color = PrimaryColor,
+                modifier = Modifier.size(48.dp)
+            ) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Icon(
+                        imageVector = icono,
+                        contentDescription = titulo,
+                        tint = White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
 
-            // Si tenías código comentado para el progreso circular,
-            // asegúrate de que los colores ahí también usen contentColor o Primary.
+            Spacer(Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    titulo,
+                    fontWeight = FontWeight.Bold,
+                    color = titleColor,
+                    style = MaterialTheme.typography.titleMedium
+                )
+                if (dato.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        dato,
+                        color = bodyColor,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
         }
     }
 }

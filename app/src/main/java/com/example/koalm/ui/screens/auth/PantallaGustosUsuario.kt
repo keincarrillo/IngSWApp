@@ -75,7 +75,7 @@ fun ImagenKoalaGustos() {
     val isDark = isSystemInDarkTheme()
     val tintColor = if (isDark) Color.White else Color.Black
     Image(
-        painter = painterResource(id = R.drawable.training),
+        painter = painterResource(id = R.drawable.pinguino_training),
         contentDescription = "Koala haciendo ejercicio",
         modifier = Modifier
             .size(300.dp)
