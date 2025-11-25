@@ -1,49 +1,48 @@
 package com.example.koalm.ui.screens.auth
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.input.*
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import android.content.Context
-
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.ui.graphics.ColorFilter
-
 import com.example.koalm.R
-import com.example.koalm.ui.theme.*
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-
 import com.example.koalm.model.Usuario
-import com.google.firebase.firestore.SetOptions
-import androidx.compose.ui.draw.clip
 import com.example.koalm.ui.components.ExitoDialogoGuardadoAnimado
 import com.example.koalm.ui.components.FalloDialogoGuardadoAnimado
-import com.example.koalm.ui.components.ValidacionesDialogoAnimado
-import kotlinx.coroutines.*
-import androidx.compose.runtime.*
 import com.example.koalm.ui.components.Logo
+import com.example.koalm.ui.components.ValidacionesDialogoAnimado
+import com.example.koalm.ui.theme.PrimaryColor
+import com.example.koalm.ui.theme.SecondaryColor
+import com.example.koalm.ui.theme.TertiaryMediumColor
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,13 +67,11 @@ fun PantallaRegistro(
     if (mensajeValidacion != null) {
         ValidacionesDialogoAnimado(
             mensaje = mensajeValidacion!!,
-            onDismiss = {
-                mensajeValidacion = null
-            }
+            onDismiss = { mensajeValidacion = null }
         )
     }
 
-    //Verificar si el correo es válido
+    // Validación de correo
     var isValidEmail by remember { mutableStateOf(true) }
     var yaExisteCorreo by remember { mutableStateOf(false) }
 
@@ -84,7 +81,6 @@ fun PantallaRegistro(
         "aol.com", "mail.com", "zoho.com", "yandex.com"
     )
 
-    //Verificar si el correo ya existe o no
     fun validarCorreoExistente(correo: String) {
         FirebaseFirestore.getInstance()
             .collection("usuarios")
@@ -98,7 +94,7 @@ fun PantallaRegistro(
             }
     }
 
-    // Para saber si el username es válido
+    // Username
     var username by remember { mutableStateOf("") }
 
     Scaffold(
@@ -112,24 +108,26 @@ fun PantallaRegistro(
                 }
             )
         }
-
     ) { padding ->
         Column(
             modifier = Modifier
-                .fillMaxSize()            // 1. Ocupar toda la pantalla
-                .padding(padding)         // 2. Respetar la barra superior (TopBar)
-                .imePadding()             // 3. <--- AQUÍ ESTÁ LA CLAVE: Empuja el contenido cuando sale el teclado
-                .verticalScroll(scrollState) // 4. Habilita el scroll en el espacio restante
-                .padding(horizontal = 24.dp), // 5. Margen a los lados
+                .fillMaxSize()
+                .padding(padding)
+                .imePadding()
+                .verticalScroll(scrollState)
+                .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top // En registro es mejor Top para ir llenando hacia abajo
+            verticalArrangement = Arrangement.Top
         ) {
             Spacer(modifier = Modifier.height(16.dp))
+
             Logo(
                 logoRes = R.drawable.greeting,
                 contentDescription = "Pinguino Saludando"
             )
+
             Spacer(modifier = Modifier.height(16.dp))
+
             CampoCorreo(
                 value = email,
                 esValido = isValidEmail,
@@ -149,17 +147,25 @@ fun PantallaRegistro(
             )
 
             Spacer(modifier = Modifier.height(4.dp))
+
             CampoNombreUsuario(
                 value = username,
                 onValueChange = { nuevoValor ->
-                   username = nuevoValor
+                    username = nuevoValor
                 }
             )
+
             Spacer(modifier = Modifier.height(4.dp))
-            CampoContrasena(password, passwordVisible, onValueChange = { password = it }) {
-                passwordVisible = !passwordVisible
-            }
+
+            CampoContrasena(
+                value = password,
+                visible = passwordVisible,
+                onValueChange = { password = it },
+                onToggle = { passwordVisible = !passwordVisible }
+            )
+
             Spacer(modifier = Modifier.height(4.dp))
+
             CampoConfirmarContrasena(
                 value = confirmPassword,
                 visible = confirmPasswordVisible,
@@ -169,19 +175,29 @@ fun PantallaRegistro(
             )
 
             Spacer(modifier = Modifier.height(4.dp))
+
             CheckboxTerminos(
                 navController = navController,
                 checked = termsAccepted,
                 onCheckedChange = { termsAccepted = it }
             )
+
             Spacer(modifier = Modifier.height(4.dp))
+
             BotonesRegistro(
-                email, username, password, confirmPassword,
-                isValidEmail, yaExisteCorreo,
-                termsAccepted, navController, context,
+                email = email,
+                username = username,
+                password = password,
+                confirmPassword = confirmPassword,
+                isValidEmail = isValidEmail,
+                yaExisteCorreo = yaExisteCorreo,
+                termsAccepted = termsAccepted,
+                navController = navController,
+                context = context,
                 onMensajeValidacionChange = { mensajeValidacion = it },
                 onGoogleSignInClick = onGoogleSignInClick
             )
+
             TextoIrIniciarSesion(navController)
         }
     }
@@ -216,9 +232,11 @@ fun CampoCorreo(
                 yaExiste && value.isNotEmpty() -> {
                     Text("Este correo ya está en uso.", color = Color.Red, fontSize = 12.sp)
                 }
+
                 !esValido && value.isNotEmpty() -> {
                     Text("El formato del correo no es válido.", color = Color.Red, fontSize = 12.sp)
                 }
+
                 else -> {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -237,14 +255,10 @@ fun CampoCorreo(
     )
 }
 
-
-
-
 @Composable
 fun AyudaDominios() {
     var mostrarDialogo by remember { mutableStateOf(false) }
 
-    // Ícono de ayuda
     IconButton(onClick = { mostrarDialogo = true }) {
         Icon(
             imageVector = Icons.Default.Info,
@@ -253,25 +267,26 @@ fun AyudaDominios() {
         )
     }
 
-    // Diálogo informativo
     if (mostrarDialogo) {
         AlertDialog(
             onDismissRequest = { mostrarDialogo = false },
             title = { Text("Dominios permitidos") },
             text = {
-                Text("Puedes usar correos de los siguientes dominios:\n\n" +
-                        "• gmail.com\n" +
-                        "• hotmail.com\n" +
-                        "• outlook.com\n" +
-                        "• icloud.com\n" +
-                        "• proton.me\n" +
-                        "• yahoo.com\n" +
-                        "• live.com\n" +
-                        "• protonmail.com\n" +
-                        "• aol.com\n" +
-                        "• mail.com\n" +
-                        "• zoho.com\n" +
-                        "• yandex.com\n")
+                Text(
+                    "Puedes usar correos de los siguientes dominios:\n\n" +
+                            "• gmail.com\n" +
+                            "• hotmail.com\n" +
+                            "• outlook.com\n" +
+                            "• icloud.com\n" +
+                            "• proton.me\n" +
+                            "• yahoo.com\n" +
+                            "• live.com\n" +
+                            "• protonmail.com\n" +
+                            "• aol.com\n" +
+                            "• mail.com\n" +
+                            "• zoho.com\n" +
+                            "• yandex.com\n"
+                )
             },
             confirmButton = {
                 TextButton(onClick = { mostrarDialogo = false }) {
@@ -282,14 +297,13 @@ fun AyudaDominios() {
     }
 }
 
-
 @Composable
 fun CampoNombreUsuario(
     value: String,
     onValueChange: (String) -> Unit
 ) {
-    val regex = "^[a-zA-Z0-9_ ]*$".toRegex() // Letras, números, guion bajo y espacios
-    val limpio = value.filter { it.code != 8203 } // Elimina caracteres invisibles (como \u200B)
+    val regex = "^[a-zA-Z0-9_ ]*$".toRegex()
+    val limpio = value.filter { it.code != 8203 }
 
     val valido = limpio.isNotBlank() &&
             limpio.trim().length >= 3 &&
@@ -316,7 +330,7 @@ fun CampoNombreUsuario(
         ),
         supportingText = {
             when {
-                value.all { it == ' ' } && value.length >= 3 -> { // Solo espacios
+                value.all { it == ' ' } && value.length >= 3 -> {
                     Text(
                         text = "El nombre no puede solo contener espacios.",
                         color = Color.Red,
@@ -339,6 +353,7 @@ fun CampoNombreUsuario(
                         fontSize = 12.sp
                     )
                 }
+
                 !regex.matches(value) -> {
                     Text(
                         text = "Solo se permiten letras, números, guion bajo y espacios.",
@@ -346,6 +361,7 @@ fun CampoNombreUsuario(
                         fontSize = 12.sp
                     )
                 }
+
                 else -> {
                     Text(
                         text = "Nombre de usuario válido.",
@@ -360,11 +376,6 @@ fun CampoNombreUsuario(
     Spacer(modifier = Modifier.height(12.dp))
 }
 
-
-
-
-
-
 @Composable
 fun CampoContrasena(
     value: String,
@@ -374,7 +385,7 @@ fun CampoContrasena(
 ) {
     val passwordValidationMessage = remember(value) {
         when {
-            value.isEmpty() -> "La contraseña debe tener al menos 8 caracteres, una letra minúscula, una mayúscula, un número y un carácter especial."
+            value.isEmpty() -> "La contraseña debe tener al menos 8 caracteres, una letra minúscula, una mayúsccula, un número y un carácter especial."
             value.length < 8 -> "La contraseña debe tener al menos 8 caracteres."
             !value.any { it.isLowerCase() } -> "Debe contener al menos una letra minúscula."
             !value.any { it.isUpperCase() } -> "Debe contener al menos una letra mayúscula."
@@ -408,7 +419,8 @@ fun CampoContrasena(
             errorLabelColor = Color.Red
         ),
         supportingText = {
-            val color = if (!isValidPassword && value.isNotEmpty()) Color.Red else TertiaryMediumColor
+            val color =
+                if (!isValidPassword && value.isNotEmpty()) Color.Red else TertiaryMediumColor
 
             Text(
                 text = passwordValidationMessage,
@@ -418,7 +430,6 @@ fun CampoContrasena(
         }
     )
 }
-
 
 @Composable
 fun CampoConfirmarContrasena(
@@ -450,12 +461,14 @@ fun CampoConfirmarContrasena(
             errorLabelColor = Color.Red
         ),
         supportingText = {
-            // Mensaje de validación inicial (cuando el campo está vacío)
             if (value.isEmpty()) {
-                Text("Las contraseñas deben coincidir.", color = TertiaryMediumColor, fontSize = 12.sp)
+                Text(
+                    "Las contraseñas deben coincidir.",
+                    color = TertiaryMediumColor,
+                    fontSize = 12.sp
+                )
             }
 
-            // Mensaje de error si las contraseñas no coinciden
             if (!coincideCon && value.isNotEmpty()) {
                 Text(
                     text = "Las contraseñas introducidas no coinciden.",
@@ -464,7 +477,6 @@ fun CampoConfirmarContrasena(
                 )
             }
 
-            // Mensaje que indica que las contraseñas coinciden
             if (coincideCon && value.isNotEmpty()) {
                 Text(
                     text = "Las contraseñas coinciden.",
@@ -476,10 +488,12 @@ fun CampoConfirmarContrasena(
     )
 }
 
-
 @Composable
-fun CheckboxTerminos(checked: Boolean, navController: NavController, onCheckedChange: (Boolean) -> Unit) {
-    val context = LocalContext.current
+fun CheckboxTerminos(
+    checked: Boolean,
+    navController: NavController,
+    onCheckedChange: (Boolean) -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth(0.97f),
         verticalAlignment = Alignment.CenterVertically,
@@ -512,11 +526,13 @@ fun CheckboxTerminos(checked: Boolean, navController: NavController, onCheckedCh
     }
 }
 
-
 @SuppressLint("SuspiciousIndentation")
 @Composable
 fun BotonesRegistro(
-    email: String, username: String, password: String, confirmPassword: String,
+    email: String,
+    username: String,
+    password: String,
+    confirmPassword: String,
     isValidEmail: Boolean,
     yaExisteCorreo: Boolean,
     termsAccepted: Boolean,
@@ -525,13 +541,12 @@ fun BotonesRegistro(
     onMensajeValidacionChange: (String?) -> Unit,
     onGoogleSignInClick: () -> Unit
 ) {
-    val coroutineScope = rememberCoroutineScope()
     val buttonModifier = Modifier.width(200.dp)
     var isLoading by remember { mutableStateOf(false) }
-    val TAG = "Registro"
+    val tag = "Registro"
 
-    //Mensaje de exito de registro
-    var mostrarDialogoExito by remember{ mutableStateOf(false) }
+    // Diálogo de éxito
+    var mostrarDialogoExito by remember { mutableStateOf(false) }
     if (mostrarDialogoExito) {
         ExitoDialogoGuardadoAnimado(
             mensaje = "¡Registro exitoso! Hemos enviado un enlace de verificación a tu correo electrónico.",
@@ -545,120 +560,92 @@ fun BotonesRegistro(
         )
     }
 
-    //Mensaje de fallo de registro
-    var mostrarDialogoFallo by remember{ mutableStateOf(false) }
+    // Diálogo de fallo
+    var mostrarDialogoFallo by remember { mutableStateOf(false) }
     if (mostrarDialogoFallo) {
         FalloDialogoGuardadoAnimado(
             mensaje = "Hubo un error al enviar el enlace de verificación.",
-            onDismiss = {
-                mostrarDialogoFallo = false
-            }
+            onDismiss = { mostrarDialogoFallo = false }
         )
     }
 
     Button(
         onClick = {
-            android.util.Log.d(TAG, "Iniciando proceso de registro")
-            android.util.Log.d(TAG, "Email: $email")
-            android.util.Log.d(TAG, "Username: $username")
-            android.util.Log.d(TAG, "Validaciones iniciales:")
-            android.util.Log.d(TAG, "- Email válido: $isValidEmail")
-            android.util.Log.d(TAG, "- Email ya existe: $yaExisteCorreo")
-            android.util.Log.d(TAG, "- Términos aceptados: $termsAccepted")
+            android.util.Log.d(tag, "Iniciando proceso de registro")
+            android.util.Log.d(tag, "Email: $email")
+            android.util.Log.d(tag, "Username: $username")
 
-            //Expresión regular: La regla de negocio que se definió para la contraseña.
-            val passwordRegex = Regex("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#\$%^&*()\\-_=+\\[{\\]}|;:,.<>?/`~]).{8,}$")
-            //Expresión regular: La regla de negocio que se definió para el nombre de usuarios (caracteres válidos)
+            val passwordRegex =
+                Regex("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#\$%^&*()\\-_=+\\[{\\]}|;:,.<>?/`~]).{8,}$")
             val usernameRegex = "^[a-zA-Z0-9_ ]*$".toRegex()
-            val limpio = username.filter { it.code != 8203 } // Elimina caracteres invisibles (como \u200B)
-            val valido = limpio.isNotBlank() &&
+            val limpio = username.filter { it.code != 8203 }
+            val usernameValido = limpio.isNotBlank() &&
                     limpio.trim().length >= 3 &&
                     usernameRegex.matches(limpio)
 
-            android.util.Log.d(TAG, "Validaciones adicionales:")
-            android.util.Log.d(TAG, "- Username válido: $valido")
-            android.util.Log.d(TAG, "- Password cumple regex: ${passwordRegex.matches(password)}")
-            android.util.Log.d(TAG, "- Passwords coinciden: ${password == confirmPassword}")
-
-            //Todas las validaciones generales
             when {
                 email.isBlank() || username.isBlank() || password.isBlank() || confirmPassword.isBlank() -> {
-                    android.util.Log.w(TAG, "Campos vacíos detectados")
                     onMensajeValidacionChange("Por favor completa todos los campos.")
                 }
+
                 !isValidEmail -> {
-                    android.util.Log.w(TAG, "Email inválido")
                     onMensajeValidacionChange("El formato del correo no es válido.")
                 }
+
                 yaExisteCorreo -> {
-                    android.util.Log.w(TAG, "Email ya existe en la base de datos")
                     onMensajeValidacionChange("El correo electrónico ya está en uso.")
                 }
-                !valido -> {
-                    android.util.Log.w(TAG, "Username inválido")
+
+                !usernameValido -> {
                     onMensajeValidacionChange("El nombre de usuario no cumple con los requisitos.")
                 }
+
                 !passwordRegex.matches(password) -> {
-                    android.util.Log.w(TAG, "Password no cumple con los requisitos")
                     onMensajeValidacionChange("La contraseña no cumple con los requisitos.")
                 }
+
                 password != confirmPassword -> {
-                    android.util.Log.w(TAG, "Passwords no coinciden")
                     onMensajeValidacionChange("Las contraseñas no coinciden.")
                 }
+
                 !termsAccepted -> {
-                    android.util.Log.w(TAG, "Términos no aceptados")
-                    onMensajeValidacionChange( "Debes aceptar los términos y condiciones.")
+                    onMensajeValidacionChange("Debes aceptar los términos y condiciones.")
                 }
+
                 else -> {
-                    android.util.Log.d(TAG, "Todas las validaciones pasaron, iniciando registro en Firebase")
                     isLoading = true
-                    // Usando el servicio de Firebase
-                    // 1) Crear usuario en Firebase Auth
+
                     FirebaseAuth.getInstance()
                         .createUserWithEmailAndPassword(email, password)
                         .addOnCompleteListener { task ->
                             if (task.isSuccessful) {
-                                android.util.Log.d(TAG, "Usuario creado exitosamente en Firebase Auth")
-                                // 1.1) Obtener UserID
                                 val auth = FirebaseAuth.getInstance()
                                 val userId = auth.currentUser!!.uid
-                                android.util.Log.d(TAG, "UserID obtenido: $userId")
 
-                                // 2) Construir un objeto Usuario mínimo (los primeros 3 campos del registro)
                                 val uLogin = Usuario(
-                                    userId   = userId,
-                                    email    = email,
+                                    userId = userId,
+                                    email = email,
                                     username = username
                                 )
 
-                                // 3) Guardar en Firestore con merge
                                 val db = FirebaseFirestore.getInstance()
-                                android.util.Log.d(TAG, "Intentando guardar usuario en Firestore")
                                 db.collection("usuarios")
                                     .document(email)
                                     .set(uLogin.toMap(), SetOptions.merge())
                                     .addOnSuccessListener {
-                                        android.util.Log.d(TAG, "Usuario guardado exitosamente en Firestore")
-                                        // 4) Enviar verificación de correo
                                         auth.currentUser
                                             ?.sendEmailVerification()
                                             ?.addOnCompleteListener { verifyTask ->
                                                 isLoading = false
                                                 if (verifyTask.isSuccessful) {
-                                                    android.util.Log.d(TAG, "Correo de verificación enviado exitosamente")
-                                                    // Mostrar diálogo de éxito
                                                     mostrarDialogoExito = true
-
                                                 } else {
-                                                    android.util.Log.e(TAG, "Error al enviar correo de verificación", verifyTask.exception)
                                                     mostrarDialogoFallo = true
                                                 }
                                             }
                                     }
                                     .addOnFailureListener { e ->
                                         isLoading = false
-                                        android.util.Log.e(TAG, "Error al guardar usuario en Firestore", e)
                                         Toast.makeText(
                                             context,
                                             "Error guardando usuario: ${e.localizedMessage}",
@@ -667,7 +654,6 @@ fun BotonesRegistro(
                                     }
                             } else {
                                 isLoading = false
-                                android.util.Log.e(TAG, "Error al crear usuario en Firebase Auth", task.exception)
                                 Toast.makeText(
                                     context,
                                     "Error al crear usuario: ${task.exception?.localizedMessage}",

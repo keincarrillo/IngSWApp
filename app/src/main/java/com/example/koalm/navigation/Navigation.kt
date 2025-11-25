@@ -11,7 +11,12 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.example.koalm.ui.screens.habitos.saludMental.PantallaConfigurarDesconexionDigital
+import com.example.koalm.ui.screens.PantallaMenuPrincipal
+import com.example.koalm.ui.screens.ajustes.PantallaAjustes
+import com.example.koalm.ui.screens.ajustes.PantallaCambiarContrasena
+import com.example.koalm.ui.screens.ajustes.PantallaNosotros
+import com.example.koalm.ui.screens.ajustes.PantallaPrivacidad
+import com.example.koalm.ui.screens.ajustes.PantallaTyC
 import com.example.koalm.ui.screens.auth.PantallaCodigoRecuperarContrasena
 import com.example.koalm.ui.screens.auth.PantallaGustosUsuario
 import com.example.koalm.ui.screens.auth.PantallaIniciarSesion
@@ -19,47 +24,41 @@ import com.example.koalm.ui.screens.auth.PantallaPersonalizarPerfil
 import com.example.koalm.ui.screens.auth.PantallaRecuperarContrasena
 import com.example.koalm.ui.screens.auth.PantallaRegistro
 import com.example.koalm.ui.screens.auth.PantallaRestablecerContrasena
-import com.example.koalm.ui.screens.estaditicas.PantallaEstadísticasSaludMental
-import com.example.koalm.ui.screens.estaditicas.PantallaEstadisticasSaludFisica
 import com.example.koalm.ui.screens.estaditicas.PantallaEstadisticasHabitoPersonalizado
-import com.example.koalm.ui.screens.habitos.saludMental.PantallaSaludMental
-import com.example.koalm.ui.screens.habitos.saludFisica.PantallaSaludFisica
-import com.example.koalm.ui.screens.habitos.saludFisica.PantallaConfiguracionHabitoAlimentacion
-import com.example.koalm.ui.screens.habitos.saludMental.PantallaConfiguracionHabitoEscritura
-import com.example.koalm.ui.screens.habitos.saludFisica.PantallaConfiguracionHabitoHidratacion
-import com.example.koalm.ui.screens.habitos.saludMental.PantallaConfiguracionHabitoLectura
-import com.example.koalm.ui.screens.habitos.saludMental.PantallaConfiguracionHabitoMeditacion
-import com.example.koalm.ui.screens.habitos.saludFisica.PantallaConfiguracionHabitoSueno
+import com.example.koalm.ui.screens.estaditicas.PantallaEstadisticasSaludFisica
+import com.example.koalm.ui.screens.estaditicas.PantallaEstadísticasSaludMental
+import com.example.koalm.ui.screens.habitos.PantallaHabitos
+import com.example.koalm.ui.screens.habitos.racha.PantallaRachaHabitos
 import com.example.koalm.ui.screens.habitos.personalizados.PantallaConfigurarHabitoPersonalizado
 import com.example.koalm.ui.screens.habitos.personalizados.PantallaGestionHabitosPersonalizados
 import com.example.koalm.ui.screens.habitos.personalizados.PantallaNotificacionesPersonalizados
-import com.example.koalm.ui.screens.habitos.PantallaHabitos
+import com.example.koalm.ui.screens.habitos.saludFisica.PantallaConfiguracionHabitoAlimentacion
+import com.example.koalm.ui.screens.habitos.saludFisica.PantallaConfiguracionHabitoHidratacion
+import com.example.koalm.ui.screens.habitos.saludFisica.PantallaConfiguracionHabitoSueno
+import com.example.koalm.ui.screens.habitos.saludFisica.PantallaSaludFisica
+import com.example.koalm.ui.screens.habitos.saludMental.PantallaConfigurarDesconexionDigital
+import com.example.koalm.ui.screens.habitos.saludMental.PantallaConfiguracionHabitoEscritura
+import com.example.koalm.ui.screens.habitos.saludMental.PantallaConfiguracionHabitoLectura
+import com.example.koalm.ui.screens.habitos.saludMental.PantallaConfiguracionHabitoMeditacion
 import com.example.koalm.ui.screens.habitos.saludMental.PantallaLibros
-import com.example.koalm.ui.screens.PantallaMenuPrincipal
-import com.example.koalm.ui.screens.habitos.racha.PantallaRachaHabitos
-import com.example.koalm.ui.screens.habitos.saludMental.*
+import com.example.koalm.ui.screens.habitos.saludMental.PantallaNotas
+import com.example.koalm.ui.screens.habitos.saludMental.PantallaSaludMental
 import com.example.koalm.ui.screens.habitos.saludMental.PantallaTemporizadorMeditacion
+import com.example.koalm.ui.screens.habitosKoalisticos.PantallaHabitosKoalisticos
+import com.example.koalm.ui.screens.parametroSalud.PantallaParametrosSalud
 import com.example.koalm.ui.screens.parametroSalud.niveles.actividadDiaria.PantallaActividadDiaria
-import com.example.koalm.ui.screens.parametroSalud.niveles.peso.PantallaActualizarPeso
-import com.example.koalm.ui.screens.parametroSalud.niveles.estres.PantallaEstres
 import com.example.koalm.ui.screens.parametroSalud.niveles.actividadDiaria.PantallaMetaCalorias
 import com.example.koalm.ui.screens.parametroSalud.niveles.actividadDiaria.PantallaMetaMovimiento
 import com.example.koalm.ui.screens.parametroSalud.niveles.actividadDiaria.PantallaMetaPasos
-import com.example.koalm.ui.screens.habitos.saludMental.PantallaNotas
-import com.example.koalm.ui.screens.parametroSalud.niveles.peso.PantallaObjetivosPeso
-import com.example.koalm.ui.screens.parametroSalud.PantallaParametrosSalud
+import com.example.koalm.ui.screens.parametroSalud.niveles.estres.PantallaEstres
+import com.example.koalm.ui.screens.parametroSalud.niveles.peso.PantallaActualizarPeso
 import com.example.koalm.ui.screens.parametroSalud.niveles.peso.PantallaControlPeso
+import com.example.koalm.ui.screens.parametroSalud.niveles.peso.PantallaObjetivosPeso
+import com.example.koalm.ui.screens.parametroSalud.niveles.peso.PantallaProgresoPeso
 import com.example.koalm.ui.screens.parametroSalud.niveles.ritmoCardiaco.PantallaRitmoCardiaco
 import com.example.koalm.ui.screens.parametroSalud.niveles.sueno.PantallaSueno
-import com.example.koalm.ui.screens.tests.PantallaTestAnsiedad
 import com.example.koalm.ui.screens.tests.PantallaResultadoAnsiedad
-import com.example.koalm.ui.screens.ajustes.PantallaCambiarContrasena
-import com.example.koalm.ui.screens.ajustes.PantallaTyC
-import com.example.koalm.ui.screens.ajustes.PantallaPrivacidad
-import com.example.koalm.ui.screens.ajustes.PantallaNosotros
-import com.example.koalm.ui.screens.ajustes.PantallaAjustes
-import com.example.koalm.ui.screens.parametroSalud.niveles.peso.PantallaProgresoPeso
-import com.example.koalm.ui.screens.habitosKoalisticos.PantallaHabitosKoalisticos
+import com.example.koalm.ui.screens.tests.PantallaTestAnsiedad
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
@@ -72,18 +71,19 @@ fun AppNavigation(
         navController = navController,
         startDestination = startDestination
     ) {
-        screenWithSlide("iniciar") {
-            PantallaIniciarSesion(
-                navController = navController,
-                onGoogleSignInClick = onGoogleSignInClick
-            )
+        // Login (sin Google porque lo manejas directo en MainActivity si quieres)
+        screenWithSlide(route = "iniciar") {
+            PantallaIniciarSesion(navController = navController)
         }
-        screenWithSlide("registro") {
+
+        // Registro: aquí sí pasamos el callback de Google
+        screenWithSlide(route = "registro") {
             PantallaRegistro(
                 navController = navController,
                 onGoogleSignInClick = onGoogleSignInClick
             )
         }
+
         screenWithSlide("recuperar") { PantallaRecuperarContrasena(navController) }
         screenWithSlide("restablecer") { PantallaRestablecerContrasena(navController) }
         screenWithSlide("recuperarCodigo") { PantallaCodigoRecuperarContrasena(navController) }
@@ -106,7 +106,6 @@ fun AppNavigation(
         screenWithSlide("nivel-de-estres") { PantallaEstres(navController) }
         screenWithSlide("objetivos-peso") { PantallaObjetivosPeso(navController) }
         screenWithSlide("actividad-diaria") { PantallaActividadDiaria(navController) }
-        screenWithSlide("objetivos-peso") { PantallaObjetivosPeso(navController) }
         screenWithSlide("control-peso") { PantallaControlPeso(navController) }
         screenWithSlide("actualizar-peso") { PantallaActualizarPeso(navController) }
         screenWithSlide("meta-diaria-pasos") { PantallaMetaPasos(navController) }
@@ -114,35 +113,33 @@ fun AppNavigation(
         screenWithSlide("meta-diaria-calorias") { PantallaMetaCalorias(navController) }
         screenWithSlide("racha_habitos") { PantallaRachaHabitos(navController) }
         screenWithSlide("test_de_ansiedad") { PantallaTestAnsiedad(navController) }
-        screenWithSlide("estadisticas_habito_perzonalizado") { PantallaEstadisticasHabitoPersonalizado(navController)}
-        screenWithSlide("cambiar_contrasena") { PantallaCambiarContrasena(navController)}
-        screenWithSlide("TyC") { PantallaTyC(navController)}
-        screenWithSlide("privacidad") { PantallaPrivacidad(navController)}
-        screenWithSlide("nosotros") { PantallaNosotros(navController)}
-        screenWithSlide("ajustes") { PantallaAjustes(navController)}
-        screenWithSlide("notificaciones") { PantallaNotificacionesPersonalizados(navController)}
+        screenWithSlide("estadisticas_habito_perzonalizado") { PantallaEstadisticasHabitoPersonalizado(navController) }
+        screenWithSlide("cambiar_contrasena") { PantallaCambiarContrasena(navController) }
+        screenWithSlide("TyC") { PantallaTyC(navController) }
+        screenWithSlide("privacidad") { PantallaPrivacidad(navController) }
+        screenWithSlide("nosotros") { PantallaNosotros(navController) }
+        screenWithSlide("ajustes") { PantallaAjustes(navController) }
+        screenWithSlide("notificaciones") { PantallaNotificacionesPersonalizados(navController) }
 
+        // ---------- HABITOS PERSONALIZADOS / CONFIGURACIÓN CON ARGUMENTOS ----------
 
-
-
-        // Configurar y editar(todo en la misma pantalla)
-        // Personzalizao
         composable(
             "configurar_habito_personalizado/{nombreHabitoEditar}",
-            arguments = listOf(navArgument("nombreHabitoEditar") {
-                type = NavType.StringType
-                nullable = true
-                defaultValue = null
-            })
+            arguments = listOf(
+                navArgument("nombreHabitoEditar") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
         ) { backStackEntry ->
             PantallaConfigurarHabitoPersonalizado(
                 navController = navController,
                 nombreHabitoEditar = backStackEntry.arguments?.getString("nombreHabitoEditar")
-                )
+            )
         }
 
         // Desconexión digital
-        // Editar habito
         composable(
             route = "configurar_habito_desconexion_digital/{habitoId}",
             arguments = listOf(
@@ -153,21 +150,15 @@ fun AppNavigation(
                 }
             )
         ) { backStackEntry ->
-            PantallaConfigurarDesconexionDigital(
-                navController = navController,
-                habitoId = backStackEntry.arguments?.getString("habitoId")
-            )
+            val habitoId = backStackEntry.arguments?.getString("habitoId")
+            PantallaConfigurarDesconexionDigital(navController, habitoId)
         }
 
-        // Crear hábito
-        composable(
-            "configurar_habito_desconexion_digital",
-        ) {
+        composable("configurar_habito_desconexion_digital") {
             PantallaConfigurarDesconexionDigital(navController, habitoId = null)
         }
 
         // Meditación
-        // Editar hábito
         composable(
             route = "configurar_habito_meditacion/{habitoId}",
             arguments = listOf(
@@ -182,16 +173,11 @@ fun AppNavigation(
             PantallaConfiguracionHabitoMeditacion(navController, habitoId)
         }
 
-        // Crear hábito
-        composable(
-            "configurar_habito_meditacion",
-        ) {
+        composable("configurar_habito_meditacion") {
             PantallaConfiguracionHabitoMeditacion(navController, habitoId = null)
         }
 
-
         // Escritura
-        // Editar habito
         composable(
             route = "configurar_habito_escritura/{habitoId}",
             arguments = listOf(
@@ -206,15 +192,11 @@ fun AppNavigation(
             PantallaConfiguracionHabitoEscritura(navController, habitoId)
         }
 
-        // Crear habito
-        composable(
-            "configurar_habito_escritura",
-        ) {
+        composable("configurar_habito_escritura") {
             PantallaConfiguracionHabitoEscritura(navController, habitoId = null)
         }
 
         // Lectura
-        // Editar hábito
         composable(
             route = "configurar_habito_lectura/{habitoId}",
             arguments = listOf(
@@ -229,15 +211,11 @@ fun AppNavigation(
             PantallaConfiguracionHabitoLectura(navController, habitoId)
         }
 
-        // Crear hábito
-        composable(
-            "configurar_habito_lectura",
-        ) {
+        composable("configurar_habito_lectura") {
             PantallaConfiguracionHabitoLectura(navController, habitoId = null)
         }
 
         // Sueño
-        // Editar hábito
         composable(
             route = "configurar_habito_sueno/{habitoId}",
             arguments = listOf(
@@ -252,15 +230,11 @@ fun AppNavigation(
             PantallaConfiguracionHabitoSueno(navController, habitoId)
         }
 
-        // Crear hábito
-        composable(
-            "configurar_habito_sueno",
-        ) {
+        composable("configurar_habito_sueno") {
             PantallaConfiguracionHabitoSueno(navController, habitoId = null)
         }
 
         // Hidratación
-        // Editar hábito
         composable(
             route = "configurar_habito_hidratacion/{habitoId}",
             arguments = listOf(
@@ -275,15 +249,11 @@ fun AppNavigation(
             PantallaConfiguracionHabitoHidratacion(navController, habitoId)
         }
 
-        // Crear hábito
-        composable(
-            "configurar_habito_hidratacion",
-        ) {
+        composable("configurar_habito_hidratacion") {
             PantallaConfiguracionHabitoHidratacion(navController, habitoId = null)
         }
 
         // Alimentación
-        // Editar hábito
         composable(
             route = "configurar_habito_alimentacion/{habitoId}",
             arguments = listOf(
@@ -298,20 +268,20 @@ fun AppNavigation(
             PantallaConfiguracionHabitoAlimentacion(navController, habitoId)
         }
 
-        // Crear hábito
-        composable(
-            "configurar_habito_alimentacion",
-        ) {
+        composable("configurar_habito_alimentacion") {
             PantallaConfiguracionHabitoAlimentacion(navController, habitoId = null)
         }
 
-//------------------------------------------------------------------------------------
+        // ---------- RUTAS CON MÁS ARGUMENTOS ----------
+
         composable(
             route = "resultado_ansiedad/{puntaje}",
-            arguments = listOf(navArgument("puntaje") {
-                type = NavType.IntType
-                defaultValue = 0
-            })
+            arguments = listOf(
+                navArgument("puntaje") {
+                    type = NavType.IntType
+                    defaultValue = 0
+                }
+            )
         ) { backStackEntry ->
             val puntaje = backStackEntry.arguments?.getInt("puntaje") ?: 0
             PantallaResultadoAnsiedad(navController, puntaje)
@@ -319,27 +289,33 @@ fun AppNavigation(
 
         composable(
             route = "temporizador_meditacion/{duracion}",
-            arguments = listOf(navArgument("duracion") {
-                type = NavType.IntType
-                defaultValue = 15
-            })
+            arguments = listOf(
+                navArgument("duracion") {
+                    type = NavType.IntType
+                    defaultValue = 15
+                }
+            )
         ) { backStackEntry ->
             val duracion = backStackEntry.arguments?.getInt("duracion") ?: 15
             PantallaTemporizadorMeditacion(navController, duracion)
         }
 
-        //HabitosKoalisticos
+        // Hábitos koalísticos
         composable(
             "pantalla_habitos_koalisticos/{tituloHabito}",
-            arguments = listOf(navArgument("tituloHabito") { type = NavType.StringType })
+            arguments = listOf(
+                navArgument("tituloHabito") { type = NavType.StringType }
+            )
         ) { backStackEntry ->
-            val tituloHabito = backStackEntry.arguments?.getString("tituloHabito") ?: "Meditación koalística"
+            val tituloHabito =
+                backStackEntry.arguments?.getString("tituloHabito")
+                    ?: "Meditación koalística"
             PantallaHabitosKoalisticos(navController, tituloHabito)
         }
     }
 }
 
-// Animación personalizada (opcional)s
+// Animación personalizada para las pantallas con slide
 private fun androidx.navigation.NavGraphBuilder.screenWithSlide(
     route: String,
     content: @Composable () -> Unit

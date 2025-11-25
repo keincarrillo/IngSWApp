@@ -35,11 +35,18 @@ import com.example.koalm.ui.components.FalloDialogoGuardadoAnimado
 import com.example.koalm.ui.components.Logo
 import com.example.koalm.ui.components.ValidacionesDialogoAnimado
 
+// IMPORTS PARA GOOGLE SIGN IN
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.google.firebase.auth.GoogleAuthProvider
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaIniciarSesion(
-    navController: NavHostController,
-    onGoogleSignInClick: () -> Unit
+    navController: NavHostController
 ) {
     val context = LocalContext.current
     val auth = FirebaseAuth.getInstance()
@@ -50,9 +57,7 @@ fun PantallaIniciarSesion(
     if (mensajeValidacion != null) {
         ValidacionesDialogoAnimado(
             mensaje = mensajeValidacion!!,
-            onDismiss = {
-                mensajeValidacion = null
-            }
+            onDismiss = { mensajeValidacion = null }
         )
     }
 
@@ -60,9 +65,7 @@ fun PantallaIniciarSesion(
     if (mostrarDialogoFallo) {
         FalloDialogoGuardadoAnimado(
             mensaje = "Usuario no registrado previamente.",
-            onDismiss = {
-                mostrarDialogoFallo = false
-            }
+            onDismiss = { mostrarDialogoFallo = false }
         )
     }
 
@@ -76,6 +79,168 @@ fun PantallaIniciarSesion(
     var password by remember { mutableStateOf("") }
     val isValidPassword = password.length >= 8
     var passwordVisible by remember { mutableStateOf(false) }
+
+    // ------------------ GOOGLE SIGN IN ------------------
+    val gso = remember {
+        GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(context.getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+    }
+    val googleSignInClient = remember { GoogleSignIn.getClient(context, gso) }
+
+    val googleLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.getResult(ApiException::class.java)
+            val credential = GoogleAuthProvider.getCredential(account.idToken, null)
+
+            auth.signInWithCredential(credential)
+                .addOnSuccessListener { authResult ->
+                    val user = authResult.user
+                    if (user == null) {
+                        mensajeValidacion = "Error al iniciar sesión con Google."
+                        return@addOnSuccessListener
+                    }
+
+                    val correoReal = user.email
+                    val userId = user.uid
+                    val displayName = user.displayName ?: ""
+
+                    if (correoReal == null) {
+                        mensajeValidacion = "No se pudo obtener el correo de Google."
+                        return@addOnSuccessListener
+                    }
+
+                    val userDocRef = db.collection("usuarios").document(correoReal)
+
+                    userDocRef.get()
+                        .addOnSuccessListener { doc ->
+                            if (doc.exists()) {
+                                // Usuario YA registrado: mismo flujo que con correo/contraseña
+                                val emailU = doc.getString("email") ?: correoReal
+                                val username = doc.getString("username") ?: displayName
+
+                                val imagenBase64 = doc.getString("imagenBase64") ?: ""
+                                val nombre = doc.getString("nombre") ?: ""
+                                val apellido = doc.getString("apellido") ?: ""
+                                val nacimiento = doc.getString("nacimiento") ?: ""
+                                val genero = doc.getString("genero") ?: ""
+                                val peso = doc.getDouble("peso")?.toFloat()
+                                val altura = doc.getLong("altura")?.toInt()
+
+                                val uLogin = Usuario(
+                                    userId = doc.getString("userId") ?: userId,
+                                    email = emailU,
+                                    username = username,
+                                    imagenBase64 = imagenBase64,
+                                    nombre = nombre,
+                                    apellido = apellido,
+                                    nacimiento = nacimiento,
+                                    genero = genero,
+                                    peso = peso,
+                                    altura = altura
+                                )
+
+                                userDocRef
+                                    .set(uLogin.toMap(), SetOptions.merge())
+                                    .addOnSuccessListener {
+                                        val completo = listOf(
+                                            nombre.isNotBlank(),
+                                            apellido.isNotBlank(),
+                                            nacimiento.isNotBlank(),
+                                            genero.isNotBlank(),
+                                            peso != null,
+                                            altura != null
+                                        ).all { it }
+
+                                        val destino = if (completo) "menu" else "personalizar"
+
+                                        navController.navigate(destino) {
+                                            popUpTo("iniciar") { inclusive = true }
+                                            launchSingleTop = true
+                                        }
+
+                                        val metasRef = userDocRef
+                                            .collection("metasSalud")
+                                            .document("valores")
+
+                                        metasRef.get()
+                                            .addOnSuccessListener { metasDoc ->
+                                                if (!metasDoc.exists()) {
+                                                    metasRef.set(
+                                                        mapOf(
+                                                            "metaPasos" to 6000,
+                                                            "metaMinutos" to 60,
+                                                            "metaCalorias" to 300
+                                                        )
+                                                    )
+                                                }
+                                            }
+                                    }
+                                    .addOnFailureListener { e ->
+                                        mensajeValidacion =
+                                            "Error al actualizar datos de usuario: ${e.localizedMessage}"
+                                    }
+
+                            } else {
+                                // Usuario NUEVO con Google → lo creamos y lo mandamos a completar perfil
+                                val nuevoUsuario = Usuario(
+                                    userId = userId,
+                                    email = correoReal,
+                                    username = displayName,
+                                    imagenBase64 = "",
+                                    nombre = "",
+                                    apellido = "",
+                                    nacimiento = "",
+                                    genero = "",
+                                    peso = null,
+                                    altura = null
+                                )
+
+                                userDocRef
+                                    .set(nuevoUsuario.toMap(), SetOptions.merge())
+                                    .addOnSuccessListener {
+                                        val metasRef = userDocRef
+                                            .collection("metasSalud")
+                                            .document("valores")
+                                        metasRef.set(
+                                            mapOf(
+                                                "metaPasos" to 6000,
+                                                "metaMinutos" to 60,
+                                                "metaCalorias" to 300
+                                            )
+                                        )
+
+                                        navController.navigate("personalizar") {
+                                            popUpTo("iniciar") { inclusive = true }
+                                            launchSingleTop = true
+                                        }
+                                    }
+                                    .addOnFailureListener { e ->
+                                        mensajeValidacion =
+                                            "Error al registrar con Google: ${e.localizedMessage}"
+                                    }
+                            }
+                        }
+                        .addOnFailureListener { e ->
+                            mensajeValidacion =
+                                "Error al consultar datos del usuario: ${e.localizedMessage}"
+                        }
+                }
+                .addOnFailureListener { e ->
+                    mensajeValidacion =
+                        "Error al iniciar sesión con Google: ${e.localizedMessage}"
+                }
+
+        } catch (e: ApiException) {
+            mensajeValidacion =
+                "Error al iniciar sesión con Google: ${e.localizedMessage}"
+        }
+    }
+    // --------------------------------------------------
 
     Scaffold { padding ->
         Column(
@@ -129,6 +294,7 @@ fun PantallaIniciarSesion(
             )
             Spacer(modifier = Modifier.height(24.dp))
 
+            // -------- INICIAR SESIÓN CON CORREO ----------
             Button(
                 onClick = {
                     when {
@@ -162,12 +328,14 @@ fun PantallaIniciarSesion(
                                                 if (doc.exists()) {
                                                     val userId = doc.getString("userId") ?: ""
                                                     val emailU = doc.getString("email") ?: ""
-                                                    val username = doc.getString("username") ?: ""
+                                                    val username =
+                                                        doc.getString("username") ?: ""
 
                                                     val imagenBase64 =
                                                         doc.getString("imagenBase64") ?: ""
                                                     val nombre = doc.getString("nombre") ?: ""
-                                                    val apellido = doc.getString("apellido") ?: ""
+                                                    val apellido =
+                                                        doc.getString("apellido") ?: ""
                                                     val nacimiento =
                                                         doc.getString("nacimiento") ?: ""
                                                     val genero = doc.getString("genero") ?: ""
@@ -210,10 +378,11 @@ fun PantallaIniciarSesion(
                                                                 launchSingleTop = true
                                                             }
 
-                                                            val metasRef = db.collection("usuarios")
-                                                                .document(correoReal)
-                                                                .collection("metasSalud")
-                                                                .document("valores")
+                                                            val metasRef =
+                                                                db.collection("usuarios")
+                                                                    .document(correoReal)
+                                                                    .collection("metasSalud")
+                                                                    .document("valores")
 
                                                             metasRef.get()
                                                                 .addOnSuccessListener { metasDoc ->
@@ -254,8 +423,11 @@ fun PantallaIniciarSesion(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            // -------- INICIAR SESIÓN CON GOOGLE ----------
             OutlinedButton(
-                onClick = onGoogleSignInClick,
+                onClick = {
+                    googleLauncher.launch(googleSignInClient.signInIntent)
+                },
                 modifier = Modifier.width(200.dp),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
             ) {
