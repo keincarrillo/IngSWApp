@@ -12,8 +12,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.Bedtime
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.MonitorWeight
 import androidx.compose.material.icons.filled.PsychologyAlt
@@ -149,12 +147,8 @@ fun PantallaParametrosSalud(
                 InfoMiniCard("Calorías", "$calorias kcal/$metaCalorias kcal", Icons.Default.LocalFireDepartment)
             }
 
-            InfoCard("Sueño", "7 h 7 min", Icons.Default.Bedtime, 0.88f) {
-                navController.navigate("sueño-de-anoche")
-            }
-            InfoCard("Ritmo Cardíaco", "88 PPM", Icons.Default.Favorite) {
-                navController.navigate("ritmo-cardiaco")
-            }
+            // 🔻 Eliminadas las cards de "Sueño" y "Ritmo Cardíaco"
+
             InfoCard("Estrés", "${ResAnsiedad}", Icons.Default.PsychologyAlt, 0.6f) {
                 navController.navigate("nivel-de-estres")
             }
