@@ -296,11 +296,24 @@ fun PantallaEstadisticasHabitoPersonalizado(
     }
 }
 
-
 @Composable
 public fun IndicadorCircular(titulo: String, valor: Int, maximo: Int) {
     val progreso = if (maximo == 0) 0f else valor.toFloat() / maximo.toFloat()
-    val colorProgreso = if (progreso == 0f) Color(0xFF9E9E9E) else Color(0xFF2F6B3A)
+
+    // 🔵 Azul cuando hay progreso, gris cuando es cero
+    val colorProgreso = if (progreso == 0f) {
+        MaterialTheme.colorScheme.outlineVariant    // gris suave del tema
+    } else {
+        PrimaryColor                                // azul como el botón
+    }
+
+    // 🎨 Track distinto al azul, adaptado a modo oscuro
+    val isDark = isSystemInDarkTheme()
+    val trackColor = if (isDark) {
+        MaterialTheme.colorScheme.surfaceVariant    // gris azulado en oscuro
+    } else {
+        TertiaryColor                               // gris claro que ya usas en el tema
+    }
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
@@ -310,16 +323,25 @@ public fun IndicadorCircular(titulo: String, valor: Int, maximo: Int) {
             CircularProgressIndicator(
                 progress = { progreso },
                 modifier = Modifier.fillMaxSize(),
-                color = colorProgreso,
+                color = colorProgreso,   // 🔵 aquí va el azul / gris
                 strokeWidth = 6.dp,
-                trackColor = Color(0xFF9E9E9E),
+                trackColor = trackColor, // 🎨 ya no es azul, es neutro
             )
-            Text("$valor días", fontSize = 12.sp)
+            Text(
+                "$valor días",
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onBackground
+            )
         }
         Spacer(modifier = Modifier.height(4.dp))
-        Text(titulo, fontSize = 14.sp)
+        Text(
+            titulo,
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.onBackground
+        )
     }
 }
+
 
 
 public fun prepararDatosParaGrafica(
@@ -373,7 +395,6 @@ public fun prepararDatosParaGrafica(
 
     return Triple(fechasActivas, valores, etiquetas)
 }
-
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
