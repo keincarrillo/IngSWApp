@@ -153,7 +153,7 @@ fun PantallaEstadisticasSaludFisica(
     val habitoActual = habitosFisicos[selectedIndex.value.coerceIn(habitosFisicos.indices)]
     val progresoActual = progresoPorHabito[habitoActual.titulo] ?: emptyMap()
 
-    val colorHabito = if (isDark) DarkSurfaceColor else PrimaryColor
+    val colorHabito = if (isDark) PrimaryColor else PrimaryColor
 
     Log.d("Graficador", "progresoActual size: ${progresoActual.size}")
 
@@ -264,7 +264,7 @@ fun PantallaEstadisticasSaludFisica(
                         Image(
                             painter = painterResource(id = R.drawable.habitosperestadisticas),
                             contentDescription = null,
-                            modifier = Modifier.size(120.dp)
+                            modifier = Modifier.size(130.dp)
                         )
                     }
                 }
@@ -343,6 +343,7 @@ fun PantallaEstadisticasSaludFisica(
             ) {
                 Text("Gestionar hábitos")
             }
+            Spacer(modifier = Modifier.height(15.dp))
         }
     }
 }
