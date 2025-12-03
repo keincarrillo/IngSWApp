@@ -884,9 +884,9 @@ fun HabitoCardPersonalizado(
     val icono = obtenerIconoPorNombre(habito.iconoEtiqueta)
     val colorIcono = parseColorFromFirebase(habito.colorEtiqueta, darken = true)
 
+    // 👇 CAMBIO IMPORTANTE: fondo neutro igual que los hábitos predeterminados
     val cardContainerColor =
-        if (isDark) MaterialTheme.colorScheme.surface
-        else colorEtiqueta.copy(alpha = 0.18f)
+        if (isDark) MaterialTheme.colorScheme.surface else ContainerColor
 
     val dateAndSubTextColor = MaterialTheme.colorScheme.onSurfaceVariant
     val baseCircleColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
@@ -903,7 +903,7 @@ fun HabitoCardPersonalizado(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .border(1.dp, colorIcono, RoundedCornerShape(16.dp)),
+            .border(1.dp, colorIcono, RoundedCornerShape(16.dp)), // borde con color del hábito
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = cardContainerColor,
@@ -933,7 +933,9 @@ fun HabitoCardPersonalizado(
                     Column {
                         Text(
                             text = habito.nombre,
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.Bold
+                            )
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
@@ -1009,6 +1011,7 @@ fun HabitoCardPersonalizado(
         }
     }
 }
+
 
 @Composable
 fun HabitoCardPredeterminado(
