@@ -68,6 +68,7 @@ import com.example.koalm.repository.HabitoRepository
 import com.example.koalm.ui.screens.habitos.saludFisica.PantallaSaludFisica
 import com.example.koalm.ui.screens.habitos.saludMental.PantallaSaludMental
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.shape.CircleShape
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -248,14 +249,42 @@ fun PantallaEstadísticasSaludMental(
                     .padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.habitosperestadisticas),
-                    contentDescription = null,
+                // ... dentro de la Row ...
+
+                // DETECTAR TEMA
+                val isDark = isSystemInDarkTheme()
+
+                Box(
                     modifier = Modifier
                         .size(120.dp)
-                        .weight(0.3f)
-                )
+                        .weight(0.3f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (isDark) {
+                        // FONDO CIRCULAR (Solo en modo oscuro)
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surfaceVariant, // O usa TertiaryDarkColor si prefieres
+                            modifier = Modifier.fillMaxSize()
+                        ) {}
 
+                        // IMAGEN (Un poco más pequeña para que quepa en el círculo)
+                        Image(
+                            painter = painterResource(id = R.drawable.habitosperestadisticas),
+                            contentDescription = null,
+                            modifier = Modifier.size(90.dp)
+                        )
+                    } else {
+                        // IMAGEN NORMAL (Modo claro)
+                        Image(
+                            painter = painterResource(id = R.drawable.habitosperestadisticas),
+                            contentDescription = null,
+                            modifier = Modifier.size(120.dp)
+                        )
+                    }
+                }
+
+                // ... sigue el Box del SelectorHabitosCentrado ...
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Box(
@@ -370,7 +399,7 @@ public fun SelectorHabitosCentrado(
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(
-            text = "Selecciona un hábito",
+            text = "Hábito",
             fontSize = 16.sp,
             fontWeight = FontWeight.Medium,
             color = Color.DarkGray,

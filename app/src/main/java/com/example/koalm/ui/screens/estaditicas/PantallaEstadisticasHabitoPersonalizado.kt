@@ -61,6 +61,8 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.foundation.isSystemInDarkTheme
+import com.example.koalm.ui.theme.TertiaryDarkColor // <--- Necesario para el fondo en modo oscuro
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -581,11 +583,22 @@ public fun GraficadorProgreso(
     labelEjeY: String = "Objetivo",
     labelEjeX: String = "Días activos del hábito"
 ){
+    // 1. DETECTAR EL TEMA
+    val isDark = isSystemInDarkTheme()
+
+    // 2. DEFINIR COLORES DINÁMICOS
+    // Fondo: Gris oscuro (tema) en noche, Gris claro fijo en día
+    val backgroundColor = if (isDark) Color (0XFF586ec9) else Color(0xFFF0F0F0)
+
+    // Textos (Nativo de Android): Gris claro en noche, Gris oscuro en día
+    val axisTextColor = if (isDark) android.graphics.Color.LTGRAY else android.graphics.Color.DKGRAY
+    val labelTextColor = if (isDark) android.graphics.Color.LTGRAY else android.graphics.Color.GRAY
+
     Canvas(
         modifier = Modifier
             .fillMaxWidth()
             .height(220.dp)
-            .background(Color(0xFFF0F0F0), shape = RoundedCornerShape(12.dp))
+            .background(backgroundColor, shape = RoundedCornerShape(12.dp)) // <--- APLICAR FONDO DINÁMICO
             .padding(start = 43.dp, end = 16.dp, top = 14.dp, bottom = 34.dp)
     ) {
         if (valores.isEmpty() || etiquetas.isEmpty()) return@Canvas
@@ -603,7 +616,7 @@ public fun GraficadorProgreso(
         val paintY = android.graphics.Paint().apply {
             textAlign = android.graphics.Paint.Align.RIGHT
             textSize = 24f
-            color = android.graphics.Color.GRAY
+            color = labelTextColor // <--- COLOR DINÁMICO
             isAntiAlias = true
         }
 
@@ -618,7 +631,7 @@ public fun GraficadorProgreso(
                 android.graphics.Paint().apply {
                     textAlign = android.graphics.Paint.Align.CENTER
                     textSize = 32f
-                    color = android.graphics.Color.DKGRAY
+                    color = axisTextColor // <--- COLOR DINÁMICO
                     isAntiAlias = true
                     typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
                 }
@@ -666,7 +679,7 @@ public fun GraficadorProgreso(
         val paintX = android.graphics.Paint().apply {
             textAlign = android.graphics.Paint.Align.CENTER
             textSize = 28f
-            color = android.graphics.Color.DKGRAY
+            color = axisTextColor // <--- COLOR DINÁMICO
             isAntiAlias = true
         }
 
@@ -682,7 +695,7 @@ public fun GraficadorProgreso(
             android.graphics.Paint().apply {
                 textAlign = android.graphics.Paint.Align.CENTER
                 textSize = 32f
-                color = android.graphics.Color.DKGRAY
+                color = axisTextColor // <--- COLOR DINÁMICO
                 isAntiAlias = true
                 typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             }

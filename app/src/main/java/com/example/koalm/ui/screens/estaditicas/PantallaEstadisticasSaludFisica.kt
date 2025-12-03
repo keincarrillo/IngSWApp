@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
+import com.example.koalm.ui.theme.TertiaryDarkColor
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -152,7 +153,7 @@ fun PantallaEstadisticasSaludFisica(
     val habitoActual = habitosFisicos[selectedIndex.value.coerceIn(habitosFisicos.indices)]
     val progresoActual = progresoPorHabito[habitoActual.titulo] ?: emptyMap()
 
-    val colorHabito = if (isDark) DarkSurfaceColor else ContainerColor
+    val colorHabito = if (isDark) DarkSurfaceColor else PrimaryColor
 
     Log.d("Graficador", "progresoActual size: ${progresoActual.size}")
 
