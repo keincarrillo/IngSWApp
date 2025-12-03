@@ -422,19 +422,6 @@ fun PantallaIniciarSesion(
             }
 
             Spacer(modifier = Modifier.height(12.dp))
-
-            // -------- INICIAR SESIÓN CON GOOGLE ----------
-            OutlinedButton(
-                onClick = {
-                    googleLauncher.launch(googleSignInClient.signInIntent)
-                },
-                modifier = Modifier.width(200.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-            ) {
-                Text("Iniciar con Google", color = MaterialTheme.colorScheme.onSurface)
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
             LoginFooterText(navController)
         }
     }

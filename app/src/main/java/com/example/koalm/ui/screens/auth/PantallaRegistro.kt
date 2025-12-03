@@ -679,15 +679,6 @@ fun BotonesRegistro(
     }
 
     Spacer(modifier = Modifier.height(12.dp))
-
-    OutlinedButton(
-        onClick = { onGoogleSignInClick() },
-        modifier = buttonModifier,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-        enabled = !isLoading
-    ) {
-        Text("Iniciar con Google", color = MaterialTheme.colorScheme.onSurface)
-    }
 }
 
 @Composable
