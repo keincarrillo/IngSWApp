@@ -221,7 +221,7 @@ class MovimientoService : Service(), SensorEventListener {
 
     private fun buildNotification() =
         NotificationCompat.Builder(this, "mov")
-            .setContentTitle("KOALM")
+            .setContentTitle("PinguBalance")
             .setContentText("Contando pasos…")
             .setSmallIcon(R.drawable.ic_notification)
             .build()

@@ -65,7 +65,7 @@ class NotificationReceiverPers : BroadcastReceiver() {
 
                 val notification = NotificationCompat.Builder(context, channelId)
                     .setSmallIcon(R.drawable.ic_notification)
-                    .setContentTitle("🐨 ¡Hora del hábito!")
+                    .setContentTitle("¡Hora del hábito!")
                     .setContentText("No olvides registrar tu progreso diario. ¡Es momento de \"$habitName\"! 🌿✨")
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
                     .setAutoCancel(true)

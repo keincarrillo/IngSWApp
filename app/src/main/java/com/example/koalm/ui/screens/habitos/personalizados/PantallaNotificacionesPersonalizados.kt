@@ -37,9 +37,6 @@ fun PantallaNotificacionesPersonalizados(navController: NavHostController) {
     val usuarioEmail = FirebaseAuth.getInstance().currentUser?.email
     val db = FirebaseFirestore.getInstance()
     val notificaciones = remember { mutableStateListOf<Map<String, Any>>() }
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
-    var recentlyDeleted by remember { mutableStateOf<Map<String, Any>?>(null) }
 
     LaunchedEffect(usuarioEmail) {
         if (usuarioEmail != null) {
@@ -97,7 +94,6 @@ fun PantallaNotificacionesPersonalizados(navController: NavHostController) {
         bottomBar = {
             BarraNavegacionInferior(navController, "inicio")
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
@@ -180,35 +176,18 @@ fun PantallaNotificacionesPersonalizados(navController: NavHostController) {
                                                 onDragEnd = {
                                                     if (offsetX < -100f || offsetX > 100f) {
                                                         dismissed = true
-                                                        val eliminado = notificaciones.removeAt(index)
-                                                        recentlyDeleted = eliminado
+                                                        val eliminado =
+                                                            notificaciones.removeAt(index)
 
-                                                        scope.launch {
-                                                            val result =
-                                                                snackbarHostState.showSnackbar(
-                                                                    message = "Notificación eliminada",
-                                                                    actionLabel = "Deshacer",
-                                                                    duration = SnackbarDuration.Short
-                                                                )
-                                                            if (result != SnackbarResult.ActionPerformed) {
-                                                                usuarioEmail?.let { email ->
-                                                                    val id =
-                                                                        eliminado["id"] as? String
-                                                                    if (id != null) {
-                                                                        db.collection("usuarios")
-                                                                            .document(email)
-                                                                            .collection(
-                                                                                "notificaciones"
-                                                                            )
-                                                                            .document(id)
-                                                                            .delete()
-                                                                    }
-                                                                }
-                                                            } else {
-                                                                recentlyDeleted?.let {
-                                                                    notificaciones.add(index, it)
-                                                                    recentlyDeleted = null
-                                                                }
+                                                        // Eliminar definitivamente en Firestore
+                                                        usuarioEmail?.let { email ->
+                                                            val id = eliminado["id"] as? String
+                                                            if (id != null) {
+                                                                db.collection("usuarios")
+                                                                    .document(email)
+                                                                    .collection("notificaciones")
+                                                                    .document(id)
+                                                                    .delete()
                                                             }
                                                         }
                                                     } else {
@@ -235,7 +214,7 @@ fun PantallaNotificacionesPersonalizados(navController: NavHostController) {
 
 @Composable
 fun TarjetaNotificacion(noti: Map<String, Any>) {
-    val habitName = noti["habitName"] as? String ?: "Hábito koalístico"
+    val habitName = noti["habitName"] as? String ?: "Hábito Pingu"
     val mensaje = noti["mensaje"] as? String ?: "Tienes un nuevo recordatorio"
     val timestamp = noti["timestamp"] as? Long
     val fecha = timestamp?.let {
