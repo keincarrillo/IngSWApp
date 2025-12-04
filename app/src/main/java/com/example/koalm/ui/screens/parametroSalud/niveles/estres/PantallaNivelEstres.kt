@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.koalm.ui.components.BarraNavegacionInferior
 import com.example.koalm.ui.components.GraficaEstres
-import com.example.koalm.ui.components.snapshotsAsState
 import com.example.koalm.ui.theme.BorderColor
 import com.example.koalm.ui.theme.ContainerColor
 import com.example.koalm.ui.theme.PrimaryColor
@@ -34,66 +33,95 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.tasks.await
 
-// Máximo teórico del test (p.ej. 21 puntos). Esto es parte de la lógica del test, no datos de ejemplo.
+// Máximo teórico del test
 private const val MAX_PUNTAJE_ESTRES = 21
 
+// ------------------------- UI STATE -------------------------
+private sealed class EstresUiState {
+    object Loading : EstresUiState()
+    data class NoData(val message: String, val nivelGuardado: String?) : EstresUiState()
+    data class Error(val message: String) : EstresUiState()
+    data class Data(
+        val puntajes: List<Int>,
+        val promedio: Double,
+        val nivelPromedio: String,
+        val mayorNivel: String,
+        val nivelGuardado: String?
+    ) : EstresUiState()
+}
+
+// ------------------------- PANTALLA -------------------------
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaEstres(
     navController: NavHostController
 ) {
     val correo = FirebaseAuth.getInstance().currentUser?.email
+    val uiState = remember { mutableStateOf<EstresUiState>(EstresUiState.Loading) }
 
-    val ansiedadDocRef = remember(correo) {
-        Firebase.firestore.collection("resultadosAnsiedad")
-            .document(correo ?: "")
-    }
-
-    // Puntajes reales recuperados de Firestore (historial / documento principal)
-    val puntajesState = remember { mutableStateOf<List<Int>>(emptyList()) }
-    val promedio = remember { mutableStateOf(0.0) }
-
+    // Cargar datos UNA sola vez para esta pantalla
     LaunchedEffect(correo) {
-        if (!correo.isNullOrBlank()) {
+        if (correo.isNullOrBlank()) {
+            uiState.value = EstresUiState.NoData(
+                message = "Inicia sesión para ver tu nivel de estrés.",
+                nivelGuardado = null
+            )
+            return@LaunchedEffect
+        }
+
+        try {
+            val firestore = Firebase.firestore
+
+            // 1) Puntajes (historial o doc principal)
             val puntajes = ObtenerPuntajes(correo)
             Log.d("ESTRES_DEBUG", "Puntajes obtenidos: $puntajes")
-            puntajesState.value = puntajes
-            promedio.value = if (puntajes.isNotEmpty()) puntajes.average() else 0.0
-        } else {
-            Log.w("ESTRES_DEBUG", "Correo nulo o vacío, no se puede obtener puntajes.")
+
+            // 2) Info general del doc principal (por ejemplo, campo "nivel")
+            val doc = firestore
+                .collection("resultadosAnsiedad")
+                .document(correo)
+                .get()
+                .await()
+
+            val nivelGuardado = if (doc.exists()) doc.getString("nivel") else null
+
+            if (puntajes.isEmpty()) {
+                uiState.value = EstresUiState.NoData(
+                    message = "Aún no hay resultados registrados.\nRealiza el test para ver tu nivel de estrés.",
+                    nivelGuardado = nivelGuardado
+                )
+            } else {
+                val promedio = puntajes.average()
+                val promedioInt = promedio.toInt()
+                val nivelPromedio = obtenerResultadoAnsiedad(promedioInt)
+
+                val maxPuntaje = puntajes.maxOrNull()
+                val mayorNivel = if (maxPuntaje != null) {
+                    obtenerResultadoAnsiedad(maxPuntaje)
+                } else {
+                    ""
+                }
+
+                uiState.value = EstresUiState.Data(
+                    puntajes = puntajes,
+                    promedio = promedio,
+                    nivelPromedio = nivelPromedio,
+                    mayorNivel = mayorNivel,
+                    nivelGuardado = nivelGuardado
+                )
+            }
+        } catch (e: Exception) {
+            Log.e("ESTRES_DEBUG", "Error al cargar datos de estrés", e)
+            uiState.value = EstresUiState.Error(
+                "Ocurrió un error al cargar tus datos.\nInténtalo de nuevo más tarde."
+            )
         }
-    }
-
-    // Nivel general guardado en Firestore (campo "nivel")
-    val resAnsiedad by ansiedadDocRef.snapshotsAsState { snap ->
-        snap?.getString("nivel")
-    }
-
-    val promedioInt = promedio.value.toInt()
-    val promedioNivel = if (puntajesState.value.isNotEmpty()) {
-        obtenerResultadoAnsiedad(promedioInt)
-    } else {
-        "" // no mostramos nada si no hay datos reales
-    }
-
-    val minScoreForColors = puntajesState.value.minOrNull()
-    val promedioColor = if (puntajesState.value.isNotEmpty()) {
-        colorForAnsiedadScore(promedioInt, minScoreForColors)
-    } else {
-        Color.Transparent
     }
 
     val isDark = isSystemInDarkTheme()
     val colorScheme = MaterialTheme.colorScheme
     val borderColor = if (isDark) colorScheme.outlineVariant else BorderColor
     val cardColor = if (isDark) colorScheme.surface else ContainerColor
-
-    val maxPuntaje = puntajesState.value.maxOrNull()
-    val mayorNivel = if (maxPuntaje != null) {
-        obtenerResultadoAnsiedad(maxPuntaje)
-    } else {
-        "" // no hay máximo si no hay datos
-    }
 
     Scaffold(
         topBar = {
@@ -134,7 +162,7 @@ fun PantallaEstres(
         ) {
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Encabezado: muestra el nivel de ansiedad solo si viene de Firestore
+            // Encabezado: texto principal con el "nivel" si lo tenemos
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Default.SentimentNeutral,
@@ -143,8 +171,20 @@ fun PantallaEstres(
                     modifier = Modifier.size(40.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
+
+                val titulo = when (val state = uiState.value) {
+                    is EstresUiState.Data ->
+                        state.nivelGuardado ?: state.nivelPromedio
+                    is EstresUiState.NoData ->
+                        state.nivelGuardado ?: "Sin resultados"
+                    is EstresUiState.Error ->
+                        "Error"
+                    EstresUiState.Loading ->
+                        "Cargando..."
+                }
+
                 Text(
-                    text = resAnsiedad ?: "",
+                    text = titulo,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     color = colorScheme.onBackground
@@ -153,169 +193,223 @@ fun PantallaEstres(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            if (puntajesState.value.isNotEmpty()) {
-                // ======== TARJETA CON GRÁFICA Y RESÚMENES (SOLO SI HAY DATOS REALES) ========
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(1.dp, borderColor, RoundedCornerShape(16.dp)),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = cardColor,
-                        contentColor = colorScheme.onSurface
-                    ),
-                    elevation = CardDefaults.cardElevation(
-                        defaultElevation = 0.dp
+            when (val state = uiState.value) {
+                EstresUiState.Loading -> {
+                    CircularProgressIndicator(
+                        color = PrimaryColor,
+                        modifier = Modifier.padding(top = 24.dp)
                     )
-                ) {
-                    Column(Modifier.padding(16.dp)) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(180.dp)
-                        ) {
-                            val puntajes = puntajesState.value
+                }
 
-                            // Escala basada en el máximo teórico del test
-                            val maxEscala = MAX_PUNTAJE_ESTRES.toFloat()
+                is EstresUiState.Error -> {
+                    TextoMensajePrincipal(
+                        mensaje = state.message,
+                        colorScheme = colorScheme
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    BotonIrAlTest(navController)
+                }
 
-                            val valores: List<Float> = puntajes.map { p ->
-                                p.coerceIn(0, MAX_PUNTAJE_ESTRES).toFloat() / maxEscala
-                            }
+                is EstresUiState.NoData -> {
+                    TextoMensajePrincipal(
+                        mensaje = state.message,
+                        colorScheme = colorScheme
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    BotonIrAlTest(navController)
+                }
 
-                            val colores: List<Color> = puntajes.map { score ->
-                                colorForAnsiedadScore(score, minScoreForColors)
-                            }
+                is EstresUiState.Data -> {
+                    // ======== TARJETA CON GRÁFICA Y RESÚMENES (SOLO SI HAY PUNTAJES) ========
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(1.dp, borderColor, RoundedCornerShape(16.dp)),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = cardColor,
+                            contentColor = colorScheme.onSurface
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    ) {
+                        Column(Modifier.padding(16.dp)) {
 
-                            GraficaEstres(
-                                valores = valores,
-                                colores = colores
-                            )
-                        }
+                            // ---------- GRÁFICA ----------
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(180.dp)
+                            ) {
+                                val puntajes = state.puntajes
+                                val maxEscala = MAX_PUNTAJE_ESTRES.toFloat()
+                                val minScore = puntajes.minOrNull()
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                                // Normalizamos 0..MAX_PUNTAJE_ESTRES -> 0f..1f
+                                val valores: List<Float> = puntajes.map { p ->
+                                    p.coerceIn(0, MAX_PUNTAJE_ESTRES)
+                                        .toFloat() / maxEscala
+                                }
 
-                        // Marcas del eje: derivadas del máximo del test (no números inventados)
-                        val lowTick = 0
-                        val midTick = MAX_PUNTAJE_ESTRES / 2
-                        val highTick = MAX_PUNTAJE_ESTRES
+                                val colores: List<Color> = puntajes.map { score ->
+                                    colorForAnsiedadScore(score, minScore)
+                                }
 
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 52.dp, end = 3.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                lowTick.toString(),
-                                fontSize = 10.sp,
-                                color = colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                midTick.toString(),
-                                fontSize = 10.sp,
-                                color = colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                highTick.toString(),
-                                fontSize = 10.sp,
-                                color = colorScheme.onSurfaceVariant
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(22.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceAround
-                        ) {
-                            Column {
-                                Text(
-                                    "Promedio de estrés",
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 13.sp,
-                                    color = colorScheme.onSurface
+                                // Aquí sólo llegamos si puntajes NO está vacío
+                                GraficaEstres(
+                                    valores = valores,
+                                    colores = colores
                                 )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    if (promedioNivel.isNotEmpty()) {
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // ---------- MARCAS DEL EJE ----------
+                            val lowTick = 0
+                            val midTick = MAX_PUNTAJE_ESTRES / 2
+                            val highTick = MAX_PUNTAJE_ESTRES
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 52.dp, end = 3.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    lowTick.toString(),
+                                    fontSize = 10.sp,
+                                    color = colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    midTick.toString(),
+                                    fontSize = 10.sp,
+                                    color = colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    highTick.toString(),
+                                    fontSize = 10.sp,
+                                    color = colorScheme.onSurfaceVariant
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(22.dp))
+
+                            // ---------- RESUMENES ----------
+                            val minScore = state.puntajes.minOrNull()
+                            val colorPromedio = colorForAnsiedadScore(
+                                score = state.promedio.toInt(),
+                                minScore = minScore
+                            )
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceAround
+                            ) {
+                                Column {
+                                    Text(
+                                        "Promedio de estrés",
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 13.sp,
+                                        color = colorScheme.onSurface
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
                                         Box(
                                             modifier = Modifier
                                                 .size(10.dp)
-                                                .background(promedioColor, CircleShape)
+                                                .background(colorPromedio, CircleShape)
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            text = promedioNivel,
+                                            text = state.nivelPromedio,
                                             color = colorScheme.onSurface
+                                        )
+                                    }
+                                }
+
+                                Column {
+                                    Text(
+                                        "Mayor estrés",
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 13.sp,
+                                        color = colorScheme.onSurface
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    if (state.mayorNivel.isNotEmpty()) {
+                                        Text(
+                                            text = state.mayorNivel,
+                                            color = colorScheme.onSurfaceVariant
                                         )
                                     }
                                 }
                             }
 
-                            Column {
-                                Text(
-                                    "Mayor estrés",
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 13.sp,
-                                    color = colorScheme.onSurface
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                if (mayorNivel.isNotEmpty()) {
-                                    Text(
-                                        text = mayorNivel,
-                                        color = colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // ---------- LEYENDA DE COLORES ----------
+                            Text(
+                                text = "Leyenda de niveles:",
+                                fontSize = 12.sp,
+                                color = colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            LeyendaColor("Mínima", SuccessColor)
+                            LeyendaColor("Leve", WarningColor)
+                            LeyendaColor("Moderada", AlertColor)
+                            LeyendaColor("Severa", CriticalColor)
                         }
                     }
-                }
 
-                Spacer(modifier = Modifier.height(14.dp))
-
-                Button(
-                    onClick = { navController.navigate("test_de_ansiedad") },
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor),
-                    shape = RoundedCornerShape(20.dp),
-                    modifier = Modifier
-                        .height(40.dp)
-                        .width(150.dp)
-                        .align(Alignment.CenterHorizontally)
-                ) {
-                    Text("Realizar test", fontSize = 16.sp)
-                }
-            } else {
-                // ======== SIN DATOS REALES AÚN ========
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Text(
-                    text = "Aún no hay resultados registrados.\nRealiza el test para ver tu nivel de estrés.",
-                    color = colorScheme.onSurfaceVariant,
-                    fontSize = 14.sp,
-                    lineHeight = 18.sp
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Button(
-                    onClick = { navController.navigate("test_de_ansiedad") },
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor),
-                    shape = RoundedCornerShape(20.dp),
-                    modifier = Modifier
-                        .height(40.dp)
-                        .width(150.dp)
-                        .align(Alignment.CenterHorizontally)
-                ) {
-                    Text("Realizar test", fontSize = 16.sp)
+                    Spacer(modifier = Modifier.height(14.dp))
+                    BotonIrAlTest(navController)
                 }
             }
         }
     }
 }
 
-// ========================= LÓGICA PARA OBTENER DATOS REALES =========================
+// ------------------------- SUBCOMPONENTES -------------------------
+@Composable
+private fun TextoMensajePrincipal(
+    mensaje: String,
+    colorScheme: ColorScheme
+) {
+    Text(
+        text = mensaje,
+        color = colorScheme.onSurfaceVariant,
+        fontSize = 14.sp,
+        lineHeight = 18.sp
+    )
+}
 
+@Composable
+private fun BotonIrAlTest(navController: NavHostController) {
+    Button(
+        onClick = { navController.navigate("test_de_ansiedad") },
+        colors = ButtonDefaults.buttonColors(containerColor = PrimaryColor),
+        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier
+            .height(40.dp)
+            .width(170.dp)
+    ) {
+        Text("Realizar test", fontSize = 16.sp)
+    }
+}
+
+@Composable
+private fun LeyendaColor(texto: String, color: Color) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier = Modifier
+                .size(10.dp)
+                .background(color, RoundedCornerShape(50))
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(text = texto, fontSize = 12.sp)
+        Spacer(modifier = Modifier.width(12.dp))
+    }
+}
+
+// ------------------------- LÓGICA FIRESTORE -------------------------
 suspend fun ObtenerPuntajes(userEmail: String): List<Int> {
     val firestore = Firebase.firestore
     return try {
@@ -342,10 +436,7 @@ suspend fun ObtenerPuntajes(userEmail: String): List<Int> {
 
         if (doc.exists()) {
             val pSingle = doc.getLong("puntaje")?.toInt()
-            if (pSingle != null) {
-                Log.d("ESTRES_DEBUG", "Puntaje único desde doc principal: $pSingle")
-                return listOf(pSingle)
-            }
+            if (pSingle != null) return listOf(pSingle)
 
             val listaCruda = doc.get("puntajes") as? List<*>
             if (listaCruda != null) {
@@ -356,10 +447,7 @@ suspend fun ObtenerPuntajes(userEmail: String): List<Int> {
                         else -> null
                     }
                 }
-                if (lista.isNotEmpty()) {
-                    Log.d("ESTRES_DEBUG", "Puntajes lista desde doc principal: $lista")
-                    return lista
-                }
+                if (lista.isNotEmpty()) return lista
             }
         }
 
@@ -371,7 +459,6 @@ suspend fun ObtenerPuntajes(userEmail: String): List<Int> {
     }
 }
 
-// Clasificación en texto a partir del puntaje real
 fun obtenerResultadoAnsiedad(puntaje: Int): String {
     return when (puntaje) {
         in 0..4 -> "Ansiedad mínima"
